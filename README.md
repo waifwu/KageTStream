@@ -6,11 +6,13 @@ game's **original script and assets** (unpacked from your own copy) in a
 
 ## Run it
 
+It is deployed at <https://kagetsu.pages.dev/> (see Deployment below).
+
+To run it locally, from this folder (the one with `index.html`):
+
 ```bash
 python3 -m http.server 8765
 ```
-
-Run it from this folder (the one with `index.html`).
 
 Then open <http://localhost:8765/>. It has to be served over HTTP — opening
 `index.html` from disk will not work (ES modules and `fetch`).
@@ -154,7 +156,24 @@ no display, and prints any script warnings.
 * Music loops by restarting the stream, so there can be a tiny gap at the loop
   point. Safari older than 18.4 cannot play Ogg Vorbis.
 
+## Deployment
+
+The site is the Cloudflare Pages project `kagetsu`, connected to this
+repository. Every push to `main` builds and publishes to
+<https://kagetsu.pages.dev/>; there is no manual step.
+
+* Build command: `mkdir -p dist && cp index.html dist/ && cp -R css js data dist/`
+* Output directory: `dist`
+* Only `index.html`, `css/`, `js/` and `data/` are published (1,230 files).
+  `README.md` and `tools/` stay in the repository.
+* There is no `404.html`, so Pages answers any unknown path with the opening
+  page and a 200 status. A missing asset comes back as HTML rather than an
+  error, so compare a file's content, not its status, when checking a deploy.
+* Pages allows 25 MiB per file and 20,000 files per deployment. The largest
+  file here is about 5 MiB.
+
 ## Note
 
-`data/` contains the commercial game's script, art and music, and is included
-here. This repository is private for that reason — keep it private.
+`data/` contains the commercial game's script, art and music. This repository
+is private, but the deployed site is not: anyone with the address can load
+those files. Cloudflare Access can limit the site to chosen people.
