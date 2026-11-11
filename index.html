@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Kagetsu Tohya</title>
+<link rel="stylesheet" href="css/shell.css">
+</head>
+<body>
+<canvas id="ambient" width="64" height="48" aria-hidden="true"></canvas>
+<div id="stage" class="ctx-busy modal">
+  <canvas id="screen" width="640" height="480" tabindex="0"></canvas>
+  <div id="modes">
+    <button id="mode-skip" class="chip" title="Fast-forwarding. Click to stop (S)"><span class="moon"></span>skip</button>
+    <button id="mode-auto" class="chip" title="Advancing by itself. Click to stop (A)"><span class="moon"></span>auto</button>
+  </div>
+  <nav id="quickbar">
+    <button class="plate" data-act="menu" title="Right-click / Esc">Menu</button>
+    <button class="plate" data-act="log" title="Mouse wheel up">Log</button>
+    <button class="plate" data-act="skip" title="S, or hold Ctrl">Skip</button>
+    <button class="plate" data-act="auto" title="A">Auto</button>
+    <button class="plate" data-act="save">Save</button>
+    <button class="plate" data-act="load">Load</button>
+    <button class="plate" data-act="hide" title="Show the picture without text">Hide</button>
+    <button class="plate" data-act="config">Settings</button>
+    <button class="plate" data-act="full" title="F">Full</button>
+  </nav>
+  <button id="qb-handle" title="Quick bar" aria-label="Quick bar"><span class="moon"></span></button>
+  <div id="toast"></div>
+  <div id="sheet"></div>
+  <div id="home"></div>
+  <div id="curtain"></div>
+</div>
+<input id="import-file" type="file" accept="application/json,.json" hidden>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
