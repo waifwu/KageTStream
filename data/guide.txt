@@ -1,0 +1,620 @@
+reformatted from https://forums.fuwanovel.net/topic/3565-kagetsu-tohya-walkthrough-reformat/
+
+Format
+(Choice Number) Reply Number. (Reply Text)
+
+---------------------------------------------------------------------------------------
+
+Day 1:
+(01) 4. Maybe I'll invade the Inui house?
+(02) 2. Steal some from Senpai in the tea room!
+(03) 2. No, I must attend class diligently.
+(04) 1. Drop by the tea room.
+(05) 3. Chat with Hisui.
+(06) 2. The hallucinations of the end of the world.
+
+---------------------------------------------------------------------------------------
+
+Day 2:
+(01) 2. Stay at the mansion.
+(02) 3. I'll go to Akiha's room.
+(03) 1. Akiha's nap has to end!
+
+---------------------------------------------------------------------------------------
+
+Day 3:
+(01) 2. Stay at the mansion.
+(02) 4. Maybe I'll help Hisui.
+(03) 3. Find Hisui.
+
+---------------------------------------------------------------------------------------
+
+Day 4:
+(01) 1. Go to school.
+(02) 2. To Ciel-senpai's apartment.
+(03) 2. ...No, I want to be swayed.
+(04) 1. Eat at the cafeteria!
+(05) 1. I'll skip class.
+(06) 4. Go out into the street.
+(07) 1. Arcueid's place. 
+(08) 3. ......What about the inside of the closet? 
+
+---------------------------------------------------------------------------------------
+
+Day 5:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 2. Chat with Arcueid a little more.
+(04) 3. Eat peacefully in the courtyard!
+(05) 2. No, I must attend class diligently.
+(06) 4. Go out into the street.
+(07) 1. Arcueid's place.
+(08) 2. I want to talk about the recent incidents.
+(09) 2. The hallucinations of the end of the world.
+
+---------------------------------------------------------------------------------------
+
+Day 6:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 4. Visit Arihiko's place.
+(04) 1. I'll return to the mansion.
+(05) 2. Visit Akiha's room.
+(06) 1. Go for it!
+
+---------------------------------------------------------------------------------------
+
+Day 7:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 2. Wait in the tea house.
+(04) 2. Have lunch with Akira-chan.
+(05) 1. I'll go out to eat!
+(06) 2. The Mobile Chinese Resturaunt Mark II.
+(UNLOCK: Ten Nights of Dream: A Story for the Evening)
+
+---------------------------------------------------------------------------------------
+
+Day 8:
+(01) 1. Go to school.
+(02) 4. Maybe I'll invade the Inui house?
+(03) 2. Steal some from Senpai in the tea room!
+(04) 2. No, I must attend class diligently.
+(05) 2. Stay in the classroom.
+(06) 2. Go visit Akiha's room.
+(07) 1. The murder cases that have been happening.
+
+(UNLOCK: Ten Nights of Dream: Nanako-chan SOS!)
+
+---------------------------------------------------------------------------------------
+
+Day 9:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 1. Go to school with Akiha.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 3. Eat peacefully in the courtyard!
+(06) 1. I'll eat lunch with Akiha.
+(07) 2. No, I must attend class diligently.
+(08) 3. Go straight home.
+(09) 1. Go home with Akiha.
+(10) 2. Go visit Akiha's room.
+(11) 3. Something that I'm forgetting.
+
+---------------------------------------------------------------------------------------
+
+Day 10:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 2. Go to school alone.
+(04) 2. I'll go straight to class.
+(05) 2. No, it's the day of the cultural festival!
+(06) 2. Costume Rental and Photography 'Marble Phantasm.'
+(07) 1. Fourth floor, first year class.
+(08) 1. I must help the class!
+
+---------------------------------------------------------------------------------------
+
+Day 11:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 2. Go to school alone.
+(04) 1. I'll stop by the Tea Ceremony Club room.
+(05) 2. No, it's the day of the cultural festival!
+(06) 1. Runaway Tea House 'Low Kick.'
+(07) 3. Second floor, third year class.
+(08) 2. Anyway, I'll stroll for now.
+
+---------------------------------------------------------------------------------------
+
+Day 12:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion, I'm going out!
+(03) 3. Go to the park.
+(04) 2. No, I'll linger in the streets a bit.
+(05) 1. To the main road.
+(06) 2. Dinner at the mansion is more than enough.
+(07) 5. Taking a stroll on the night streets.
+
+---------------------------------------------------------------------------------------
+
+Day 13:
+(01) 2. Stay at the mansion.
+(02) 7. I'll go sunbathing by the detached building.
+(03) 5. Go to the detached building.
+(04) 3. Something that I'm forgetting.
+
+---------------------------------------------------------------------------------------
+
+Day 14:
+(01) 1. Go to school.
+(02) 2. To Ciel-senpai's apartment.
+(03) 2. ...No, I want to be swayed.
+(04) 2. Steal some from Senpai in the tea room!
+(05) 2. No, I must attend class diligently.
+(06) 4. Go out into the street.
+(07) 2. Ciel-senpai's place.
+(08) 1. It's about the killer.
+(09) 1. The murder cases that have been happening.
+
+---------------------------------------------------------------------------------------
+
+Day 15:
+(01) 1. Go to school.
+(02) 2. To Ciel-senpai's apartment.
+(03) 1. ...I mustn't be swayed.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 1. It's just another day.
+(06) 3. Eat peacefully in the courtyard!
+(07) 2. No, I must attend class diligently.
+(08) 4. Go out into the street.
+(09) 1. Arcueid's place.
+(10) 2. ...Check around the bed!
+(11) 2. The hallucinations of the end of the world.
+
+(UNLOCK: Ten Nights of Dream: Hisui-chan, Inversion Impulse!)
+
+---------------------------------------------------------------------------------------
+
+Day 16:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 1. Peacefully go to school.
+(04) 1. I'll stop by the Tea Ceremony Club room.
+(05) 2. No, it's the day of the cultural festival!
+(06) 3. Mysterious Movie Theater 'Planetarium.'
+(07) 2. Third floor, second year class.
+(08) 1. I must help the class!
+
+---------------------------------------------------------------------------------------
+
+Day 17:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 2. Go to school alone.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 2. No, it's the day of the cultural festival!
+(06) 1. Runaway Tea House 'Low Kick.'
+(07) 1. Fourth floor, first year class.
+(08) 1. I must help the class!
+
+---------------------------------------------------------------------------------------
+
+Day 18:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 1. Go to Arcueid's place.
+(04) 1. Eeeht! Come what may!
+
+(UNLOCK: Ten Nights of Dream: Crimson Moon)
+
+---------------------------------------------------------------------------------------
+
+Day 19:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 3. Go to the park.
+(04) 2. No, I'll linger in the streets a bit.
+(05) 2. To the intersection.
+(06) 2. Dinner at the mansion is more than enough.
+(07) 5. ...Eh? Another dream?
+(08) 7. How about both Kohaku-san and Hisui?
+
+(UNLOCK: Ten Nights of Dream: Flower of Thanatos)
+
+---------------------------------------------------------------------------------------
+
+Day 20:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 1. Go to school with Akiha.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 1. It's just another day.
+(06) 3. Eat peacefully in the courtyard!
+(07) 1. I'll eat lunch with Akiha.
+(08) 2. No, I must attend class diligently.
+(09) 3. Go straight home.
+(10) 2. Go home alone.
+(11) 4. Go visit Kohaku-san's room.
+(12) 2. ...Just a little won't hurt, will it?
+(13) 4. Extermination of the cat demon in the detached building.
+
+---------------------------------------------------------------------------------------
+
+Day 21:
+(A special story event takes place today. No choices are made.)
+
+---------------------------------------------------------------------------------------
+
+Day 22:
+(01) 2. Stay at the mansion.
+(02) 7. I'll go sunbathing by the detached building.
+
+(KEY 1 FOUND)
+
+(03) 6. What's in Makihisa's Room?
+
+"Tsukihime, The How and Why!"
+
+A list of 10 questions will be placed here. The set is picked randomly, and
+you're going to be missing at least one on purpose, so miss at least one
+or just randomly click and get it over with.
+
+---------------------------------------------------------------------------------------
+
+Day 23:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 5. To Ciel-senpai's place.
+(04) 2. All right, I'll postpone the studying until tomorrow!
+(05) 2. ......If one swallows poison, then one must finish it.
+
+---------------------------------------------------------------------------------------
+
+Day 24:
+(01) 2. Stay at the mansion.
+(02) 1. It would be nice to rest in my room.
+(03) 1. Sleep in my room.
+(04) 2. Dinner at the mansion is more than enough.
+(05) 5. ...Eh? Another dream?
+(06) 1. It must be Arcueid.
+
+(UNLOCK: Ten Nights of Dream: Imogirisou)
+
+---------------------------------------------------------------------------------------
+
+Day 25:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 1. Go to school with Akiha.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 3. Was it... the athletic festival? 
+
+---------------------------------------------------------------------------------------
+
+Day 26:
+(01) 1. Go to school.
+(02) 3. Straight to school.
+(03) 1. Go to school with Akiha.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 2. No, it's the day of the culture festival!
+(06) 1. Runaway Tea House 'Low Kick.'
+(07) 1. Fourth floor, first year class.
+(08) 1. I must help the class!
+
+---------------------------------------------------------------------------------------
+
+Day 27:
+(01) 2. Stay at the mansion.
+(02) 2. I'll go to the Nanaya's Forest.
+(03) 1. Sleep in my room.
+(04) 2. Dinner at the mansion is more than enough.
+(05) 5. ...Eh? Another dream?
+(06) 6. ...For some reason that child pops up in my head. (H-Scene)
+
+---------------------------------------------------------------------------------------
+
+Day 28:
+(01) 2. Stay at the mansion.
+(02) 5. I'll visit Kohaku-san.
+(03) 4. Help Kohaku-san.
+(04) 1. I'll go out to eat!
+(05) 1. The Indian resturaunt Messian.
+(06) 1. The murder cases that have been happening.
+
+---------------------------------------------------------------------------------------
+
+Day 29:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 2. Chat with Arcueid a little more.
+(04) 2. Steal some from Senpai in the tea room!
+(05) 2. No, I must attend class diligently.
+(06) 4. Go out into the street.
+(07) 3. ...the back alley.
+(08) 1. Stay in my room.
+
+(UNLOCK: Ten Nights of Dream: Dawn)
+
+---------------------------------------------------------------------------------------
+
+Day 30:
+(01) 2. Stay at the mansion.
+(02) 7. I'll go sunbathing by the detached building.
+(03) 6. What's in Makihisa's Room?
+
+"Tsukihime, The How and Why!"
+
+NOW it's time to do this. The question set chosen will be asked randomly, but
+the answers and order will be the same. And yes, every answer must be correct
+or you'll do exactly what you did on Day 22 again.
+
+Answers:
+
+Common Knowledge
+
+(01) 3. Venus.
+(02) 4. Italy.
+(03) 1. Ko.
+(04) 4. Funajima.
+(05) 5. Consumer Electronics.
+(06) 3. Around minus 273 degrees.
+(07) 4. Kill him.
+(08) 5. Horse.
+(09) 1. Root Vegetable.
+(10) 2. Pheasant.
+
+Tsukihime Main Story
+
+(01) 3. Golden.
+(02) 3. Escaping as a tourist out of season.
+(03) 2. Red.
+(04) 3. Asagami Academy.
+(05) 1. Nrvnqsr.
+(06) 3. On the eighth day.
+(07) 1. Nrvnqsr Chaos.
+(08) 5. Arima.
+(09) 2. Wolf.
+(10) 1. The always cool Kohaku-san.
+
+Summer Festival
+
+(01) 1. The first question!
+(02) 3. A Bunbukucha Kettle.
+(03) 2. Two Pieces.
+(04) 3. The Dark Six.
+(05) 5. Flash of the Dimensional Ninja.
+(06) 2. Twice...?
+(07) 4. Hitman Style.
+(08) 2. Broomstick Girl Magical Amber.
+(09) 2. Jinan Sougen.
+(10) 4. Canadian.
+
+(SECOND KEY FOUND)
+
+(04) 2. Dinner at the mansion is more than enough.
+(05) 1. The murder cases that have been happening.
+
+---------------------------------------------------------------------------------------
+
+Day 31:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 2. Wait in the tea house.
+(04) 2. Have lunch with Akira-chan.
+(05) 1. I'll go out to eat!
+(06) 3. Barbecue at Dai Teito in the neighboring town.
+
+---------------------------------------------------------------------------------------
+
+Day 32:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 5. Go to the Jinan Hospital.
+(04) 2. No, I'll linger in the streets a bit.
+(05) 2. To the intersection.
+(06) 2. Dinner at the mansion is more than enough.
+(07) 2. The hallucinations of the end of the world.
+
+(UNLOCK: Ten Nights of Dream: Red Demon God)
+
+---------------------------------------------------------------------------------------
+
+Day 33:
+(01) 2. Stay at the mansion.
+(02) 3. I'll go to Akiha's room.
+(03) 2. .....No, wait... disturbing a nap isn't good.
+(04) 4. Help Kohaku-san.
+(05) 2. Dinner at the mansion is more than enough.
+(06) 3. Something that I'm forgetting.
+
+---------------------------------------------------------------------------------------
+
+Day 34:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 2. Chat with Arcueid a little more.
+(04) 2. Steal some from Senpai in the tea room!
+(05) 2. No, I must attend class diligently.
+(06) 4. Go out into the street.
+(07) 1. Arcueid's place.
+
+---------------------------------------------------------------------------------------
+
+Day 35:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 1. Peacefully go to school.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 1. It's just another day.
+(06) 2. Steal some from Senpai in the tea room!
+(07) 2. No, I must attend class diligently.
+(08) 4. Go out into the street.
+(09) 2. Ciel-senpai's place.
+(10) 3. .....Check out Senpai's closet!!
+
+---------------------------------------------------------------------------------------
+
+Day 36:
+(01) 2. Stay at the mansion.
+(02) 2. I'll go to the Nanaya's Forest.
+(03) 2. Will this chance be big enough---?!
+(04) 2. Will this chance be big enough---?!
+(05) 2. Will this chance be big enough---?!
+(Yes, this is correct - pick the second choice three times in a row!)
+
+---------------------------------------------------------------------------------------
+
+Day 37:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 1. Go to Arcueid's place.
+(04) 2. No, I need to calm down and go back!
+(05) 1. I'll return to the mansion.
+(06) 2. Visit Akiha's room.
+(07) 2. Dinner at the mansion is more than enough.
+(08) 2. The hallucinations of the end of the world.
+
+---------------------------------------------------------------------------------------
+
+Day 38:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 1. Peacefully go to school.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 1. It's just another day.
+(06) 2. Steal some from Senpai in the tea room!
+(07) 2. No, I must attend class diligently.
+(08) 4. Go out into the street.
+(09) 2. Ciel-senpai's place.
+(10) 2. ...Excuse myself.
+(11) 3. Something that I'm forgetting.
+
+(UNLOCK: Ten Nights of Dream: The Tohno Family Con Game)
+
+---------------------------------------------------------------------------------------
+
+Day 39:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 6. Go to Ciel-senpai's place.
+(04) 2. All right, I'll postpone the studying until tomorrow!
+(05) 1. .....Run away without Senpai.....
+(06) 1. I'll return to the mansion.
+(07) 2. Visit Akiha's room.
+(08) 2. Maybe I'd rather not...?
+(09) 1. I'll go out to eat!
+(10) 1. The Indian resturaunt Messian.
+(11) 3. Something that I'm forgetting.
+
+---------------------------------------------------------------------------------------
+
+Day 40:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 6. Go to Ciel-senpai's place.
+(04) 1. Right, I must study for the tests!
+
+---------------------------------------------------------------------------------------
+
+Day 41:
+(01) 1. Go to school.
+(02) 1. To Arcueid's apartment.
+(03) 1. Peacefully go to school.
+(04) 3. Maybe I'll drop by the courtyard?
+(05) 1. It's just another day.
+(06) 2. Steal some from Senpai in the tea room!
+(07) 2. No, I must attend class diligently.
+(08) 2. Stay in the classroom.
+(09) 1. Stay in my room.
+(10) 3. Something that I'm forgetting.
+
+(UNLOCK: Ten Nights of Dream: Good luck, Ciel-Sensei)
+
+---------------------------------------------------------------------------------------
+
+Day 42:
+(01) 2. Stay at the mansion.
+(02) 4. Maybe I'll help Hisui.
+(03) 4. Help Kohaku-san.
+(04) 2. Dinner at the mansion is more than enough.
+(05) 3. Something that I'm forgetting.
+
+---------------------------------------------------------------------------------------
+
+Day 43:
+(01) 2. Stay at the mansion.
+(02) 8. I'm tired of the mansion. I'm going out!
+(03) 1. Go to Arcueid's place.
+(04) 2. No, I need to calm down and go back!
+(05) 1. I'll return to the mansion.
+(05) 4. Help Kohaku-san.
+
+---------------------------------------------------------------------------------------
+
+Endings:
+
+There are two possible endings to the game. You do not need to save here, as starting
+"a day" will you put back here.
+
+Normal End:
+Day 44:
+
+(01) 2. Stay at the mansion.
+(02) 6. I'll go sunbathing in the courtyard.
+(03) ......I gaze at the blood on my finger. (Ending 1)
+
+r e p e a t a g a i n . . .
+
+Day 45: Select "op" instead of "a day."
+
+(01) 2. Run in front of the dump truck. 
+
+Day 46: Select "ep."
+
+True End:
+Day 44:
+
+(01) 2. Stay at the mansion.
+(02) 6. I'll go sunbathing in the courtyard.
+(03) ......I shake my head uneasily. (H-Scene Warning!)
+
+r e p e a t a g a i n . . .
+
+Day 45: Select "op" instead of "a day."
+
+(01) 2. Run in front of the dump truck. 
+
+Day 46: Select "ep."
+
+---------------------------------------------------------------------------------------
+
+You have now completed the main storyline. All that is left are the
+"Ten Nights of Dream" which are short, self-contained stories, the various Summer
+Festivals, and one more bonus, "Dreaming, Drinking Moon." These are "for fun" stories
+and, of course, have no bearing on the main plot at all, and are questionably canonical.
+Viewing of these stories are required to unlock some CGs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
