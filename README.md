@@ -7,8 +7,10 @@ game's **original script and assets** (unpacked from your own copy) in a
 ## Run it
 
 ```bash
-python3 -m http.server 8765 --directory "/Users/h009/Downloads/Kagetsu Tohya/web"
+python3 -m http.server 8765
 ```
+
+Run it from this folder (the one with `index.html`).
 
 Then open <http://localhost:8765/>. It has to be served over HTTP — opening
 `index.html` from disk will not work (ES modules and `fetch`).
@@ -17,7 +19,7 @@ Then open <http://localhost:8765/>. It has to be served over HTTP — opening
 translation by swapping `nscript.dat` / `nscriptoriginal.dat` first):
 
 ```bash
-python3 tools/extract.py "/Users/h009/Downloads/Kagetsu Tohya/Game"
+python3 tools/extract.py "/path/to/Kagetsu Tohya/Game"
 ```
 
 ## The interface
@@ -154,5 +156,5 @@ no display, and prints any script warnings.
 
 ## Note
 
-`data/` contains the commercial game's script, art and music. Keep this folder
-for your own use — don't put it on a public web server.
+`data/` contains the commercial game's script, art and music, and is included
+here. This repository is private for that reason — keep it private.
