@@ -123,6 +123,7 @@ export class Engine {
     this.waveLoop = null;
     this.skipMode = false;
     this.replaying = false;
+    this.creditsSkip = false;
   }
 
   loadGlobals() {
@@ -475,7 +476,41 @@ export class Engine {
   }
 
   skipping() {
+    if (this.creditsSkip) {
+      // until the credits' routine has returned to whoever called it
+      const n = this.callStack.length;
+      if (n > this.creditsDepth || (n === this.creditsDepth && this.inCredits())) return true;
+      this.creditsSkip = false;
+    }
     return this.skipMode || this.host.input.ctrl;
+  }
+
+  // The closing credits (the script's *pre_staffroll, cards shown in turn, and *true_staffroll, the
+  // scrolling roll) run on timers and take no clicks: a minute or two with nothing to do but wait.
+  // Here a click during either asks whether to pass over the rest. Passing over them is running
+  // them with no waits, so the script still stops the music and leaves the screen as it means to.
+  inCredits() {
+    if (!this.creditSpans) {
+      const offs = [...this.labels.values()].map((l) => l.off).sort((a, b) => a - b);
+      this.creditSpans = ['pre_staffroll', 'true_staffroll'].filter((n) => this.labels.has(n)).map((n) => {
+        const from = this.labels.get(n).off;
+        const next = offs.find((o) => o > from);
+        return [from, next === undefined ? this.len : next];
+      });
+    }
+    return this.creditSpans.some(([a, b]) => this.pc >= a && this.pc < b);
+  }
+  // a click is waiting there: a picture on its way in is finished at once, so that the question comes promptly
+  creditsPending() {
+    const q = this.host.input.q;
+    return !this.creditsSkip && !!this.host.confirmSkipCredits && !!q && this.inCredits() && q.some((e) => e.type === 'click');
+  }
+  async creditsClick() {
+    if (this.creditsSkip || !this.host.confirmSkipCredits || !this.inCredits()) return;
+    if (!this.host.input.takeClick()) return;
+    const yes = await this.host.confirmSkipCredits();
+    this.host.input.flush();
+    if (yes) { this.creditsSkip = true; this.creditsDepth = this.callStack.length; }
   }
 
   async run() {
@@ -585,8 +620,9 @@ export class Engine {
   async doEffect(eff) {
     const gfx = this.host.gfx;
     if (eff.type === 0) { gfx.dirty = true; return; }
-    await gfx.transition(eff, this.textMode, () => this.skipping());
-    if (eff.type !== 1 && this.effectBlank > 0 && !this.skipping()) await this.host.sleep(this.effectBlank);
+    await gfx.transition(eff, this.textMode, () => this.skipping() || this.creditsPending());
+    if (eff.type !== 1 && this.effectBlank > 0 && !this.skipping() && !this.creditsPending()) await this.host.sleep(this.effectBlank);
+    await this.creditsClick();
     this.host.input.flush();
   }
   newPage() {
@@ -608,6 +644,7 @@ export class Engine {
       const left = end - Date.now();
       if (left <= 0) return;
       await this.host.sleep(Math.min(left, 30));
+      await this.creditsClick();
       if (this.skipping()) return;
       if (clickSkips && input.takeClick()) return;
     }
@@ -1095,7 +1132,7 @@ def('jumpf', function () {
   }
   this.warn('jumpf: no "~" found');
 });
-def('jumpb', function () { this.pc = this.lastTilde; });
+def('jumpb', function () { if (!this.creditsSkip) this.pc = this.lastTilde; });      // passing over the credits: their scroll's loop is left
 
 // ---- timing
 def('resettimer', function () { this.timerStart = Date.now(); });
@@ -1105,6 +1142,7 @@ def('waittimer', async function () {
   if (this.host.gfx.dirty) this.host.gfx.present(this.textMode);
   if (this.skipping()) { await this.host.sleep(left > 100 ? 4 : Math.max(0, Math.min(left, 4))); return; }
   if (left > 0) await this.host.sleep(left); else await this.host.yield();
+  await this.creditsClick();
 });
 def('gettimer', function () { this.setRef(this.readVarRef(), Date.now() - this.timerStart); });
 def('wait', async function () { await this.wait(this.readInt(), false); });

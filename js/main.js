@@ -419,6 +419,7 @@ async function boot() {
     random: Math.random,
     onCaption: (c) => { document.title = c.split('//')[0].trim() || c; },
     onState: () => refresh(),
+    confirmSkipCredits: () => shell.confirm('Skip the credits?'),
     onEnd: async () => {
       audio.stopBgm(500);
       shell.curtain(true);

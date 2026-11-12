@@ -286,6 +286,7 @@ const JA = {
     'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
   'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
     '開くとすぐにゲームが始まります。セーブはこのブラウザのものとは別に保存されます。「設定」の「セーブデータ」で、こちらでファイルに書き出して向こうで読み込めば移せます。逆も同じです。',
+  'Skip the credits?': 'スタッフロールをスキップしますか？',
   'Import save data from a file?': 'ファイルからセーブデータを読み込みますか？',
   'What the file holds replaces what is kept here, and the game starts again.': 'ファイルの内容が、ここに保存されているものと置き換わります。ゲームは最初から始まります。',
   'Every version is on GitHub:': 'すべての版はGitHubにあります：',
