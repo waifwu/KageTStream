@@ -58,7 +58,7 @@ Both systems can be built from a Mac. The builds are not code-signed (the macOS
 one is signed ad hoc, which Apple silicon needs before it will run anything),
 so Windows SmartScreen and macOS Gatekeeper each ask once. Saves are kept in the
 program's own profile, apart from any browser's; Settings has **Save data**
-(export to a file, import from a file) to carry them across. `npm run icon` redraws `build/icon.png` from `tools/make-icon.js`.
+(export to a file, import from a file) to carry them across. `npm run icon` redraws `build/icon.png`, `build/icon-win.png` and the website's `../favicon.ico` from `tools/make-icon.js`.
 
 ## The interface
 

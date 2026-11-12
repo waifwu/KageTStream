@@ -1,11 +1,13 @@
 // Draws the program's icon: the interface's small moon over its twilight field.
-// Run with `npm run icon`; writes build/icon.png (macOS, Linux) and build/icon-win.png (Windows).
+// Run with `npm run icon`; writes build/icon.png (macOS, Linux), build/icon-win.png (Windows)
+// and, from the Windows drawing, the website's ../favicon.ico.
 
 const { app, BrowserWindow } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const SIZE = 1024;
+const FAVICON_SIZES = [16, 32, 48, 64, 128, 256];
 
 // `inset` is the margin macOS icons keep around the plate; Windows icons run to the edge.
 function svg(inset, radius) {
@@ -48,7 +50,31 @@ async function draw(win, markup, out) {
   await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(page));
   await new Promise((r) => setTimeout(r, 300));
   const image = await win.webContents.capturePage({ x: 0, y: 0, width: SIZE, height: SIZE });
-  fs.writeFileSync(out, image.resize({ width: SIZE, height: SIZE, quality: 'best' }).toPNG());
+  const full = image.resize({ width: SIZE, height: SIZE, quality: 'best' });
+  fs.writeFileSync(out, full.toPNG());
+  console.log('wrote', path.relative(process.cwd(), out));
+  return full;
+}
+
+// An .ico is a directory of images; each one here is stored as a PNG, which every current browser reads.
+function writeIco(full, out) {
+  const pngs = FAVICON_SIZES.map((s) => full.resize({ width: s, height: s, quality: 'best' }).toPNG());
+  const head = Buffer.alloc(6 + 16 * pngs.length);
+  head.writeUInt16LE(0, 0);
+  head.writeUInt16LE(1, 2);
+  head.writeUInt16LE(pngs.length, 4);
+  let offset = head.length;
+  pngs.forEach((png, i) => {
+    const s = FAVICON_SIZES[i], e = 6 + 16 * i;
+    head.writeUInt8(s >= 256 ? 0 : s, e);
+    head.writeUInt8(s >= 256 ? 0 : s, e + 1);
+    head.writeUInt16LE(1, e + 4);
+    head.writeUInt16LE(32, e + 6);
+    head.writeUInt32LE(png.length, e + 8);
+    head.writeUInt32LE(offset, e + 12);
+    offset += png.length;
+  });
+  fs.writeFileSync(out, Buffer.concat([head, ...pngs]));
   console.log('wrote', path.relative(process.cwd(), out));
 }
 
@@ -61,6 +87,7 @@ app.whenReady().then(async () => {
     webPreferences: { offscreen: true },
   });
   await draw(win, svg(100, 185), path.join(dir, 'icon.png'));
-  await draw(win, svg(0, 200), path.join(dir, 'icon-win.png'));
+  const win32 = await draw(win, svg(0, 200), path.join(dir, 'icon-win.png'));
+  writeIco(win32, path.join(__dirname, '..', '..', 'favicon.ico'));
   app.quit();
 });
