@@ -96,6 +96,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hm-actions { display: flex; gap: 46px; margin: 18px 0 8px; }
 .hm-link { font-size: 25px; color: var(--ink); border-bottom: 1.5px solid var(--rule); padding: 0 2px 1px; transition: color .12s, border-color .12s; }
 .hm-link:hover { color: #000; border-color: var(--ink); }
+a.hm-link { text-decoration: none; }      /* the rule under it is the border: no underline of the browser's as well */
 .hm-link.warn { color: #8b3a3f; border-color: #b9777b; }
 /* Japanese: a Mincho face behind the Latin one, upright where the Latin is italic (a slanted
    Japanese face is only the upright one pushed over), and no wide spacing between letters */
