@@ -30,6 +30,7 @@ export class Shell {
     this.toastEl = document.getElementById('toast');
     this.ambient = document.getElementById('ambient');
     this.input = null;
+    this.everything = false;      // "Unlock everything" is on (main.js sets it): the pages' counts say so
     this.layers = [];
     this.leaving = [];
     this.homeOpen = false;
@@ -682,7 +683,7 @@ export class Shell {
         const cat = cats[index];
         tabs.forEach((b, k) => b.classList.toggle('on', k === index));
         const open = cat.items.filter((it) => it.unlocked);
-        count.textContent = open.length + ' of ' + cat.items.length + ' seen';
+        count.textContent = this.everything ? 'All ' + cat.items.length + ' unlocked' : open.length + ' of ' + cat.items.length + ' seen';
         scroll.innerHTML = '';
         scroll.scrollTop = 0;
         ctl.items.length = 0;
@@ -778,7 +779,7 @@ export class Shell {
     return this.openLayer('paper music', (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', 'Music player'));
       const open = tracks.filter((t) => !t.locked);
-      layer.appendChild(el('div', 'page-note', open.length === tracks.length ? 'All ' + tracks.length + ' heard' : open.length + ' of ' + tracks.length + ' heard in the story'));
+      layer.appendChild(el('div', 'page-note', this.everything ? 'All ' + tracks.length + ' unlocked' : open.length === tracks.length ? 'All ' + tracks.length + ' heard' : open.length + ' of ' + tracks.length + ' heard in the story'));
       const list = el('div', 'mp-list');
       const rows = [];
       for (const t of tracks) {
@@ -865,9 +866,12 @@ export class Shell {
       layer.appendChild(el('div', 'page-note', 'Kept in this browser'));
       const cols = el('div', 'cols');
       const rows = [];
+      let box = null;
       for (const sec of sections) {
-        const box = el('div', 'cf-col');
-        box.appendChild(el('div', 'cf-sec', sec.title));
+        // a section marked `under` goes below the one before it, in the same column
+        const below = sec.under && box;
+        if (!below) box = el('div', 'cf-col');
+        box.appendChild(el('div', 'cf-sec' + (below ? ' below' : ''), sec.title));
         for (const row of sec.rows) {
           rows.push(row);
           const r = el('div', 'cf-row');
@@ -887,7 +891,8 @@ export class Shell {
             const buttons = [];
             const paint = () => buttons.forEach(([b, v]) => b.classList.toggle('sel', get(row.key) === v));
             for (const [label, value] of row.options) {
-              const b = ctl.nav(el('button', 'cf-opt', label), () => { set(row.key, value); paint(); });
+              // `set` may ask first (and so take a while, or decline): the row shows what was kept
+              const b = ctl.nav(el('button', 'cf-opt', label), async () => { await set(row.key, value); paint(); });
               buttons.push([b, value]);
               opts.appendChild(b);
             }
@@ -897,7 +902,7 @@ export class Shell {
           }
           box.appendChild(r);
         }
-        cols.appendChild(box);
+        if (!below) cols.appendChild(box);
       }
       layer.appendChild(cols);
       this.back(layer, ctl);
@@ -985,7 +990,8 @@ export class Shell {
         legend.innerHTML = '';
         if (t.note) legend.appendChild(el('span', 'fc-note', t.note));
         const scenes = chart.nodes.filter((n) => n.kind === 'scene');
-        count.textContent = scenes.filter((n) => isSeen.get(n.id)).length + ' of ' + scenes.length + ' scenes read';
+        count.textContent = opts.unlocked ? 'All ' + scenes.length + ' scenes unlocked'
+          : scenes.filter((n) => isSeen.get(n.id)).length + ' of ' + scenes.length + ' scenes read';
 
         // What is drawn. By default only what has been reached: the scenes read, and the next
         // step from each (through any turn in the road). "Everything" draws the whole chart.

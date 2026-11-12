@@ -84,6 +84,14 @@ the story.
   skip parts already read, daily message, skip explicit content), music and
   effect volume, the glow around the picture, fullscreen. The game's "Game
   settings" entry opens this page.
+* **Unlock everything** (Settings, under Progress; off by default) — asks
+  first, then opens every scene on the flowchart (each can be read on its own),
+  every picture and track in the Gallery, and every story on the Start game
+  pages (Ep, Summer Festivals, all ten dreams). It is a view laid over your own
+  progress, not a change to it: nothing in the save data is altered, and the
+  story goes on recording what you really read. Switching it off shows your own
+  progress again, including anything read while it was on. The day's own
+  branching is left alone, so the story still plays as your progress has it.
 
 ## Controls
 

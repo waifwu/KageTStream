@@ -403,6 +403,11 @@ export class UI {
     if (stop) this.host.audio.stopBgm(600);
   }
 
+  // "Unlock everything" (Settings) is on: the galleries, the music player and the flowchart show
+  // everything as open. Nothing of the reader's own progress is changed by it, and that progress
+  // goes on being kept, so turning the switch off shows it again as it really stands.
+  unlocked() { return !!(this.host.unlocked && this.host.unlocked()); }
+
   // The game's four galleries, read from the script: each fills in a page's nine pictures (and,
   // for two of them, names and the flags that open them) before it shows the page, and that
   // stretch of script is simply run for every page. What opens a picture differs by gallery:
@@ -410,6 +415,7 @@ export class UI {
   pictures() {
     const e = this.engine;
     const { loader } = this.host;
+    const all = this.unlocked();
     const clean = (t) => cleanLabel(t || '').trim();
     const started = e.numalias.has('execution_cnt') ? e.getNum(e.numalias.get('execution_cnt')) : 0;
     const keep = [e.getNum(4020), e.getNum(4025), e.getNum(4012)];
@@ -427,7 +433,7 @@ export class UI {
           if (!file || file[0] === '*') continue;
           const url = loader.resolve(file);
           if (!url) continue;
-          const unlocked = rule === 'shown' ? e.fileLog.has(file.replace(/\\/g, '/').toLowerCase())
+          const unlocked = all ? true : rule === 'shown' ? e.fileLog.has(file.replace(/\\/g, '/').toLowerCase())
             : rule === 'flag' ? e.getNum(4040 + k) !== 0 : started >= e.getNum(4060 + k);
           items.push({ url, unlocked, title: rule === 'shown' ? '' : clean(e.getStr(4040 + k)), artist: rule === 'shown' ? '' : clean(e.getStr(4050 + k)) });
         }
@@ -467,6 +473,7 @@ export class UI {
   // through for the music they play (a scene runs from "*s<N>" to "*se<N>").
   heardTracks() {
     const e = this.engine;
+    if (this.unlocked()) return new Set(this.tracks().map((t) => t.no));
     const heard = new Set();
     for (const f of e.musicLog) { const m = /track0*(\d+)$/.exec(f); if (m) heard.add(parseInt(m[1], 10)); }
     if (!this.sceneMusic) {
@@ -541,8 +548,9 @@ export class UI {
       const end = 'se' + scene.slice(1);
       return e.labelLog.has(e.labels.has(end) ? end : scene);
     };
+    const all = this.unlocked();
     const seen = new Set();
-    for (const n of day.nodes) if (n.kind === 'scene' && entered(n.scene)) seen.add(n.id);
+    for (const n of day.nodes) if (n.kind === 'scene' && (all || entered(n.scene))) seen.add(n.id);
     const tabs = [{ label: 'The day', chart: day, seen, open: null, current: e.replaying ? null : e.currentFlow, fog: true }];
     // With the guide on, the way its choices lead through today: the flow is followed block by
     // block from the values the day began with (kept by main.js when "*f500" is passed).
@@ -571,13 +579,13 @@ export class UI {
       const read = new Set(), open = new Set();
       for (const n of s.chart.nodes) {
         if (n.kind !== 'scene') continue;
-        if (n.fin ? flag(n.fin) > 0 : entered(n.scene)) read.add(n.id);
-        if (flag(n.flag) > 0 && n.fin) open.add(n.id);
+        if (all || (n.fin ? flag(n.fin) > 0 : entered(n.scene))) read.add(n.id);
+        if ((all || flag(n.flag) > 0) && n.fin) open.add(n.id);
       }
       tabs.push({ label: s.label, note: s.note, chart: s.chart, seen: read, open, current: null, fog: false });
     }
     const prefs = this.host.flowPrefs;
-    const r = await shell.flowchart(tabs, { canReplay: true, value: flag, prefs, savePrefs: this.host.saveFlowPrefs });
+    const r = await shell.flowchart(tabs, { canReplay: true, value: flag, prefs, savePrefs: this.host.saveFlowPrefs, unlocked: all });
     if (r && r.replay) {
       if (await shell.confirm('Read this scene again?', 'It plays by itself and then returns to the title. The day so far is kept only if it has been saved.')) {
         throw new Signal('replay', r.replay);

@@ -225,6 +225,29 @@ async function boot() {
     'g:adult': { get: () => engine.getNum(gameVar('eroskip')) === 1, set: (on) => engine.setNum(gameVar('eroskip'), on ? 1 : 0) },
   };
   const onOff = [['On', true], ['Off', false]];
+
+  // "Unlock everything" is a view laid over the reader's own progress, never a change to it. The
+  // port's own pages (gallery, music player, flowchart) ask host.unlocked(). The game's Start game
+  // pages are the script's: there, and only there, the flags that decide which entries are offered
+  // read as set. They are stored as they really are, and the story goes on setting them, so
+  // switching this off shows the reader's own progress again, with whatever was read meanwhile.
+  const MENU_FLAGS = ['yume_on', 'finish_yume', 'twilight_aday', 'twilight_ep',
+    ...Array.from({ length: 10 }, (_, i) => 'yume' + String(i + 1).padStart(2, '0'))];
+  const applyUnlock = () => {
+    const on = !!settings.unlockAll;
+    shell.everything = on;
+    if (!engine) return;
+    const from = engine.labels.get('gamestart_menu'), to = engine.labels.get('option');
+    // the script names its variables as it starts, so the flags are looked up when first needed
+    let flags = null;
+    engine.numOverride = on && from && to && from.off < to.off
+      ? (i, v) => {
+        if (v > 0 || engine.stmtStart < from.off || engine.stmtStart >= to.off) return v;
+        if (!flags) flags = new Set(MENU_FLAGS.filter((n) => engine.numalias.has(n)).map((n) => engine.numalias.get(n)));
+        return flags.has(i) ? 1 : v;
+      }
+      : null;
+  };
   const openConfig = () => {
     const story = [
       { key: 'font', label: 'Story font', options: [['Original', 'original'], ['Serif', 'serif'], ['Sans', 'sans']] },
@@ -249,7 +272,22 @@ async function boot() {
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
         { key: 'full', label: 'Fullscreen', options: onOff },
       ] },
-    ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement : settings[key]), (key, value) => {
+      { title: 'Progress', under: true, rows: [
+        { key: 'unlockAll', label: 'Unlock everything', options: onOff },
+      ] },
+    ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
+      : key === 'unlockAll' ? !!settings.unlockAll : settings[key]), async (key, value) => {
+      if (key === 'unlockAll') {
+        if (!!settings.unlockAll === value) return;
+        if (value && !(await shell.confirm('Unlock everything?',
+          'Every scene on the flowchart, every picture and track in the Gallery, and every story on the Start game page opens. '
+          + 'Your own progress is not changed and goes on being kept: turn this off again here to go back to it.'))) return;
+        settings.unlockAll = value;
+        applyUnlock();
+        saveSettings();
+        shell.toast(value ? 'Everything is unlocked.' : 'Back to your own progress.');
+        return;
+      }
       if (GAME[key]) { GAME[key].set(value); engine.flushGlobals(true); return; }
       if (key === 'guide') { guide.setOn(value); return; }
       if (key === 'full') { fullscreen(value); return; }
@@ -269,6 +307,7 @@ async function boot() {
   const host = {
     gfx, text, audio, input, storage, loader, ui, shell,
     sleep, frame, openConfig,
+    unlocked: () => !!settings.unlockAll,
     flowPrefs: { all: !!settings.flowAll, hints: !!settings.flowHints },
     saveFlowPrefs: () => { settings.flowAll = host.flowPrefs.all; settings.flowHints = host.flowPrefs.hints; saveSettings(); },
     yield: () => sleep(0),
@@ -308,6 +347,7 @@ async function boot() {
   ui.host = host;
   engine = new Engine(script, host);
   ui.engine = engine;
+  applyUnlock();
   engine.textSpeedNo = settings.speed;
   engine.autoPace = settings.autoPace;
   window.__engine = engine; // handy for debugging from the console

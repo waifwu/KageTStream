@@ -56,6 +56,7 @@ export class Engine {
     this.fileLog = new Set();
     this.labelLog = new Set();
     this.musicLog = new Set();      // music the story has played (for the music player)
+    this.numOverride = null;        // see getNum
     this.globalsDirty = false;
     this.lastGlobalFlush = 0;
 
@@ -164,7 +165,12 @@ export class Engine {
   }
 
   // ------------------------------------------------------------------ variables
-  getNum(i) { return this.nums[i] | 0; }
+  // `numOverride(i, value)`, when the host sets it, may answer for a variable as the script reads
+  // it. What is stored (and saved) stays as it is.
+  getNum(i) {
+    const v = this.nums[i] | 0;
+    return this.numOverride ? this.numOverride(i, v) : v;
+  }
   setNum(i, v) {
     v |= 0;
     if (this.nums[i] === v) return;
