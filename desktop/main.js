@@ -138,6 +138,14 @@ function openWindow() {
     event.preventDefault();
     outside(url);
   });
+  // Settings' "Export to a file" arrives here as a download: ask where to keep it, starting in Documents.
+  win.webContents.session.on('will-download', (event, item) => {
+    item.setSaveDialogOptions({
+      title: 'Export save data',
+      defaultPath: path.join(app.getPath('documents'), item.getFilename()),
+      filters: [{ name: 'Save data', extensions: ['json'] }],
+    });
+  });
   win.webContents.session.setPermissionRequestHandler((wc, permission, done) => done(permission === 'fullscreen'));
 
   win.loadURL(ORIGIN + '/index.html');
