@@ -45,6 +45,41 @@ export class Loader {
     }
     return p;
   }
+  // The exact pixels of a .bmp, decoded from the file's own bytes. Reading them back off a canvas
+  // is not exact everywhere: a browser that guards against fingerprinting (Brave) nudges the
+  // values it hands back, and a colour key then matches nothing.
+  pixels(name) {
+    const url = this.resolve(name);
+    if (!url || !/\.bmp$/i.test(url)) return Promise.resolve(null);
+    return fetch(url)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .then((buf) => (buf ? decodeBmp(buf) : null))
+      .catch(() => null);
+  }
+}
+
+// Uncompressed 8-bit palettised, 24-bit and 32-bit bitmaps -> { w, h, data: RGBA }; null for the rest.
+function decodeBmp(buf) {
+  const v = new DataView(buf);
+  if (v.byteLength < 54 || v.getUint16(0, true) !== 0x4d42) return null;
+  const off = v.getUint32(10, true), hs = v.getUint32(14, true);
+  if (hs < 40) return null;
+  const w = v.getInt32(18, true), sh = v.getInt32(22, true);
+  const bpp = v.getUint16(28, true), comp = v.getUint32(30, true);
+  if (comp !== 0 || w <= 0 || !sh || (bpp !== 8 && bpp !== 24 && bpp !== 32)) return null;
+  const h = Math.abs(sh), stride = ((w * bpp + 31) >> 5) << 2;
+  const pal = 14 + hs;
+  if (off + stride * h > v.byteLength || (bpp === 8 && pal + 1024 > v.byteLength)) return null;
+  const b = new Uint8Array(buf);
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0, di = 0; y < h; y++) {
+    const row = off + (sh > 0 ? h - 1 - y : y) * stride; // rows run bottom-up unless the height is negative
+    for (let x = 0; x < w; x++, di += 4) {
+      const p = bpp === 8 ? pal + b[row + x] * 4 : row + x * (bpp >> 3);
+      data[di] = b[p + 2]; data[di + 1] = b[p + 1]; data[di + 2] = b[p]; data[di + 3] = 255;
+    }
+  }
+  return { w, h, data };
 }
 
 function makeCanvas(w, h) {
@@ -116,9 +151,11 @@ export class Gfx {
     let data = this.spriteCache.get(tag);
     if (!data) {
       const t = parseTag(tag);
-      const img = await this.loader.image(t.file);
-      if (!img) return null;
-      data = this.buildSprite(img, t);
+      const keyed = t.trans !== 'c' && t.trans !== 'a';
+      const raw = keyed ? await this.loader.pixels(t.file) : null;
+      const img = raw ? null : await this.loader.image(t.file);
+      if (!img && !raw) return null;
+      data = this.buildSprite(img, t, raw);
       this.spriteCache.set(tag, data);
       if (this.spriteCache.size > 48) this.spriteCache.delete(this.spriteCache.keys().next().value);
     } else {
@@ -128,18 +165,22 @@ export class Gfx {
     return { tag, data, x: 0, y: 0, alpha: 255, visible: true, cell: 0 };
   }
 
-  buildSprite(img, t) {
-    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  // `raw` is the file's exact pixels when the loader could decode them (colour-keyed bitmaps)
+  buildSprite(img, t, raw) {
+    const iw = raw ? raw.w : img.naturalWidth || img.width, ih = raw ? raw.h : img.naturalHeight || img.height;
     if (t.trans === 'c') {
       return { canvas: img, w: Math.floor(iw / t.cells), h: ih, cells: t.cells, delays: t.delays, loop: t.loop };
     }
-    const src = makeCanvas(iw, ih);
-    const sctx = src.getContext('2d', { willReadFrequently: true });
-    sctx.drawImage(img, 0, 0);
+    let d;
+    if (raw) d = raw.data;
+    else {
+      const src = makeCanvas(iw, ih);
+      const sctx = src.getContext('2d', { willReadFrequently: true });
+      sctx.drawImage(img, 0, 0);
+      d = sctx.getImageData(0, 0, iw, ih).data;
+    }
     let w = iw;
     if (t.trans === 'a') w = Math.floor(iw / 2);
-    const pix = sctx.getImageData(0, 0, iw, ih);
-    const d = pix.data;
     const out = makeCanvas(w, ih);
     const octx = out.getContext('2d');
     const op = octx.createImageData(w, ih);
