@@ -525,7 +525,7 @@ export class UI {
       return tracks[(i < 0 ? (d > 0 ? 0 : tracks.length - 1) : i + d + tracks.length) % tracks.length].no;
     };
     const api = {
-      play: (no) => { this.playing = no; audio.playBgm(file(no), false); },
+      play: (no) => { this.playing = no; audio.playBgm(file(no), false, true); },     // whole: the bar can go anywhere
       toggle: () => {
         if (!tracks.length) return;
         if (!(this.playing > 0)) { api.play(tracks[0].no); return; }

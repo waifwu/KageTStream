@@ -237,6 +237,9 @@ repository. Every push to `main` builds and publishes to
 * There is no `404.html`, so Pages answers any unknown path with the opening
   page and a 200 status. A missing asset comes back as HTML rather than an
   error, so compare a file's content, not its status, when checking a deploy.
+* Pages does not answer byte-range requests for these files, so a streamed
+  track cannot be seeked and its length is a guess. The music player therefore
+  fetches each track whole and plays it from memory (`js/audio.js`).
 * Pages allows 25 MiB per file and 20,000 files per deployment. The largest
   file here is about 5 MiB.
 
