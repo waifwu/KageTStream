@@ -112,6 +112,15 @@ export class Engine {
     return out;
   }
 
+  // A click cursor's picture. The script hides the cursor by setting it to icon\hollow.bmp, one
+  // pixel. The English patch asks for that pixel opaque (":c;", in place of the original's
+  // ":l/3,..." that crashed ONScripter-EN when scaled), and it is sky blue: drawn, it is a dot
+  // after the text. A cursor of one pixel is none.
+  async loadCursor(tag) {
+    const sprite = await this.host.gfx.loadSprite(tag);
+    return sprite && sprite.data && sprite.data.w <= 1 && sprite.data.h <= 1 ? null : sprite;
+  }
+
   // ------------------------------------------------------------------ state
   setSkip(on) {
     if (this.skipMode === on) return;
@@ -895,7 +904,7 @@ export class Engine {
     this.cursors = [null, null];
     for (let i = 0; i < 2; i++) {
       const c = snap.cursors && snap.cursors[i];
-      if (c) this.cursors[i] = { tag: c.tag, x: c.x, y: c.y, abs: c.abs, sprite: await gfx.loadSprite(c.tag) };
+      if (c) this.cursors[i] = { tag: c.tag, x: c.x, y: c.y, abs: c.abs, sprite: await this.loadCursor(c.tag) };
     }
     audio.stopSe();
     await gfx.restore(snap.gfx);
@@ -1251,7 +1260,7 @@ def('setcursor abssetcursor', async function (name) {
   this.comma(); const x = this.readInt();
   this.comma(); const y = this.readInt();
   if (no < 0 || no > 1) return;
-  const sprite = await this.host.gfx.loadSprite(tag);
+  const sprite = await this.loadCursor(tag);
   this.cursors[no] = { tag, x, y, abs: name === 'abssetcursor', sprite };
 });
 

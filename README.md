@@ -254,6 +254,11 @@ script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt`.
   cross-fade; this script never uses them.
 * Five lines of prose in the translation lost their leading back-tick. The
   Windows engine silently drops them; here they are shown as text.
+* Where the script hides the click cursor (the daily messages, among others) it
+  sets it to `icon\hollow.bmp`, a single sky-blue pixel, which the English patch
+  asks for opaque (the original's transparent form crashed ONScripter-EN when
+  scaled). Drawn, it is a dot after the text; here a one-pixel cursor is not
+  drawn at all (`Engine.loadCursor`).
 * The system menu, save/load, history and settings are this port's own pages
   (see The interface), and the flowchart is new. Saves are not compatible with
   the Windows build's.
