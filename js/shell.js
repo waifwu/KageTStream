@@ -7,11 +7,14 @@
 
 import { parseCond } from './flowchart-model.js';
 import { t, when as whenJa } from './i18n.js';
+import { titleX } from './skins.js';
 
 // (several functions below have a `t` of their own: there the wording is asked of `tr`)
 const tr = t;
 
-const SW = 1280, SH = 960;
+// The stage: 1280 x 960, or 16:9 at the same height (Settings > Picture). Its pages are laid out
+// for either by css/shell.css ("#stage.wide").
+const SW = 1280, SH = 960, SW_WIDE = (SH * 16) / 9;
 
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
@@ -58,6 +61,8 @@ export class Shell {
     this.layers = [];
     this.leaving = [];
     this.homeOpen = false;
+    this.wide = false;
+    this.SW = SW;
     this.scale = 1;
     this.toastTimer = null;
     this.lastAmbient = 0;
@@ -88,10 +93,17 @@ export class Shell {
   }
 
   fit() {
-    const s = Math.min(window.innerWidth / SW, window.innerHeight / SH);
+    const s = Math.min(window.innerWidth / this.SW, window.innerHeight / SH);
     this.scale = s;
-    const x = Math.round((window.innerWidth - SW * s) / 2), y = Math.round((window.innerHeight - SH * s) / 2);
+    const x = Math.round((window.innerWidth - this.SW * s) / 2), y = Math.round((window.innerHeight - SH * s) / 2);
     this.stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+  }
+  // the stage at 16:9, or back at the game's own 4:3
+  setWide(on) {
+    this.wide = !!on;
+    this.SW = this.wide ? SW_WIDE : SW;
+    this.stage.classList.toggle('wide', this.wide);
+    this.fit();
   }
 
   // ---------------------------------------------------------------- ambient backdrop
@@ -107,10 +119,22 @@ export class Shell {
     const tmp = document.createElement('canvas');
     tmp.width = 64;
     tmp.height = 48;
-    const t = tmp.getContext('2d');
-    let primed = false;
+    const t = tmp.getContext('2d', { willReadFrequently: true });
+    let primed = false, seen = '', still = 0;
     this.ambientTimer = setInterval(() => {
+      // nothing of the glow shows while the stage covers the window: it is left as it was
+      if (this.SW * this.scale >= window.innerWidth - 1 && SH * this.scale >= window.innerHeight - 1) return;
       if (document.hidden || !this.paintAmbient(t)) return;
+      // Once the glow has caught up with a picture that is not changing it is left alone: every
+      // touch of the canvas has the whole window's blur worked out again, ten times a second.
+      let sig = '';
+      try {
+        const d = t.getImageData(0, 0, 64, 48).data;
+        let a = 0, b = 0;
+        for (let i = 0; i < d.length; i += 4) { a = (a * 31 + d[i] + d[i + 1] * 3) % 1000003; b = (b * 17 + d[i + 2]) % 1000003; }
+        sig = a + ':' + b;
+      } catch (e) { /* the sketch cannot be read: the glow is simply kept up as before */ }
+      if (sig && sig === seen) { if (++still > 45) return; } else { still = 0; seen = sig; }
       ctx.globalAlpha = primed ? 0.13 : 1;
       ctx.drawImage(tmp, 0, 0);
       primed = true;
@@ -503,15 +527,25 @@ export class Shell {
       ctl.sticky = true;
       const rule = el('div', 'rulecursor');
       layer.appendChild(rule);
+      // At 16:9 the picture is a wider one made from the game's (skins.js): its entries stand
+      // across the whole of it, and the line of capitals along its top, which could not be made
+      // wider with the rest, is set here.
+      const wide = this.wide;
+      if (wide) {
+        const brand = el('div', 'gt-brand');
+        for (const ch of 'TSUKIHIME FUN DISC') brand.appendChild(el('span', null, ch));
+        layer.appendChild(brand);
+      }
       for (const it of items) {
         const b = ctl.nav(el('button', 'gt-item', it.label), () => ctl.done(it.action || it.no));
-        b.style.left = it.cx * 2 + 'px';
+        b.style.left = (wide ? (it.cx / 640) * this.SW : it.cx * 2) + 'px';
         layer.appendChild(b);
       }
       if (note) layer.appendChild(el('div', 'gt-note', note));
       if (secret) {
         const b = el('button', 'gt-secret');
-        b.style.cssText = 'left:' + secret.x * 2 + 'px;top:' + secret.y * 2 + 'px;width:' + secret.w * 2 + 'px;height:' + secret.h * 2 + 'px';
+        const left = wide ? titleX(secret.x, 854) * this.SW : secret.x * 2;
+        b.style.cssText = 'left:' + left + 'px;top:' + secret.y * 2 + 'px;width:' + secret.w * 2 + 'px;height:' + secret.h * 2 + 'px';
         b.tabIndex = -1;
         b.addEventListener('click', () => ctl.done(secret.no));
         layer.appendChild(b);
@@ -761,7 +795,32 @@ export class Shell {
   // one picture at full size; click or the arrow keys go on to the next
   viewer(items, start) {
     return this.openLayer('viewer', (layer, ctl) => {
+      // At 16:9 a picture of the game's shape leaves the sides bare. A soft, dark copy of it lies
+      // there: painted once, small, into a canvas that is simply shown large. (A blur asked of the
+      // style sheet is worked out again for every frame the page fades or the picture changes.)
+      const back = this.wide ? document.createElement('canvas') : null;
+      if (back) {
+        back.className = 'vw-back';
+        back.width = 96;
+        back.height = 54;
+        layer.appendChild(back);
+      }
+      const soften = (im) => {
+        if (!back || !im.naturalWidth) return;
+        const x = back.getContext('2d');
+        const k = Math.max(back.width / im.naturalWidth, back.height / im.naturalHeight) * 1.12;
+        const w = im.naturalWidth * k, hgt = im.naturalHeight * k;
+        x.fillStyle = '#000';
+        x.fillRect(0, 0, back.width, back.height);
+        try { x.filter = 'blur(3px) saturate(1.15)'; } catch (e) { /* no canvas filters: it is small enough to be soft as it is */ }
+        x.drawImage(im, (back.width - w) / 2, (back.height - hgt) / 2, w, hgt);
+        x.filter = 'none';
+        x.fillStyle = 'rgba(0,0,0,.5)';
+        x.fillRect(0, 0, back.width, back.height);
+        back.classList.add('on');
+      };
       const img = el('img', 'vw-img');
+      img.decoding = 'async';
       layer.appendChild(img);
       const cap = el('div', 'vw-cap');
       layer.appendChild(cap);
@@ -771,9 +830,12 @@ export class Shell {
       const show = () => {
         const it = items[i];
         img.classList.remove('on');
-        img.onload = () => img.classList.add('on');
+        const arrived = () => { if (items[i] !== it) return; img.classList.add('on'); soften(img); };
+        img.onload = arrived;
         img.src = it.url;
-        if (img.complete && img.naturalWidth) img.classList.add('on');
+        if (img.complete && img.naturalWidth) arrived();
+        // the one that follows is fetched meanwhile, so going on to it does not wait
+        if (items.length > 1) { const next = new Image(); next.decoding = 'async'; next.src = items[(i + 1) % items.length].url; }
         cap.innerHTML = '';
         if (it.title) cap.appendChild(el('div', 'vw-title', it.title));
         if (it.artist) cap.appendChild(el('div', 'vw-artist', it.artist));
@@ -919,7 +981,8 @@ export class Shell {
             const paint = () => buttons.forEach(([b, v]) => b.classList.toggle('sel', get(row.key) === v));
             for (const [label, value] of row.options) {
               // `set` may ask first (and so take a while, or decline): the row shows what was kept
-              const b = ctl.nav(el('button', 'cf-opt', label), async () => { await set(row.key, value); paint(); });
+              // (every row is shown again: one setting can change what another reads, as the picture's shape does the glow)
+              const b = ctl.nav(el('button', 'cf-opt', label), async () => { await set(row.key, value); rows.forEach((r) => r.repaint && r.repaint()); });
               buttons.push([b, value]);
               opts.appendChild(b);
             }
@@ -1114,7 +1177,7 @@ export class Shell {
         body.appendChild(view);
 
         // pan and zoom
-        const VW = 1280, VH = 750;
+        const VW = this.SW, VH = 750;
         const fitZ = Math.min(VW / chart.width, VH / chart.height);
         const minZ = Math.min(fitZ, 1), maxZ = Math.max(1.6, minZ);
         let z = Math.min(0.85, Math.max(minZ, 0.85)), tx = 0, ty = 0;

@@ -18,12 +18,15 @@ export class Input {
     this.ctrl = false;
     this.modal = false;       // true while the interface has a page open: its own handlers take the keys
     this.onGlobalKey = onGlobalKey;
+    this.vw = W;              // the view's width in the game's pixels, and where the game's 640
+    this.ox = 0;              // begins in it (main.js sets both when the picture is 16:9)
     this.attach();
   }
 
+  // the pointer in the game's 640 x 480; at 16:9 x runs past both ends of that
   pos(ev) {
     const r = this.canvas.getBoundingClientRect();
-    this.x = ((ev.clientX - r.left) / r.width) * W;
+    this.x = ((ev.clientX - r.left) / r.width) * this.vw - this.ox;
     this.y = ((ev.clientY - r.top) / r.height) * H;
     return { x: this.x, y: this.y };
   }

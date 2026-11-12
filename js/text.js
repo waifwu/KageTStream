@@ -121,10 +121,17 @@ export class TextLayer {
     this.gfx = gfx;
     this.S = gfx.S;
     this.canvas = document.createElement('canvas');
-    this.canvas.width = W * this.S;
+    this.canvas.width = gfx.VW * this.S;
     this.canvas.height = H * this.S;
     this.ctx = this.canvas.getContext('2d');
     this.reset();
+  }
+
+  // the view changed shape (gfx.js): the page is drawn again where the game's 640 now stands in it
+  resize() {
+    this.canvas.width = this.gfx.VW * this.S;
+    this.canvas.height = H * this.S;
+    this.redraw();
   }
 
   reset() {
@@ -241,7 +248,7 @@ export class TextLayer {
   drawGlyph(ctx, g, color) {
     if (g.hid || g.c === ' ' || g.c === '　') return;
     const S = this.S;
-    ctx.setTransform(S, 0, 0, S, 0, 0);
+    ctx.setTransform(S, 0, 0, S, this.gfx.OX * S, 0);
     ctx.font = fontCss(g.f, g.ff);
     ctx.textBaseline = 'alphabetic';
     const x = Math.round(g.x * S) / S;
@@ -258,13 +265,16 @@ export class TextLayer {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     for (const g of this.glyphs) this.drawGlyph(ctx, g, g.col);
   }
-  // darken (or draw the frame image of) the window area; ctx is in logical coordinates
+  // darken (or draw the frame image of) the window area; ctx is in the game's coordinates.
+  // A shade that reaches both sides of the game's 640 goes on to the sides of a wider view.
   drawShade(ctx, win = this.win, image = this.winImage) {
     if (image) { ctx.drawImage(image, win.rx, win.ry); return; }
     if (!win.color || win.color.toLowerCase() === '#ffffff') return;
+    const ox = this.gfx.OX;
+    const x0 = win.rx <= 0 ? -ox : win.rx, x1 = win.rr >= W - 1 ? W + ox : win.rr + 1;
     ctx.globalCompositeOperation = 'multiply';
     ctx.fillStyle = win.color;
-    ctx.fillRect(win.rx, win.ry, win.rr - win.rx + 1, win.rb - win.ry + 1);
+    ctx.fillRect(x0, win.ry, x1 - x0, win.rb - win.ry + 1);
     ctx.globalCompositeOperation = 'source-over';
   }
 

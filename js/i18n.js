@@ -193,12 +193,16 @@ const JA = {
   'Music': '音楽',
   'Sound effects': '効果音',
   'Sound': '音',
+  'Picture shape': '画面比率',
   'Glow around the picture': '画面のまわりの光',
   'Fullscreen': '全画面',
   'Language and progress': '言語と進行状況',
   'Progress': '進行状況',
   'Language': '言語',
   'Unlock everything': 'すべて解放する',
+  'Switch the picture to 16:9?': '画面を16:9に切り替えますか？',
+  'Backgrounds and event pictures are enlarged to fill the screen, so some of them are cut off at the top and the bottom. The Gallery still shows every picture whole, and 4:3 can be chosen again at any time.':
+    '背景とイベント絵は画面いっぱいに拡大されるため、上下が切れるものがあります。ギャラリーではどの絵も全体が表示され、いつでも4:3に戻せます。',
   'Unlock everything?': 'すべて解放しますか？',
   'Every scene on the flowchart, every picture and track in the Gallery, and every story on the Start game page opens. Your own progress is not changed and goes on being kept: turn this off again here to go back to it.':
     'フローチャートの全シーン、ギャラリーの全画像と全曲、ゲーム開始ページの全物語が開きます。あなた自身の進行状況は変わらず、記録も続きます。ここでオフに戻すと元の表示に戻ります。',
@@ -259,6 +263,8 @@ const JA = {
   'Twenty slots with a picture and a line of the page, kept in this browser.': '画面の絵とページの一行が付く二十枠。このブラウザに保存されます。',
   'History': '回想',
   'Everything read this session, as one scroll.': '今回読んだすべてを、一続きで。',
+  'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.':
+    'プレイのページと設定で選べます。横長の画面いっぱいに表示され、左右の余白がなくなります。背景は画面に合わせて拡大されるため、上下が切れるものがあります。タイトルとすべてのメニューも横長に合わせて配置されます。',
   'Mouse, keyboard and touch': 'マウス・キーボード・タッチ',
   'Click, tap, Enter, Space': 'クリック、タップ、Enter、Space',
   'Go on to the next line, or take what is pointed at.': '次の行へ進む、または指している項目を選ぶ。',

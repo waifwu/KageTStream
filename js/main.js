@@ -111,7 +111,19 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
+  // its shape at once, the opening page with it; the game's picture when it is made (below).
+  // The glow around the picture is kept for each shape by itself: on at 4:3, where it softens the
+  // bare sides of a wide window, and off at 16:9 until the reader turns it on there.
+  const glowKey = () => (settings.wide ? 'ambientWide' : 'ambient');
+  let applyWide = () => { shell.setWide(settings.wide); shell.setAmbient(settings[glowKey()]); };
+  // 16:9 fills the screen by cutting into the pictures: the reader is told so before it is taken
+  // (it is what they asked for, so "Yes" is the answer pointed at)
+  const confirmWide = async () => (await shell.ask('Switch the picture to 16:9?',
+    'Backgrounds and event pictures are enlarged to fill the screen, so some of them are cut off at the top and the bottom. '
+    + 'The Gallery still shows every picture whole, and 4:3 can be chosen again at any time.', undefined, 0)) === true;
+  shell.setWide(settings.wide);
   // The interface speaks the story's language. The setting is known at once; whether the data
   // really holds the Japanese script is known when it has loaded, and is put right then.
   const wording = (l) => {
@@ -140,7 +152,7 @@ async function boot() {
   const homeArt = new Image();
   homeArt.src = DATA + 'arc/image/gamestart/load.jpg';
   shell.ambientSource = () => (homeArt.complete && homeArt.naturalWidth ? homeArt : null);
-  shell.setAmbient(settings.ambient);
+  shell.setAmbient(settings[glowKey()]);
 
   // -------------------------------------------------------------- opening page
   let ready = false;
@@ -183,6 +195,7 @@ async function boot() {
         ['Settings', 'One page for everything: the story\u2019s font, text speed, sound, and the game\u2019s own four switches.'],
         ['Saves', 'Twenty slots with a picture and a line of the page, kept in this browser.'],
         ['History', 'Everything read this session, as one scroll.'],
+        ['16:9', 'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.'],
       ]);
     } },
     { plate: 'Controls', build(p) {
@@ -230,6 +243,14 @@ async function boot() {
           location.reload();
         });
       }
+      // the same switch as Settings > Picture shape, here before the game begins
+      h.choice(p, 'Picture shape', [['4:3', false], ['16:9', true]], !!settings.wide, async (value) => {
+        if (value && !(await confirmWide())) return;
+        settings.wide = value;
+        storage.saveSettings(settings);
+        applyWide();
+        if (shell.homeRefresh) shell.homeRefresh();
+      });
       h.press(p, failed ? 'No game data' : ready ? 'press any button' : 'Loading…', ready, () => start());
       p.addEventListener('click', (e) => { if (ready && e.target === p) start(); });
     } },
@@ -278,7 +299,7 @@ async function boot() {
     shell.stepWord = (s) => back.near(s) || s;
   }
   const loader = new Loader(DATA, manifest);
-  const gfx = new Gfx(canvas, loader, scale);
+  const gfx = new Gfx(canvas, loader, scale, settings.wide);
   const text = new TextLayer(gfx);
   gfx.text = text;
   gfx.bgOverride = bgOverride;      // the game's menu screens are redrawn (skins.js)
@@ -325,6 +346,16 @@ async function boot() {
   };
   const input = new Input(canvas, onKey);
   shell.input = input;
+  // Settings > Picture shape, changed while the game runs: the stage, the game's picture and
+  // where the pointer is taken to be all follow.
+  applyWide = () => {
+    shell.setWide(settings.wide);
+    shell.setAmbient(settings[glowKey()]);
+    gfx.setWide(settings.wide);
+    input.vw = gfx.VW;
+    input.ox = gfx.OX;
+  };
+  applyWide();
   shell.syncModal();
   shell.onAction((act) => { if (actions[act]) actions[act](); });
   // a click on the picture stops fast-forward, as it does in the original engine
@@ -384,12 +415,13 @@ async function boot() {
         { key: 'bgmVol', label: 'Music', range: true },
         { key: 'seVol', label: 'Sound effects', range: true },
         { key: 'muted', label: 'Sound', options: [['On', false], ['Off', true]] },
+        { key: 'wide', label: 'Picture shape', options: [['4:3', false], ['16:9', true]] },
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
         { key: 'full', label: 'Fullscreen', options: onOff },
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
-      : key === 'unlockAll' ? !!settings.unlockAll : key === 'lang' ? lang : settings[key]), async (key, value) => {
+      : key === 'unlockAll' ? !!settings.unlockAll : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
       if (key === 'lang') {
         if (value === lang) return;
         if (!(await shell.confirm(value === 'ja' ? 'Switch the story to Japanese?' : 'Switch the story to English?',
@@ -424,14 +456,17 @@ async function boot() {
       if (GAME[key]) { GAME[key].set(value); engine.flushGlobals(true); return; }
       if (key === 'guide') { guide.setOn(value); return; }
       if (key === 'full') { fullscreen(value); return; }
+      if (key === 'wide' && value && !settings.wide && !(await confirmWide())) return;
       const fontChanged = key === 'font' && settings.font !== value;
-      settings[key] = value;
+      const shapeChanged = key === 'wide' && !!settings.wide !== value;
+      settings[key === 'ambient' ? glowKey() : key] = value;
       if (fontChanged) { applyFont(); text.reflow(); gfx.present(engine.textMode); }
+      if (shapeChanged) applyWide();
       engine.textSpeedNo = settings.speed;
       engine.autoPace = settings.autoPace;
       audio.setMuted(settings.muted);
       audio.setVolumes(settings.bgmVol, settings.seVol);
-      shell.setAmbient(settings.ambient);
+      shell.setAmbient(settings[glowKey()]);
       saveSettings();
     });
   };

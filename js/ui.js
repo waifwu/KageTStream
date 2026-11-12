@@ -137,7 +137,15 @@ export class UI {
     if (skin) return this.skinned(skin, buttons);
     const { gfx, input } = this.host;
     input.flush();
-    const hit = (x, y) => {
+    // The buttons are places on the background picture. Enlarged to fill a 16:9 view it loses its
+    // top and foot; if a button lies there, the picture goes back to its own size while the
+    // script keeps these buttons (the engine lets go at the next "btndef").
+    if (buttons.some((b) => !gfx.backShown(b.x, b.y, b.w, b.h))) {
+      gfx.setPlainOnly(true);
+      gfx.present(this.engine.textMode);
+    }
+    const hit = (gx, gy) => {
+      const { x, y } = gfx.toBack(gx, gy);
       for (let i = buttons.length - 1; i >= 0; i--) {
         const b = buttons[i];
         if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) return i;
@@ -151,7 +159,7 @@ export class UI {
           const b = buttons[hover];
           ctx.drawImage(img, b.sx, b.sy, b.w, b.h, b.x, b.y, b.w, b.h);
         }
-      });
+      }, 'back');
       this.setPointer(hover >= 0);
     };
     draw();
@@ -219,7 +227,7 @@ export class UI {
       const mark = spans.find((sp) => sp.index === wanted);
       if (mark && mark.rects.length) {
         const r = mark.rects[0];
-        const cx = Math.max(6, r.x - 9), cy = r.y + Math.min(r.h, text.win.fh) / 2 + 1;
+        const cx = Math.max(6 - gfx.OX, r.x - 9), cy = r.y + Math.min(r.h, text.win.fh) / 2 + 1;
         gfx.overlay((ctx) => {
           ctx.fillStyle = '#f4cf7c';
           ctx.shadowColor = 'rgba(0,0,0,.8)';

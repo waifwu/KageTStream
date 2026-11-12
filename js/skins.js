@@ -76,21 +76,18 @@ export function paintPaper(t, x, y, w, h) {
 // the painting itself, so nothing has to cover it: in that strip each pixel becomes a low quantile
 // of its row over a wide span. The lettering is thin and lighter than the ground behind it, so the
 // quantile lands on the ground; the ground is a soft gradient, so nothing else is lost.
-function cleanTitle(img) {
-  const w = img.naturalWidth, h = img.naturalHeight;
-  const c = makeCanvas(w, h);
-  const x = c.getContext('2d', { willReadFrequently: true });
-  x.drawImage(img, 0, 0);
-  const y0 = Math.round(h * 0.835), y1 = Math.round(h * 0.992), rows = y1 - y0;
+// `x` is the picture's context; rows y0..y1 are done. `q(row)` is the quantile for a row of the
+// strip (low where the lettering is lighter than the ground, high where it is darker). The strip
+// eases into the untouched picture over its first rows, or its last ones (`easeAtEnd`).
+function unletter(x, w, h, y0, y1, q, easeAtEnd) {
+  const rows = y1 - y0;
   const id = x.getImageData(0, y0, w, rows);
   const d = id.data;
   const out = new Uint8ClampedArray(d);
   const R = Math.round(w * 0.06);
   const buf = new Uint8Array(2 * R + 1);
-  // the four labels are lighter than the ground, the notice under them darker: take the ground from the other side
-  const split = Math.round(h * 0.925) - y0;
   for (let y = 0; y < rows; y++) {
-    const q = y < split ? 0.3 : 0.74;
+    const qy = q(y);
     for (let ch = 0; ch < 3; ch++) {
       for (let px = 0; px < w; px++) {
         const a = Math.max(0, px - R), b = Math.min(w - 1, px + R);
@@ -98,14 +95,15 @@ function cleanTitle(img) {
         for (let k = a; k <= b; k++) buf[n++] = d[(y * w + k) * 4 + ch];
         const sub = buf.subarray(0, n);
         sub.sort();
-        out[(y * w + px) * 4 + ch] = sub[Math.floor(n * q)];
+        out[(y * w + px) * 4 + ch] = sub[Math.floor(n * qy)];
       }
     }
   }
-  // ease into the untouched picture over the first rows, so there is no seam
+  // ease into the untouched picture, so there is no seam
   const feather = Math.max(2, Math.round(h * 0.012));
-  for (let y = 0; y < feather; y++) {
-    const t = (y + 1) / (feather + 1);
+  for (let k = 0; k < feather; k++) {
+    const y = easeAtEnd ? rows - 1 - k : k;
+    const t = (k + 1) / (feather + 1);
     for (let i = y * w * 4, e = (y + 1) * w * 4; i < e; i++) out[i] = d[i] + (out[i] - d[i]) * t;
   }
   id.data.set(out);
@@ -113,31 +111,105 @@ function cleanTitle(img) {
   // one soft pass over the strip, to settle the row-by-row result
   try {
     const copy = makeCanvas(w, h);
-    copy.getContext('2d').drawImage(c, 0, 0);
+    copy.getContext('2d').drawImage(x.canvas, 0, 0);
     x.save();
     x.beginPath();
-    x.rect(0, y0 + feather, w, rows - feather);
+    x.rect(0, easeAtEnd ? y0 : y0 + feather, w, rows - feather);
     x.clip();
     x.filter = 'blur(' + Math.max(1, Math.round(w / 400)) + 'px)';
     x.drawImage(copy, 0, 0);
     x.restore();
     x.filter = 'none';
   } catch (e) { /* no canvas filters: the strip stays as computed */ }
+}
+
+// `brandToo`: the line of spaced capitals along the top goes as well (it is set again by the
+// interface where the picture is made wider, see widenTitle).
+function cleanTitle(img, brandToo) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const c = makeCanvas(w, h);
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(img, 0, 0);
+  const y0 = Math.round(h * 0.835), y1 = Math.round(h * 0.992);
+  // the four labels are lighter than the ground, the notice under them darker: take the ground from the other side
+  const split = Math.round(h * 0.925) - y0;
+  unletter(x, w, h, y0, y1, (y) => (y < split ? 0.3 : 0.74), false);
+  if (brandToo) unletter(x, w, h, 0, Math.round(h * 0.075), () => 0.3, true);
   return c;
+}
+
+// The title for a 16:9 view. Enlarging it to fill would cut into its emblem, which is nearly as
+// high as the picture, so it is made wider instead: the middle, where the emblem stands, is kept
+// exactly as it is, and the sky and the ground at either side of it are drawn out to the new
+// edges, easing from the one into the other. `src` is the cleaned picture (no lettering left in
+// it to be drawn out of shape); the result is `vw` wide for every 640 of the original.
+const TITLE_KEEP = [128, 512];      // the columns of 640 that hold the emblem
+function widenTitle(src, vw) {
+  const up = 2;                     // worked at twice the picture's size, for the easing between columns
+  const sw = src.width * up, sh = src.height * up;
+  const unit = sw / 640;
+  const big = makeCanvas(sw, sh);
+  const bx = big.getContext('2d', { willReadFrequently: true });
+  bx.imageSmoothingQuality = 'high';
+  bx.drawImage(src, 0, 0, sw, sh);
+  const from = bx.getImageData(0, 0, sw, sh).data;
+  const ow = Math.round(vw * unit);
+  const out = makeCanvas(ow, sh);
+  const ox = out.getContext('2d');
+  const to = ox.createImageData(ow, sh);
+  const td = to.data;
+  // where a column of the result comes from: one for one in the middle; at a side, `rate` of the
+  // picture to each column of the result, rising to one for one over the last `blend` columns
+  const keep0 = TITLE_KEEP[0] * unit, keep1 = TITLE_KEEP[1] * unit;
+  const side = (ow - (keep1 - keep0)) / 2;        // columns of the result on either side of the middle
+  const blend = 90 * unit;
+  const run = (u, len) => {                        // u columns in from an edge, of a side holding `len` of the picture
+    const rate = (len - blend / 2) / (side - blend / 2);
+    if (u <= side - blend) return rate * u;
+    const v = u - (side - blend);
+    return rate * (side - blend) + rate * v + ((1 - rate) * v * v) / (2 * blend);
+  };
+  for (let X = 0; X < ow; X++) {
+    let fx;
+    if (X < side) fx = run(X, keep0);
+    else if (X >= ow - side) fx = sw - 1 - run(ow - 1 - X, sw - keep1);
+    else fx = keep0 + (X - side);
+    fx = Math.max(0, Math.min(sw - 1, fx));
+    const x0 = Math.floor(fx), x1 = Math.min(sw - 1, x0 + 1), t = fx - x0;
+    for (let y = 0; y < sh; y++) {
+      const a = (y * sw + x0) * 4, b = (y * sw + x1) * 4, o = (y * ow + X) * 4;
+      td[o] = from[a] + (from[b] - from[a]) * t;
+      td[o + 1] = from[a + 1] + (from[b + 1] - from[a + 1]) * t;
+      td[o + 2] = from[a + 2] + (from[b + 2] - from[a + 2]) * t;
+      td[o + 3] = 255;
+    }
+  }
+  ox.putImageData(to, 0, 0);
+  return out;
+}
+// where a place on the title (x of 640) is, of 1 across a view `vw` wide: the entries and the
+// secret corner are put there by the interface
+export function titleX(x, vw) {
+  if (vw <= 640) return x / 640;
+  const side = (vw - (TITLE_KEEP[1] - TITLE_KEEP[0])) / 2;
+  return (x - TITLE_KEEP[0] + side) / vw;
 }
 
 let paper = null;
 const cleaned = new Map();
-// what to show in place of a background picture, or null to show it as it is
-export function bgOverride(file, img) {
+// What to show in place of a background picture, or null to show it as it is. The stand-in is
+// drawn over the whole view, so at 16:9 (`wide`) the title is made for that shape; the paper is
+// only washes of colour and is simply drawn wider.
+export function bgOverride(file, img, wide) {
   const f = norm(file);
   if (PAPER_BG.test(f)) {
     if (!paper) { paper = makeCanvas(1280, 960); paintPaper(paper.getContext('2d'), 0, 0, 1280, 960); }
     return paper;
   }
   if (TITLE_BG.test(f) && img) {
-    if (!cleaned.has(f)) cleaned.set(f, cleanTitle(img));
-    return cleaned.get(f);
+    const key = f + (wide ? ':wide' : '');
+    if (!cleaned.has(key)) cleaned.set(key, wide ? widenTitle(cleanTitle(img, true), 854) : cleanTitle(img));
+    return cleaned.get(key);
   }
   return null;
 }

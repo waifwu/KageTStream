@@ -1243,6 +1243,7 @@ def('setcursor abssetcursor', async function (name) {
 def('btndef', async function () {
   this.ws();
   const v = this.readStr();
+  if (v !== this.btnDefName) this.host.gfx.setPlainOnly(false);     // (see ui.js, buttonWait)
   this.buttons = [];
   this.btnImage = null;
   this.btnDefName = v;

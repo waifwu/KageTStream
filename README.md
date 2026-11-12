@@ -125,9 +125,29 @@ the story.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the game's own four switches (instant effects,
   skip parts already read, daily message, skip explicit content), music and
-  effect volume, the glow around the picture, fullscreen, and save data to and
-  from a file. The game's "Game
+  effect volume, the picture's shape (4:3 or 16:9), the glow around the picture,
+  fullscreen, and save data to and from a file. The game's "Game
   settings" entry opens this page.
+* **16:9** (Settings, *Picture shape*; off by default) — the game without the
+  bare strips at its sides on a wide screen. The script still works in its own
+  640×480, which stands in the middle of an 854×480 view (`js/gfx.js`):
+  backgrounds are enlarged until they are as wide as the view, so an eighth of
+  each is lost off the top and off the foot; standing pictures, sprites and the
+  story's text keep their size and their places, and the shade behind the text
+  runs the whole width. A picture whose sides are one flat colour (a line of
+  words on black) is not enlarged but set on that colour, so none of it is cut.
+  The title is not cropped either: its emblem is nearly as high as the picture,
+  so the sky and ground at its sides are drawn out to the new edges instead
+  (`js/skins.js`, `widenTitle`). Every page of the interface is laid out for the
+  wider stage (`css/shell.css`, `#stage.wide`), and the gallery still shows a
+  picture whole, over a soft copy of itself. It can be switched at any time
+  (the opening page's Play tab has the same switch), and saves are the same in
+  either shape. The glow around the picture is kept for each shape by itself:
+  on at 4:3, off at 16:9 until it is turned on there.
+* **The waiting marks** — the triangle after a line and the sheet of paper at
+  the end of a page are 24×24 bitmaps in the game's files. They are drawn
+  instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
+  the resolution the picture is drawn at, so they stay as sharp as the text.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
   holds the Japanese script) — English or 日本語. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
