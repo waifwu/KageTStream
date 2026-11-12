@@ -255,9 +255,9 @@ The site is the Cloudflare Pages project `kagetsu`, connected to this
 repository. Every push to `main` builds and publishes to
 <https://kagetsu.pages.dev/>; there is no manual step.
 
-* Build command: `mkdir -p dist && cp index.html dist/ && cp -R css js data dist/`
+* Build command: `mkdir -p dist && cp index.html favicon.ico dist/ && cp -R css js data dist/`
 * Output directory: `dist`
-* Only `index.html`, `css/`, `js/` and `data/` are published (1,230 files).
+* Only `index.html`, `favicon.ico`, `css/`, `js/` and `data/` are published (1,230 files).
   `README.md` and `tools/` stay in the repository.
 * There is no `404.html`, so Pages answers any unknown path with the opening
   page and a 200 status. A missing asset comes back as HTML rather than an
