@@ -84,13 +84,15 @@ the story.
   tabs of thumbnails, read from the script with its own unlock rules, and a
   full-size viewer. *Flowchart*. *Music player*: the seventeen tracks under the
   names the script gives them; one the story has not played yet shows as
-  "? ? ?" and cannot be played.
+  "? ? ?" and cannot be played. *Guide*, when the walkthrough is in `data/`
+  (see Guide below).
 * **Quick bar** — slides in along the top edge while the story waits for you
   (tap the small moon in the corner on a touch screen): Menu, Log, Skip, Auto,
   Save, Load, Hide, Settings, Full. It stays away on the game's own button
   screens.
-* **Menu** (right-click / Esc) — the script's own entries, plus Flowchart and
-  Settings.
+* **Menu** (right-click / Esc / Backspace) — the script's own entries, with
+  Flowchart, Guide (when the walkthrough is in `data/`) and Settings set in
+  before its last one.
 * **On a phone** — the controls are a mouse's and a keyboard's, and the stage is
   scaled to the window as a whole, so on a phone it is too small to read. A
   notice says so as the page opens and asks the reader not to play on a mobile
@@ -98,7 +100,7 @@ the story.
   outside the stage, at the screen's own size.
 * **Save / Load** — twenty slots, each with a picture of the scene, the time and
   a line of the page.
-* **Text history** — everything read this session as one scroll.
+* **Text history** — the last 200 pages read this session, as one scroll.
 * **Flowchart** — built from the script's own flow section
   (`js/flowchart-model.js`), in three tabs. *The day* is laid out by place and
   time: Morning across the top, School, Mansion and Street as columns, Night
@@ -124,10 +126,11 @@ the story.
   a choice the game offers (none, for either ending). Add `ja` to play the
   Japanese script the same way.
 * **Settings** — one page for everything: story font (the game's own, a serif or
-  a sans), text speed, auto pace, the game's own four switches (instant effects,
-  skip parts already read, daily message, skip explicit content), music and
-  effect volume, the picture's shape (4:3 or 16:9), the glow around the picture,
-  fullscreen, and save data to and from a file. The game's "Game
+  a sans), text speed, auto pace, the guide's marks, the game's own four
+  switches (instant effects, skip parts already read, daily message, skip
+  explicit content), music and effect volume, sound on or off, the picture's
+  shape (4:3 or 16:9), the glow around the picture, fullscreen, the language,
+  Unlock everything, and save data to and from a file. The game's "Game
   settings" entry opens this page.
 * **16:9** (Settings, *Picture shape*; off by default) — the game without the
   bare strips at its sides on a wide screen. The script still works in its own
@@ -186,7 +189,7 @@ the story.
 | Input | Action |
 | --- | --- |
 | Left click / tap / Enter / Space | Advance text, pick the highlighted item |
-| Right click / two-finger tap / Esc | The menu |
+| Right click / two-finger tap / Esc / Backspace | The menu |
 | Mouse wheel up / ↑ / PageUp | Text history |
 | Ctrl (hold) / a finger held on the picture | Fast-forward while held |
 | S | Toggle fast-forward (stops at the next choice, or on a click) |
@@ -215,6 +218,9 @@ Settings has the export and import too.
 
 ```
 index.html              the stage: canvas plus the interface's layers
+404.html                the site's answer to an unknown address
+_headers                the site's cache rules (Cloudflare Pages)
+favicon.ico             the site's icon, drawn by desktop/tools/make-icon.js
 css/shell.css           the interface's look
 js/engine.js            script interpreter: parser, variables, control flow, every command
 js/gfx.js               compositing, alpha-mask sprites, monochrome tint, transition effects
@@ -230,6 +236,7 @@ js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
 js/i18n.js              the interface's words in Japanese
 desktop/main.js         the desktop program: the window, and the files served to it
+desktop/tools/make-icon.js  draws the program's icons and the site's favicon.ico
 tools/extract.py        unpacks a game folder into data/; --ja adds the Japanese script
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script
@@ -295,5 +302,9 @@ repository. Every push to `main` builds and publishes to
 ## Note
 
 `data/` contains the commercial game's script, art and music. This repository
-is private, but the deployed site is not: anyone with the address can load
-those files. Cloudflare Access can limit the site to chosen people.
+is public on GitHub, with `data/` in it, and the deployed site is open to
+anyone with the address: both hand those files to whoever asks. Making the
+repository private (Pages keeps building from a private repository) and
+putting Cloudflare Access in front of the site would limit them to chosen
+people; the opening page's Download links point at this repository's
+releases, so they would then work only for people with access to it.
