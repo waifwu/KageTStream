@@ -1,7 +1,7 @@
 {
   "name": "kagetsu-tohya-desktop",
   "productName": "Kagetsu Tohya",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Kagetsu Tohya, the browser port, as a desktop program",
   "author": "Kagetsu Tohya browser port",
   "private": true,
@@ -31,17 +31,55 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "../index.html", "to": "web/index.html" },
-      { "from": "../css", "to": "web/css", "filter": ["**/*", "!**/.DS_Store"] },
-      { "from": "../js", "to": "web/js", "filter": ["**/*", "!**/.DS_Store"] },
-      { "from": "../data", "to": "web/data", "filter": ["**/*", "!**/.DS_Store"] }
+      {
+        "from": "../index.html",
+        "to": "web/index.html"
+      },
+      {
+        "from": "../css",
+        "to": "web/css",
+        "filter": [
+          "**/*",
+          "!**/.DS_Store"
+        ]
+      },
+      {
+        "from": "../js",
+        "to": "web/js",
+        "filter": [
+          "**/*",
+          "!**/.DS_Store"
+        ]
+      },
+      {
+        "from": "../data",
+        "to": "web/data",
+        "filter": [
+          "**/*",
+          "!**/.DS_Store"
+        ]
+      }
     ],
-    "electronLanguages": ["en-US", "en", "ja"],
+    "electronLanguages": [
+      "en-US",
+      "en",
+      "ja"
+    ],
     "win": {
       "icon": "build/icon-win.png",
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "zip", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -57,14 +95,25 @@
       "identity": "-",
       "hardenedRuntime": false,
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
     },
     "linux": {
       "icon": "build/icon.png",
       "category": "Game",
       "target": [
-        { "target": "AppImage", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     }
   }
