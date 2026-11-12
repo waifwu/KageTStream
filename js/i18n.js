@@ -276,6 +276,16 @@ const JA = {
   'Erase everything': 'すべて消去する',
   'Erase every save and all progress?': 'すべてのセーブと進行状況を消去しますか？',
   'This cannot be undone.': '元には戻せません。',
+  'Download': 'ダウンロード',
+  'The game as a program': 'アプリ版',
+  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
+    '同じ移植を、専用のウィンドウで動くアプリにしたものです。ファイルはすべて中に入っていて（約330MB）、接続がなくても遊べます。',
+  'macOS · Apple silicon': 'macOS · Appleシリコン',
+  'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
+    'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
+  'Saves made there are kept apart from this browser’s. The Save data page’s export and import carry them across.':
+    'アプリのセーブはこのブラウザのものとは別に保存されます。「セーブデータ」のページの書き出しと読み込みで移せます。',
+  'Every version is on GitHub:': 'すべての版はGitHubにあります：',
   'Play here, in the browser': 'このブラウザで遊ぶ',
   'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.': 'インストールは不要です。ゲームのファイルは遊びながら届き、一日が終わるたびに自動で保存されます。',
   'A browser plays no sound until the page has been clicked, so the game begins with a press.': 'ブラウザはページをクリックするまで音を出せないので、ゲームは一押しで始まります。',

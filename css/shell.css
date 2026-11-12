@@ -71,6 +71,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hm-plate:hover, .hm-plate.on { color: #fff; }
 .hm-plate:hover::after { left: 60px; right: 60px; }
 .hm-plate.on::after { left: 16px; right: 16px; }
+/* five plates: each as wide as its word, so the gaps between the words are the same */
+.hm-strip.tight .hm-plate { width: auto; padding: 0 20px; }
+.hm-strip.tight .hm-plate:hover::after { left: calc(50% - 34px); right: calc(50% - 34px); }
+.hm-strip.tight .hm-plate.on::after { left: 10px; right: 10px; }
 .hm-rule { position: absolute; left: 0; right: 0; top: 122px; height: 1.5px; background: rgba(248, 238, 219, .5); }
 
 .hm-intro { position: absolute; left: 70px; right: 70px; bottom: 96px; transition: opacity .25s; }
@@ -90,6 +94,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hm-panel .fine { font-size: 19px; line-height: 30px; font-style: italic; color: var(--ink-soft); }
 .hm-rows { display: grid; grid-template-columns: 290px 1fr; column-gap: 26px; row-gap: 4px; margin: 4px 0 16px; }
 .hm-rows .k { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.hm-files { row-gap: 14px; margin: 18px 0 26px; align-items: baseline; }
+:root:lang(ja) .hm-files .k { letter-spacing: .12em; }
 .hm-facts { display: flex; gap: 60px; margin: 12px 0 22px; }
 .hm-facts div { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
 .hm-facts b { display: block; font-size: 46px; font-weight: 400; line-height: 54px; letter-spacing: 0; text-transform: none; color: var(--ink); }

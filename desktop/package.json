@@ -1,0 +1,71 @@
+{
+  "name": "kagetsu-tohya-desktop",
+  "productName": "Kagetsu Tohya",
+  "version": "1.0.0",
+  "description": "Kagetsu Tohya, the browser port, as a desktop program",
+  "author": "Kagetsu Tohya browser port",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "icon": "electron tools/make-icon.js",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "dist": "electron-builder --win --mac"
+  },
+  "devDependencies": {
+    "electron": "^45.3.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "dev.pages.kagetsu.desktop",
+    "productName": "Kagetsu Tohya",
+    "artifactName": "Kagetsu-Tohya-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "../index.html", "to": "web/index.html" },
+      { "from": "../css", "to": "web/css", "filter": ["**/*", "!**/.DS_Store"] },
+      { "from": "../js", "to": "web/js", "filter": ["**/*", "!**/.DS_Store"] },
+      { "from": "../data", "to": "web/data", "filter": ["**/*", "!**/.DS_Store"] }
+    ],
+    "electronLanguages": ["en-US", "en", "ja"],
+    "win": {
+      "icon": "build/icon-win.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "artifactName": "Kagetsu-Tohya-Setup.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Kagetsu Tohya"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.games",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Game",
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] }
+      ]
+    }
+  }
+}

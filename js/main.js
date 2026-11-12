@@ -41,6 +41,10 @@ const CONTROLS = [
   ['Top edge', 'The quick bar appears while the story waits for you. On a touch screen, tap the small moon at the corner.'],
 ];
 
+// The desktop program (desktop/main.js) serves these same pages over its own scheme.
+const DESKTOP = location.protocol === 'app:';
+const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
+
 async function boot() {
   const shell = new Shell();
   const canvas = document.getElementById('screen');
@@ -163,6 +167,19 @@ async function boot() {
         }, 'warn'],
       ]);
     } },
+    // The same pages as a program (desktop/): offered here, and left out when this is that program.
+    ...(DESKTOP ? [] : [{ plate: 'Download', build(p) {
+      h.head(p, 'The game as a program');
+      h.p(p, 'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.');
+      h.downloads(p, [
+        ['Windows', 'Kagetsu-Tohya-Setup.exe', RELEASES + '/latest/download/Kagetsu-Tohya-Setup.exe'],
+        ['macOS · Apple silicon', 'Kagetsu-Tohya-mac-arm64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-arm64.dmg'],
+        ['macOS · Intel', 'Kagetsu-Tohya-mac-x64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-x64.dmg'],
+      ]);
+      h.p(p, 'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.', 'fine');
+      h.p(p, 'Saves made there are kept apart from this browser’s. The Save data page’s export and import carry them across.', 'fine');
+      h.link(p, 'Every version is on GitHub:', 'github.com/waifwu/KageTStream/releases', RELEASES);
+    } }]),
     { plate: 'Play', build(p) {
       h.head(p, 'Play here, in the browser');
       h.p(p, 'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.');

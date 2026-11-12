@@ -34,6 +34,31 @@ python3 tools/extract.py --ja "/path/to/Kagetsu Tohya.cue"
 This writes `data/script-ja.txt` and lists it in the manifest; nothing else in
 `data/` is touched. The pictures and sound are the ones already extracted.
 
+## Desktop program
+
+The same pages as a program of its own, for Windows and macOS, with every file
+inside it. Finished builds are on the
+[releases page](https://github.com/waifwu/KageTStream/releases); the opening
+page's **Download** tab links to the latest.
+
+`desktop/` is a small Electron wrapper: one window, and the site's files served
+to it from disk over a private scheme (`app://kagetsu/`), so modules, `fetch`
+and `localStorage` work as they do on the site. Nothing in `js/` is different;
+the Download tab is simply left out there.
+
+```bash
+cd desktop
+npm install
+npm start            # run it from this folder
+npm run dist         # build dist/: the Windows installer and zip, both macOS disk images
+```
+
+Both systems can be built from a Mac. The builds are not code-signed (the macOS
+one is signed ad hoc, which Apple silicon needs before it will run anything),
+so Windows SmartScreen and macOS Gatekeeper each ask once. Saves are kept in the
+program's own profile, apart from any browser's; export and import carry them
+across. `npm run icon` redraws `build/icon.png` from `tools/make-icon.js`.
+
 ## The interface
 
 Everything is drawn inside the picture and scales with it; there is no
@@ -42,8 +67,9 @@ paper, slate ink in a Palatino face, thin rules that run in from the edge of the
 screen, a lower-case "back", and the twilight field behind anything shown over
 the story.
 
-* **Opening page** — four plates over the twilight field: About (with a link to
-  the source on GitHub), Controls, Save data, Play. It opens with none chosen, so a stray click starts nothing; the
+* **Opening page** — five plates over the twilight field: About (with a link to
+  the source on GitHub), Controls, Save data, Download (the desktop program;
+  left out inside that program), Play. It opens with none chosen, so a stray click starts nothing; the
   Play page's "press any button" starts the game (and is the click a browser
   needs before it will play sound).
 * **The game's own menus** — the title, Start game and each story's page are
@@ -168,6 +194,7 @@ js/input.js             mouse / touch / keyboard
 js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
 js/i18n.js              the interface's words in Japanese
+desktop/main.js         the desktop program: the window, and the files served to it
 tools/extract.py        unpacks a game folder into data/; --ja adds the Japanese script
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script

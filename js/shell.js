@@ -1391,7 +1391,7 @@ export class Shell {
     home.innerHTML = '';
     if (art) home.style.backgroundImage = 'url("' + art + '")'; else home.classList.add('fallback');
     home.appendChild(el('div', 'hm-brand', brand));
-    const strip = el('div', 'hm-strip');
+    const strip = el('div', 'hm-strip' + (tabs.length > 4 ? ' tight' : ''));     // a fifth plate: each a little narrower
     home.appendChild(strip);
     home.appendChild(el('div', 'hm-rule'));
     const intro = el('div', 'hm-intro');
@@ -1467,6 +1467,20 @@ export const h = {
   actions: (panel, actions) => {
     const g = el('div', 'hm-actions');
     for (const [label, fn, cls] of actions) { const b = el('button', 'hm-link' + (cls ? ' ' + cls : ''), label); b.addEventListener('click', fn); g.appendChild(b); }
+    panel.appendChild(g);
+  },
+  // files to fetch: [[what it is for, the file's name, its address]]
+  downloads: (panel, files) => {
+    const g = el('div', 'hm-rows hm-files');
+    for (const [k, name, href] of files) {
+      g.appendChild(el('div', 'k', k));
+      const a = document.createElement('a');
+      a.className = 'hm-link';
+      a.textContent = name;
+      a.href = href;
+      a.rel = 'noopener';
+      g.appendChild(el('div', 'v')).appendChild(a);
+    }
     panel.appendChild(g);
   },
   // a link that leaves the page
