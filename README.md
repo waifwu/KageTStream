@@ -90,6 +90,11 @@ the story.
   screens.
 * **Menu** (right-click / Esc) — the script's own entries, plus Flowchart and
   Settings.
+* **On a phone** — the controls are a mouse's and a keyboard's, and the stage is
+  scaled to the window as a whole, so on a phone it is too small to read. A
+  notice says so as the page opens and asks the reader not to play on a mobile
+  device but on a desktop or PC; "Continue anyway" lets them in. It stands
+  outside the stage, at the screen's own size.
 * **Save / Load** — twenty slots, each with a picture of the scene, the time and
   a line of the page.
 * **Text history** — everything read this session as one scroll.
@@ -154,9 +159,9 @@ the story.
 | Input | Action |
 | --- | --- |
 | Left click / tap / Enter / Space | Advance text, pick the highlighted item |
-| Right click / long-press / Esc | The menu |
+| Right click / two-finger tap / Esc | The menu |
 | Mouse wheel up / ↑ / PageUp | Text history |
-| Ctrl (hold) | Fast-forward while held |
+| Ctrl (hold) / a finger held on the picture | Fast-forward while held |
 | S | Toggle fast-forward (stops at the next choice, or on a click) |
 | A | Toggle auto-advance |
 | 1 / 2 / 3 | Text speed slow / normal / fast |

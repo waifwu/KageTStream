@@ -31,9 +31,9 @@ const frame = () => new Promise((r) => (document.hidden ? setTimeout(r, 16) : re
 
 const CONTROLS = [
   ['Click, tap, Enter, Space', 'Go on to the next line, or take what is pointed at.'],
-  ['Right-click, long press, Esc', 'The menu: save, load, history, flowchart, guide, settings, title.'],
+  ['Right-click, two-finger tap, Esc', 'The menu: save, load, history, flowchart, guide, settings, title.'],
   ['Wheel up, ↑, PageUp', 'Text history. Scroll past its end to return.'],
-  ['Ctrl, held', 'Fast-forward for as long as it is held.'],
+  ['Ctrl, or a finger, held down', 'Fast-forward for as long as it is held.'],
   ['S', 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
   ['A', 'Let the story advance by itself.'],
   ['1, 2, 3', 'Text speed: slow, normal, fast.'],
@@ -45,6 +45,37 @@ const CONTROLS = [
 // game: there the opening page is passed over, and the story begins as the window opens.
 const DESKTOP = location.protocol === 'app:';
 const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
+
+// A phone. The controls are a mouse's and a keyboard's, and the stage is scaled to the window as
+// a whole, so on a phone the picture is a few centimetres across and the pages' lettering too
+// small to read. The reader is asked, before anything else, to play on a desktop or PC instead. It is a request and not a lock: "Continue
+// anyway" lets them in. The notice stands outside the stage, which would make it as small as
+// the rest (css/shell.css, #phone-note).
+const onPhone = () => {
+  if (DESKTOP) return false;
+  const coarse = !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  return /Mobi|iPhone|iPod/i.test(navigator.userAgent) || (coarse && Math.min(window.screen.width, window.screen.height) < 600);
+};
+function phoneNotice() {
+  const make = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = t(text);
+    return e;
+  };
+  const box = make('div');
+  box.id = 'phone-note';
+  box.setAttribute('role', 'alertdialog');
+  const card = make('div', 'card paper');
+  card.appendChild(make('h1', null, 'For desktop or PC only'));
+  card.appendChild(make('p', null, 'Please do not play this on a phone or another mobile device. The controls are built for a mouse and a keyboard, not for a touch screen, and the picture and the text come out too small to read.'));
+  card.appendChild(make('p', null, 'Open it on a desktop or PC instead.'));
+  const go = make('button', null, 'Continue anyway');
+  go.addEventListener('click', () => box.remove());
+  card.appendChild(go);
+  box.appendChild(card);
+  document.body.appendChild(box);
+}
 
 async function boot() {
   const shell = new Shell();
@@ -98,6 +129,7 @@ async function boot() {
     }
   };
   wording(settings.lang === 'ja' ? 'ja' : 'en');
+  if (onPhone()) phoneNotice();
   const applyFont = () => {
     if (!FONTS[settings.font]) settings.font = 'original';
     setStoryFont(settings.font);

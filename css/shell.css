@@ -461,3 +461,17 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .cg-grid .cg.arrive { animation: rise .36s cubic-bezier(.2, .7, .2, 1) backwards; }
 .cg img { opacity: 0; transition: opacity .3s ease-out; }
 .cg img.on { opacity: 1; }
+
+/* ------------------------------------------------------------------ a phone
+   Asked to play on a desktop or PC instead (main.js, phoneNotice). This stands outside the stage
+   and is measured in the screen's own pixels: inside it, it would be as small as everything else. */
+#phone-note { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  overflow-y: auto; background: rgba(22, 14, 34, .86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-family: var(--serif);
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%; animation: fadein .3s ease-out backwards; }
+#phone-note .card { box-sizing: border-box; width: 100%; max-width: 420px; margin: auto; padding: 30px 26px 20px; text-align: center; box-shadow: 0 18px 60px rgba(14, 8, 20, .6); }
+#phone-note h1 { display: inline-block; margin: 0 0 16px; padding: 0 6px 6px; font-size: 25px; font-weight: 400; line-height: 32px; border-bottom: 1.5px solid var(--rule); }
+#phone-note p { margin: 0 0 12px; font-size: 16px; line-height: 25px; }
+#phone-note p + p { font-size: 18px; }
+#phone-note button { margin-top: 8px; padding: 12px 18px; font-size: 16px; font-style: italic; color: var(--ink-soft); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+:root:lang(ja) #phone-note button { font-style: normal; }

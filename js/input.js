@@ -1,10 +1,11 @@
 // Mouse / touch / keyboard -> a small queue of logical events the engine awaits.
 //   click   left button, tap, Enter, Space
-//   rclick  right button, long-press, two-finger tap, Escape
+//   rclick  right button, two-finger tap, Escape
 //   move    pointer moved (only delivered to someone waiting)
 //   wheel   dy < 0 up, dy > 0 down
 //   key     arrows / page keys
-//   wake    something changed (Ctrl, skip toggle) - re-check state
+//   wake    something changed (Ctrl, a finger held down, skip toggle) - re-check state
+// A finger held on the picture fast-forwards for as long as it stays there, as Ctrl held does.
 import { W, H } from './gfx.js';
 
 export class Input {
@@ -62,8 +63,16 @@ export class Input {
   attach() {
     const c = this.canvas;
     let longPress = null;
-    let longFired = false;
+    let longFired = false;        // this touch has been taken as something other than a tap
+    let holding = false;          // a finger is held down: fast-forwarding, as with Ctrl
     const touches = new Set();
+    const letGo = () => {
+      clearTimeout(longPress);
+      if (!holding) return;
+      holding = false;
+      this.ctrl = false;
+      this.push({ type: 'wake' });
+    };
     c.addEventListener('contextmenu', (e) => e.preventDefault());
     c.addEventListener('pointerdown', (e) => {
       const p = this.pos(e);
@@ -71,9 +80,15 @@ export class Input {
         touches.add(e.pointerId);
         longFired = false;
         clearTimeout(longPress);
-        if (touches.size >= 2) { longFired = true; this.push({ type: 'rclick' }); return; }
+        if (touches.size >= 2) { longFired = true; letGo(); this.push({ type: 'rclick' }); return; }
         this.push({ type: 'move', x: p.x, y: p.y });
-        longPress = setTimeout(() => { longFired = true; this.push({ type: 'rclick' }); }, 600);
+        longPress = setTimeout(() => {
+          longFired = true;
+          if (this.modal) return;
+          holding = true;
+          this.ctrl = true;
+          this.push({ type: 'wake' });
+        }, 450);
         return;
       }
       if (e.button === 0) this.push({ type: 'click', x: p.x, y: p.y });
@@ -83,13 +98,13 @@ export class Input {
     c.addEventListener('pointerup', (e) => {
       if (e.pointerType !== 'touch') return;
       touches.delete(e.pointerId);
-      clearTimeout(longPress);
+      letGo();
       if (!longFired && touches.size === 0) {
         const p = this.pos(e);
         this.push({ type: 'click', x: p.x, y: p.y });
       }
     });
-    c.addEventListener('pointercancel', (e) => { touches.delete(e.pointerId); clearTimeout(longPress); });
+    c.addEventListener('pointercancel', (e) => { touches.delete(e.pointerId); letGo(); });
     c.addEventListener('pointermove', (e) => {
       const p = this.pos(e);
       this.push({ type: 'move', x: p.x, y: p.y });
@@ -123,6 +138,6 @@ export class Input {
       if (!e.repeat && this.onGlobalKey && this.onGlobalKey(e.key.toLowerCase())) e.preventDefault();
     });
     window.addEventListener('keyup', (e) => { if (e.key === 'Control') this.ctrl = false; });
-    window.addEventListener('blur', () => { this.ctrl = false; });
+    window.addEventListener('blur', () => { holding = false; this.ctrl = false; });
   }
 }
