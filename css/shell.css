@@ -121,6 +121,11 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 .hm-choice .hm-link:hover { color: var(--ink); border-color: var(--rule); }
 .hm-choice .hm-link.on { color: var(--ink); border-color: var(--ink); cursor: default; }
 .hm-press { display: block; margin: 46px auto 10px; padding: 14px 40px; font-size: 27px; letter-spacing: .42em; text-indent: .42em; text-transform: uppercase; color: var(--ink); animation: blink 2.2s ease-in-out infinite; }
+/* the Play page: "press any button" in the middle of the space left under the switches */
+.hm-panel.hm-play { display: flex; flex-direction: column; align-items: flex-start; }
+.hm-play > :nth-last-child(2) { margin-bottom: 24px; }
+.hm-play > p + .hm-choice { margin-top: 12px; }     /* margins do not collapse in a flex box: 14 + 12 = the usual 26 */
+.hm-play .hm-press { margin: auto; }
 .hm-press[disabled] { animation: none; opacity: .45; cursor: default; letter-spacing: .1em; text-transform: none; font-style: italic; }
 @keyframes blink { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
 .hm-status { position: absolute; left: 70px; bottom: 30px; font-size: 19px; font-style: italic; color: rgba(248, 238, 219, .75); }

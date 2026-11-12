@@ -303,7 +303,6 @@ const JA = {
   'Every version is on GitHub:': 'すべての版はGitHubにあります：',
   'Play here, in the browser': 'このブラウザで遊ぶ',
   'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.': 'インストールは不要です。ゲームのファイルは遊びながら届き、一日が終わるたびに自動で保存されます。',
-  'A browser plays no sound until the page has been clicked, so the game begins with a press.': 'ブラウザはページをクリックするまで音を出せないので、ゲームは一押しで始まります。',
   'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.': 'ゲームデータが見つかりません。 python3 tools/extract.py "<Gameフォルダのパス>"  を実行して再読み込みしてください。',
   'press any button': 'ボタンを押してください',
   'No game data': 'ゲームデータがありません',

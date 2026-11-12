@@ -246,8 +246,11 @@ script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt`.
 * Text is rendered by the browser from the game's own `default.ttf`, at up to 3×
   resolution, so glyph edges are sharper than the original 640×480 output and
   line breaks can occasionally differ by a word.
-* Music loops by restarting the stream, so there can be a tiny gap at the loop
-  point. Safari older than 18.4 cannot play Ogg Vorbis.
+* Story music starts streaming at once; meanwhile the track is fetched whole and
+  decoded, and a Web Audio buffer that loops by itself takes over where the first
+  pass ends (`js/audio.js`), so later loops have no gap. Without Web Audio, or if
+  the track cannot be fetched, the stream loops by restarting as before. Safari
+  older than 18.4 cannot play Ogg Vorbis.
 
 ## Deployment
 
@@ -255,13 +258,20 @@ The site is the Cloudflare Pages project `kagetsu`, connected to this
 repository. Every push to `main` builds and publishes to
 <https://kagetsu.pages.dev/>; there is no manual step.
 
-* Build command: `mkdir -p dist && cp index.html favicon.ico dist/ && cp -R css js data dist/`
+* Build command: `mkdir -p dist && cp index.html favicon.ico 404.html _headers dist/ && cp -R css js data dist/`
 * Output directory: `dist`
-* Only `index.html`, `favicon.ico`, `css/`, `js/` and `data/` are published (1,230 files).
-  `README.md` and `tools/` stay in the repository.
-* There is no `404.html`, so Pages answers any unknown path with the opening
-  page and a 200 status. A missing asset comes back as HTML rather than an
-  error, so compare a file's content, not its status, when checking a deploy.
+* Only `index.html`, `favicon.ico`, `404.html`, `_headers`, `css/`, `js/` and
+  `data/` are published. `README.md` and `tools/` stay in the repository.
+* `_headers` lets browsers keep the game's own pictures, sounds, music and font
+  (`data/arc/`, `data/cd/`, `data/default.ttf`) for a year without asking
+  again; they never change. The page, `css/`, `js/` and the script, manifest
+  and guide keep Pages' default (`max-age=0, must-revalidate`), since a deploy
+  changes them.
+* `404.html` answers any unknown path with a 404 status and a link back to the
+  game, so a missing asset is an error rather than the opening page.
+* While the story waits for a click, the next pictures the script names are
+  fetched ahead (`Engine.upcomingImages`, `Loader.prefetch`), and a picture that
+  fails to load is tried twice more before it is given up.
 * Pages does not answer byte-range requests for these files, so a streamed
   track cannot be seeked and its length is a guess. The music player therefore
   fetches each track whole and plays it from memory (`js/audio.js`).

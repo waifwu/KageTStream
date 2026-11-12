@@ -96,6 +96,22 @@ export class Engine {
     this.loadGlobals();
   }
 
+  // The pictures named in the next stretch of the script, in order, from where it stands now: for
+  // the loader to fetch while the reader reads. Branches are not followed; it is a guess that is
+  // right most of the time and costs nothing when it is not.
+  upcomingImages(max = 6, span = 6000) {
+    const from = this.pc, to = Math.min(this.len, from + span);
+    if (from === this.lastLookAhead) return [];
+    this.lastLookAhead = from;
+    const re = /"(?::[^;"\n]*;)?([^"\n]+?\.(?:jpg|jpeg|png))"/gi;
+    re.lastIndex = from;
+    const out = [];
+    for (let m; out.length < max && (m = re.exec(this.src)) && m.index < to;) {
+      if (!out.includes(m[1])) out.push(m[1]);
+    }
+    return out;
+  }
+
   // ------------------------------------------------------------------ state
   setSkip(on) {
     if (this.skipMode === on) return;

@@ -41,21 +41,39 @@ export class Loader {
     }
     return null;
   }
+  // A picture, decoded. A load that fails (a dropped connection) is tried twice more before the
+  // picture is given up for now; given up, it is not remembered, so the next request tries again.
   image(name) {
     const url = this.resolve(name);
     if (!url) return Promise.resolve(null);
     let p = this.images.get(url);
     if (!p) {
       p = new Promise((res) => {
-        const img = new Image();
-        img.onload = () => res(img);
-        img.onerror = () => { console.warn('failed to load', url); res(null); };
-        img.src = url;
+        const tryLoad = (left) => {
+          const img = new Image();
+          img.onload = () => res(img);
+          img.onerror = () => {
+            if (left > 0) { setTimeout(() => tryLoad(left - 1), left > 1 ? 600 : 2000); return; }
+            console.warn('failed to load', url);
+            if (this.images.get(url) === p) this.images.delete(url);
+            res(null);
+          };
+          img.src = url;
+        };
+        tryLoad(2);
       });
       this.images.set(url, p);
       if (this.images.size > 80) this.images.delete(this.images.keys().next().value);
     }
     return p;
+  }
+  // Start loading pictures the script will soon ask for, so they are ready when it does.
+  // Only names not already held or on their way; the cache keeps 80, so a few at a time.
+  prefetch(names) {
+    for (const n of names) {
+      const url = this.resolve(n);
+      if (url && !this.images.has(url)) this.image(n);
+    }
   }
   // The exact pixels of a .bmp, decoded from the file's own bytes. Reading them back off a canvas
   // is not exact everywhere: a browser that guards against fingerprinting (Brave) nudges the

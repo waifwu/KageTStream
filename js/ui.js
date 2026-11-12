@@ -28,6 +28,8 @@ export class UI {
     const typed = Math.max(0, text.glyphs.length - this.waitGlyphs);
     this.waitGlyphs = kind === '\\' ? 0 : text.glyphs.length;
     if (e.skipping()) { await this.host.frame(); return; }
+    // the reader is reading: fetch the pictures the next pages will want
+    if (gfx.loader) gfx.loader.prefetch(e.upcomingImages());
 
     const cur = noCursor ? null : e.cursors[kind === '@' ? 0 : 1];
     const sp = cur && cur.sprite;

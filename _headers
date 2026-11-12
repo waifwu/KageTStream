@@ -1,0 +1,15 @@
+# Cloudflare Pages response headers (see README, Deployment).
+#
+# The game's pictures, sounds, music and font are the original files and never change, so a
+# browser may keep them for a year without asking again. Everything else (the page, css/, js/,
+# and the script, manifest and guide in data/) changes with a deploy and keeps Pages' default:
+# kept, but checked with the server each time.
+
+/data/arc/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/cd/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/default.ttf
+  Cache-Control: public, max-age=31536000, immutable

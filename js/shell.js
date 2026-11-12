@@ -1478,6 +1478,7 @@ export class Shell {
       home.classList.toggle('tabbed', i >= 0);
       if (i >= 0) {
         panel.innerHTML = '';
+        panel.className = 'hm-panel paper';      // a tab may add a class of its own (Play's hm-play)
         panel.scrollTop = 0;
         tabs[i].build(panel);
       }

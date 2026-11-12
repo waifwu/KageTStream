@@ -231,9 +231,9 @@ async function boot() {
       h.link(p, 'Every version is on GitHub:', 'github.com/waifwu/KageTStream/releases', RELEASES);
     } },
     { plate: 'Play', build(p) {
+      p.classList.add('hm-play');        // "press any button" stands in the middle of the space below
       h.head(p, 'Play here, in the browser');
       h.p(p, 'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.');
-      h.p(p, 'A browser plays no sound until the page has been clicked, so the game begins with a press.');
       if (failed) h.p(p, 'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.', 'fine');
       if (manifest && manifest.files.includes('script-ja.txt')) {
         h.choice(p, 'Language', LANGUAGES, lang, (value) => {
