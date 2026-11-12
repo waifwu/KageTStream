@@ -97,6 +97,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hm-link { font-size: 25px; color: var(--ink); border-bottom: 1.5px solid var(--rule); padding: 0 2px 1px; transition: color .12s, border-color .12s; }
 .hm-link:hover { color: #000; border-color: var(--ink); }
 .hm-link.warn { color: #8b3a3f; border-color: #b9777b; }
+/* Japanese: a Mincho face behind the Latin one, upright where the Latin is italic (a slanted
+   Japanese face is only the upright one pushed over), and no wide spacing between letters */
+:root:lang(ja) { --serif: "Palatino Linotype", Palatino, "Book Antiqua", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", "Noto Serif CJK JP", "MS PMincho", serif; }
+:root:lang(ja) #stage *, :root:lang(ja) #home * { font-style: normal; }
+:root:lang(ja) .slot.empty .thumb::after { content: "空き"; }
+:root:lang(ja) .cg.locked::after { content: "未見"; }
+:root:lang(ja) .cf-sec, :root:lang(ja) .hm-plate, :root:lang(ja) .hm-press, :root:lang(ja) #quickbar .plate,
+:root:lang(ja) .hm-choice .k, :root:lang(ja) .hm-facts div, :root:lang(ja) .hm-brand, :root:lang(ja) .gd-sub, :root:lang(ja) .fc-sub { letter-spacing: .12em; text-indent: 0; }
+.hm-choice { display: flex; align-items: baseline; gap: 34px; margin: 26px 0 0; }
+.hm-choice .k { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.hm-choice .hm-link { color: var(--ink-soft); border-color: transparent; }
+.hm-choice .hm-link:hover { color: var(--ink); border-color: var(--rule); }
+.hm-choice .hm-link.on { color: var(--ink); border-color: var(--ink); cursor: default; }
 .hm-press { display: block; margin: 46px auto 10px; padding: 14px 40px; font-size: 27px; letter-spacing: .42em; text-indent: .42em; text-transform: uppercase; color: var(--ink); animation: blink 2.2s ease-in-out infinite; }
 .hm-press[disabled] { animation: none; opacity: .45; cursor: default; letter-spacing: .1em; text-transform: none; font-style: italic; }
 @keyframes blink { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
@@ -236,10 +249,11 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 
 /* flowchart: tabs for the day and the two side stories */
 .fc-head { position: absolute; left: 0; top: 40px; display: flex; align-items: flex-end; }
-.fc-head .page-title { position: static; padding: 0 30px 4px 90px; border-bottom: 1.5px solid var(--rule); }
+/* --fit (shell.js, fitHead) sets the title and its tabs smaller where their words are too long for the line */
+.fc-head .page-title { position: static; padding: 0 calc(30px * var(--fit, 1)) 4px 90px; font-size: calc(44px * var(--fit, 1)); border-bottom: 1.5px solid var(--rule); }
 .fc-head .page-title::after { display: none; }
-.fc-tabs { display: flex; gap: 34px; padding: 0 30px 0 24px; border-bottom: 1.5px solid rgba(92, 102, 140, .3); }
-.fc-tab { font-size: 21px; line-height: 40px; margin-bottom: -1.5px; color: var(--ink-soft); border-bottom: 1.5px solid transparent; padding: 0 2px; transition: color .12s; }
+.fc-tabs { display: flex; gap: calc(34px * var(--fit, 1)); padding: 0 calc(30px * var(--fit, 1)) 0 calc(24px * var(--fit, 1)); white-space: nowrap; border-bottom: 1.5px solid rgba(92, 102, 140, .3); }
+.fc-tab { font-size: calc(21px * var(--fit, 1)); line-height: 40px; margin-bottom: -1.5px; color: var(--ink-soft); border-bottom: 1.5px solid transparent; padding: 0 2px; transition: color .12s; }
 .fc-tab:hover { color: var(--ink); }
 .fc-tab.on { color: var(--ink); border-bottom-color: var(--rule); }
 .fc-note { font-style: italic; }

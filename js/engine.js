@@ -57,6 +57,8 @@ export class Engine {
     this.labelLog = new Set();
     this.musicLog = new Set();      // music the story has played (for the music player)
     this.numOverride = null;        // see getNum
+    this.clickstr = null;           // see the clickstr command
+    this.clickstrLines = 0;
     this.globalsDirty = false;
     this.lastGlobalFlush = 0;
 
@@ -724,6 +726,19 @@ export class Engine {
         }
         await put(ch);
         i++;
+        // (not when another of them, or a wait of the line's own, comes straight after)
+        if (this.clickstr && this.clickstr.has(ch)) {
+          const nx = tok[i];
+          if (!(nx !== undefined && (this.clickstr.has(nx) || nx === '@' || nx === '\\'))) {
+            const left = text.linesLeft ? text.linesLeft() : Infinity;
+            gfx.present(true);
+            if (left <= this.clickstrLines) {
+              await this.host.ui.clickWait('\\');
+              this.newPage();
+            } else await this.host.ui.clickWait('@');
+            instant = false; due = Date.now();
+          }
+        }
         continue;
       }
       // one-byte (English) text: wrap at word boundaries
@@ -922,11 +937,18 @@ def('dim', function () {
 // accepted and ignored: these configure things that have no browser equivalent
 def('nsa arc ns2 ns3 nsadir filelog labellog kidokuskip mode_saya mode_ext mode800 mode400 mode320 ' +
     'transmode humanz underline windowback defaultfont defaultspeed mousecursor killmenu roff rmode ' +
-    'clickstr clickvoice selectvoice linepage usewheel useescspc pretextgosub textgosub loadgosub ' +
+    'clickvoice selectvoice linepage usewheel useescspc pretextgosub textgosub loadgosub ' +
     'maxkaisoupage lookbacksp soundpressplgin spi automode_time defvoicevol defsevol defmp3vol ' +
     'shadedistance intlimit zenkakko english mode_wave_demo savedir humanorder insertmenu resetmenu deletemenu ' +
     'menu_full menu_window menu_automode menu_click_def menu_click_page menu_dwavvolume lookbackflush lookbackvoice',
   function () { this.skipStatement(); });
+// clickstr "chars",lines: in two-byte (Japanese) text, a wait for a click follows each of these
+// characters, and a new page instead when no more than `lines` lines are left in the window.
+def('clickstr', function () {
+  const chars = this.readStr();
+  this.clickstr = chars ? new Set(chars) : null;
+  this.clickstrLines = this.tryComma() ? this.readInt() : 0;
+});
 def('game', function () {
   this.gameStarted = true;
   this.jumpTo('start');
@@ -1266,7 +1288,7 @@ async function select(name) {
   await this.enterTextMode();
   this.setSkip(false);
   this.flushGlobals();
-  const idx = await this.host.ui.select(opts.map((o) => o.text));
+  const idx = await this.host.ui.select(opts.map((o) => o.text), opts.map((o) => o.label || ''));
   if (mode === 'num') this.setRef(ref, idx);
   else if (mode === 'gosub') { if (this.jumpTo(opts[idx].label)) this.callStack.push(ret); }
   else this.jumpTo(opts[idx].label);

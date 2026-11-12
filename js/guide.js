@@ -13,6 +13,74 @@
 const words = (s) => s.toLowerCase().replace(/^\s*\d+\s*[.)]\s*/, '').replace(/[`|^]/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 
 // 1 when the two say the same thing, less as their words differ
+// The choices a script offers, in order: [{ key: where the options lead, texts }].
+function choiceSets(src) {
+  const out = [];
+  const lines = src.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (!/(?:^|[:\s])sel(?:ect|gosub)\s+["`$]/.test(lines[i]) || /^\s*;/.test(lines[i])) continue;
+    let stmt = lines[i];
+    while (/,\s*$/.test(stmt) && i + 1 < lines.length) stmt += '\n' + lines[++i];
+    const texts = [], labels = [];
+    for (const m of stmt.matchAll(/(?:"([^"]*)"|`([^`]*)`)\s*,\s*\*([A-Za-z0-9_]+)/g)) {
+      texts.push(m[1] !== undefined ? m[1] : m[2]);
+      labels.push(m[3].toLowerCase());
+    }
+    if (texts.length) out.push({ key: labels.join(','), texts });
+  }
+  return out;
+}
+const squash = (texts) => texts.map((t) => String(t).replace(/\s+/g, '')).join('\u0001');
+
+// For a story running in another language than the walkthrough's: its choices lead to the same
+// places as the reference script's, so each set of options is paired with the reference's set that
+// leads there (the n-th with the n-th, where several do). Gives a function that turns the options
+// offered (and where they lead) into the reference's wording, or returns them as they are.
+export function choiceTranslator(src, refSrc) {
+  const byKey = new Map();
+  for (const s of choiceSets(refSrc)) { if (!byKey.has(s.key)) byKey.set(s.key, []); byKey.get(s.key).push(s.texts); }
+  const seen = new Map(), table = new Map();
+  for (const s of choiceSets(src)) {
+    const k = seen.get(s.key) || 0;
+    seen.set(s.key, k + 1);
+    const ref = (byKey.get(s.key) || [])[k];
+    if (ref && ref.length === s.texts.length) table.set(s.key + '\u0002' + squash(s.texts), ref);
+  }
+  return (texts, labels) => (labels && table.get(labels.map((l) => String(l).toLowerCase()).join(',') + '\u0002' + squash(texts))) || texts;
+}
+
+// The other way round: the reference script's wording of a choice (as the flowchart has it), or the
+// walkthrough's wording of it, in the words of the script that is running.
+export function choiceBack(src, refSrc) {
+  const byKey = new Map();
+  for (const s of choiceSets(src)) { if (!byKey.has(s.key)) byKey.set(s.key, []); byKey.get(s.key).push(s.texts); }
+  const seen = new Map(), exact = new Map(), all = [];
+  const tidy = (x) => String(x).replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+  for (const s of choiceSets(refSrc)) {
+    const k = seen.get(s.key) || 0;
+    seen.set(s.key, k + 1);
+    const own = (byKey.get(s.key) || [])[k];
+    if (!own || own.length !== s.texts.length) continue;
+    s.texts.forEach((ref, i) => {
+      const key = squash([ref]);
+      if (!exact.has(key)) exact.set(key, tidy(own[i]));
+      all.push([ref, tidy(own[i])]);
+    });
+  }
+  const near = new Map();
+  return {
+    exact: (text) => exact.get(squash([text])) || null,
+    // the walkthrough writes a choice in its own words: the closest of the reference's
+    near: (text) => {
+      if (near.has(text)) return near.get(text);
+      let best = null, score = 0.6;
+      for (const [ref, own] of all) { const sc = similarity(text, ref); if (sc > score) { score = sc; best = own; } }
+      near.set(text, best);
+      return best;
+    },
+  };
+}
+
 export function similarity(a, b) {
   const x = words(a), y = words(b);
   if (!x || !y) return 0;

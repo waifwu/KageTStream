@@ -159,6 +159,8 @@ export class TextLayer {
   }
 
   // ---------------------------------------------------------------- writing
+  // lines of the window not yet begun, the one being written included
+  linesLeft() { return this.win.rows - this.st.line; }
   op(o) {
     this.ops.push(o);
     const g = apply(this.st, o);

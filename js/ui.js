@@ -186,7 +186,7 @@ export class UI {
   }
 
   // ------------------------------------------------------------------ text choices
-  async select(texts) {
+  async select(texts, labels) {
     const { gfx, input, text, shell } = this.host;
     const e = this.engine;
     input.flush();
@@ -206,7 +206,9 @@ export class UI {
     let hover = hit(input.x, input.y);
     // the guide's choice, if it is on and has one for this: a small moon before the option
     const guide = this.host.guide;
-    const wanted = guide ? guide.suggest(texts) : -1;
+    // (a story in another language than the walkthrough's: the same options, in its wording)
+    const told = this.host.guideTexts ? this.host.guideTexts(texts, labels) : texts;
+    const wanted = guide ? guide.suggest(told) : -1;
     const paint = () => {
       spans.forEach((s, i) => {
         text.recolor(s.from, s.to, i === hover ? on : off);
@@ -232,7 +234,7 @@ export class UI {
       this.setPointer(hover >= 0);
     };
     const chosen = (index) => {
-      if (guide && guide.chose(texts, index) === 'left') shell.toast('Not the guide\u2019s choice: no more marks this play-through, and the same Day stays next up.');
+      if (guide && guide.chose(told, index) === 'left') shell.toast('Not the guide\u2019s choice: no more marks this play-through, and the same Day stays next up.');
       return index;
     };
     paint();
@@ -408,6 +410,23 @@ export class UI {
   // goes on being kept, so turning the switch off shows it again as it really stands.
   unlocked() { return !!(this.host.unlocked && this.host.unlocked()); }
 
+  // The script the flowchart and the track names are read from: the English one, also while the
+  // story runs in another language (the two have the same scenes under the same labels).
+  refSrc() { return this.host.refScript || this.engine.src; }
+
+  // Whether a scene has been read through: its closing label "*se<N>" has been passed. A scene
+  // whose closing label only one of the scripts has counts as read once it has been entered.
+  entered(scene) {
+    const e = this.engine;
+    const end = 'se' + scene.slice(1);
+    if (!this.refLabels) {
+      this.refLabels = new Set();
+      for (const m of this.refSrc().matchAll(/^[ \t]*\*([A-Za-z0-9_]+)/gm)) this.refLabels.add(m[1].toLowerCase());
+    }
+    if (e.labels.has(end) && this.refLabels.has(end)) return e.labelLog.has(end);
+    return e.labelLog.has(end) || e.labelLog.has(scene);
+  }
+
   // The game's four galleries, read from the script: each fills in a page's nine pictures (and,
   // for two of them, names and the flags that open them) before it shows the page, and that
   // stretch of script is simply run for every page. What opens a picture differs by gallery:
@@ -449,13 +468,11 @@ export class UI {
   // The tracks, as the script's own music room names them ("*mp_play<N>": play "*<N>", "Now playing: ...").
   tracks() {
     if (this.trackList) return this.trackList;
-    const e = this.engine;
+    const src = this.refSrc();
     const out = [];
-    for (const [name, l] of e.labels) {
-      const m = /^mp_play(\d+)$/.exec(name);
-      if (!m) continue;
-      const end = e.src.indexOf('\n*', l.off + 1);
-      const block = e.src.slice(l.off, end < 0 ? l.off + 600 : end);
+    for (const m of src.matchAll(/^[ \t]*\*mp_play\d+\b/gm)) {
+      const end = src.indexOf('\n*', m.index + 1);
+      const block = src.slice(m.index, end < 0 ? m.index + 600 : end);
       const play = /play\w*\s+"\*(\d+)"/.exec(block);
       const title = /Now playing:\s*([^\n]*)/.exec(block);
       if (!play) continue;
@@ -490,10 +507,7 @@ export class UI {
         }
       }
     }
-    for (const [scene, nos] of this.sceneMusic) {
-      const end = 'se' + scene.slice(1);
-      if (e.labelLog.has(e.labels.has(end) ? end : scene)) for (const no of nos) heard.add(no);
-    }
+    for (const [scene, nos] of this.sceneMusic) if (this.entered(scene)) for (const no of nos) heard.add(no);
     return heard;
   }
 
@@ -538,16 +552,22 @@ export class UI {
     const e = this.engine;
     const { shell } = this.host;
     if (!this.charts) {
-      const flow = parseFlow(e.src);
-      this.charts = { model: flow, day: layoutFlow(flow, { bands: true }), side: sideStories(e.src, flow) };
+      const flow = parseFlow(this.refSrc());
+      this.charts = { model: flow, day: layoutFlow(flow, { bands: true }), side: sideStories(this.refSrc(), flow) };
+      // the chart is laid out from the reference script; where the story runs in another language
+      // its scenes carry the names that script gives them
+      const names = this.host.sceneNames;
+      if (names) {
+        for (const n of this.charts.day.nodes) {
+          const own = n.scene && names.get(n.scene);
+          if (own) { n.name = own.name; n.zone = own.zone; }
+        }
+      }
     }
     const day = this.charts.day;
     if (!day.nodes.length) { shell.toast('This story has no flowchart.'); return; }
     const flag = (name) => (name && e.numalias.has(name) ? e.getNum(e.numalias.get(name)) : 0);
-    const entered = (scene) => {
-      const end = 'se' + scene.slice(1);
-      return e.labelLog.has(e.labels.has(end) ? end : scene);
-    };
+    const entered = (scene) => this.entered(scene);
     const all = this.unlocked();
     const seen = new Set();
     for (const n of day.nodes) if (n.kind === 'scene' && (all || entered(n.scene))) seen.add(n.id);

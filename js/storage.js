@@ -3,6 +3,7 @@
 export class Storage {
   constructor(prefix) {
     this.prefix = prefix;
+    this.slotPrefix = '';       // saved games are a script's own: another language keeps its own set
     this.mem = new Map();
     try {
       localStorage.setItem(prefix + 'probe', '1');
@@ -31,10 +32,10 @@ export class Storage {
   }
   loadGlobals() { return this.get('global'); }
   saveGlobals(g) { return this.set('global', g); }
-  saveSlot(no, data) { return this.set('save' + no, data); }
-  loadSlot(no) { return this.get('save' + no); }
+  saveSlot(no, data) { return this.set(this.slotPrefix + 'save' + no, data); }
+  loadSlot(no) { return this.get(this.slotPrefix + 'save' + no); }
   slotInfo(no) {
-    const d = this.get('save' + no);
+    const d = this.get(this.slotPrefix + 'save' + no);
     return d ? { time: d.time, scriptLen: d.scriptLen } : null;
   }
   loadSettings() { return this.get('settings') || {}; }

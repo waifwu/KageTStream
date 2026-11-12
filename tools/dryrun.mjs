@@ -1,14 +1,14 @@
 // Headless smoke test: runs the real interpreter over data/script.txt with a
 // stub display, making random choices, and reports script warnings.
 //
-//   node tools/dryrun.mjs [runs=30] [stepsPerRun=400000] [seed=1]
+//   node tools/dryrun.mjs [runs=30] [stepsPerRun=400000] [seed=1] [script=data/script.txt]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Engine, Signal, commandNames } from '../js/engine.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const script = fs.readFileSync(path.join(here, '..', 'data', 'script.txt'), 'utf8');
+const script = fs.readFileSync(process.argv[5] ? path.resolve(process.argv[5]) : path.join(here, '..', 'data', 'script.txt'), 'utf8');
 const runs = +process.argv[2] || 30;
 const maxSteps = +process.argv[3] || 400000;
 let seed = +process.argv[4] || 1;

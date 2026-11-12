@@ -2,6 +2,10 @@
 """Unpack an NScripter / ONScripter game folder into plain files a browser can fetch.
 
     python3 tools/extract.py "<path to Game folder>" [output dir, default: ./data]
+    python3 tools/extract.py --ja "<Japanese nscript.dat, its folder, or the disc image (.bin/.cue/.iso)>"
+
+The second form adds the Japanese script to the data that is already there (it can also be
+given together with the first). With it the player offers a language switch.
 
 What it does
   * nscript.dat   -> data/script.txt   (XOR 0x84 de-obfuscation, Shift-JIS -> UTF-8)
@@ -9,12 +13,14 @@ What it does
   * CD/track*.ogg -> data/cd/
   * default.ttf   -> data/default.ttf
   * Walkthrough.txt (next to the game, or in ../Extras) -> data/guide.txt
+  * --ja <source> -> data/script-ja.txt (the same de-obfuscation; read straight off a disc image)
   * data/manifest.json lists every extracted file (lower-case, forward slashes).
 
 Nothing is re-encoded: images and audio are written byte-for-byte as stored.
 """
 import json
 import os
+import re
 import shutil
 import struct
 import sys
@@ -158,13 +164,112 @@ def norm(name):
     return name.replace('\\', '/').lower()
 
 
+def iso_files(path):
+    """Yields (name, read) for every file of an ISO9660 disc image: a plain .iso, or a raw
+    .bin of 2352-byte sectors (mode 1 or mode 2 form 1)."""
+    f = open(path, 'rb')
+    for size, skip in ((2352, 24), (2352, 16), (2048, 0)):
+        f.seek(16 * size + skip)
+        if f.read(6)[1:6] == b'CD001':
+            break
+    else:
+        raise ValueError('not an ISO9660 disc image: ' + path)
+
+    def read(lba, length):
+        out = bytearray()
+        while len(out) < length:
+            f.seek(lba * size + skip)
+            out += f.read(2048)
+            lba += 1
+        return bytes(out[:length])
+
+    def walk(lba, length, prefix):
+        data = read(lba, length)
+        i = 0
+        while i < len(data):
+            n = data[i]
+            if n == 0:                      # records do not cross a sector: on to the next one
+                i = (i // 2048 + 1) * 2048
+                continue
+            rec = data[i:i + n]
+            i += n
+            name = rec[33:33 + rec[32]]
+            if name in (b'\x00', b'\x01'):
+                continue
+            e_lba, e_len = struct.unpack_from('<I', rec, 2)[0], struct.unpack_from('<I', rec, 10)[0]
+            name = prefix + name.decode('cp932', 'replace').split(';')[0]
+            if rec[25] & 2:
+                yield from walk(e_lba, e_len, name + '/')
+            else:
+                yield name, (lambda a=e_lba, b=e_len: read(a, b))
+
+    f.seek(16 * size + skip)
+    root = f.read(2048)[156:190]
+    yield from walk(struct.unpack_from('<I', root, 2)[0], struct.unpack_from('<I', root, 10)[0], '')
+
+
+def japanese_script(src):
+    """The Japanese script as text. `src` is an nscript.dat, a folder holding one, or a disc image
+    (.bin / .iso, or the .cue beside it): on a disc the largest nscript.dat is the game's."""
+    if os.path.isdir(src):
+        src = os.path.join(src, 'nscript.dat')
+    if src.lower().endswith('.cue'):
+        m = re.search(r'FILE\s+"([^"]+)"', open(src, encoding='utf-8', errors='replace').read())
+        folder = os.path.dirname(os.path.abspath(src))
+        want = (m.group(1) if m else '').lower()
+        hit = [n for n in os.listdir(folder) if n.lower() == want]
+        if not hit:
+            raise ValueError('the file named in the cue sheet is not beside it')
+        src = os.path.join(folder, hit[0])
+    if src.lower().endswith(('.bin', '.iso', '.img')):
+        best = None
+        for name, read in iso_files(src):
+            if name.lower().rsplit('/', 1)[-1] == 'nscript.dat':
+                data = read()
+                if best is None or len(data) > len(best):
+                    best = data
+        if best is None:
+            raise ValueError('no nscript.dat on the disc')
+        raw = best
+    else:
+        raw = open(src, 'rb').read()
+    return bytes(b ^ 0x84 for b in raw).decode('cp932', 'replace').replace('\r\n', '\n').replace('\r', '\n')
+
+
+def add_japanese(src, out):
+    """Writes data/script-ja.txt and lists it in the manifest that is already there."""
+    text = japanese_script(src)
+    with open(os.path.join(out, 'script-ja.txt'), 'wb') as f:
+        f.write(text.encode('utf-8'))
+    mpath = os.path.join(out, 'manifest.json')
+    manifest = json.load(open(mpath)) if os.path.exists(mpath) else {'files': []}
+    manifest['files'] = sorted(set(manifest['files']) | {'script-ja.txt'})
+    with open(mpath, 'w') as f:
+        json.dump(manifest, f)
+    print('japanese script: %d lines' % text.count('\n'))
+
+
 def main():
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    ja = None
+    if '--ja' in args:
+        k = args.index('--ja')
+        if k + 1 >= len(args):
+            print(__doc__)
+            return 1
+        ja = args[k + 1]
+        del args[k:k + 2]
+    here = os.path.dirname(os.path.abspath(__file__))
+    if not args and ja:                 # only the Japanese script, into the data that is there
+        out = os.path.abspath(os.path.join(here, '..', 'data'))
+        os.makedirs(out, exist_ok=True)
+        add_japanese(ja, out)
+        return 0
+    if not args:
         print(__doc__)
         return 1
-    game = sys.argv[1]
-    here = os.path.dirname(os.path.abspath(__file__))
-    out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(here, '..', 'data')
+    game = args[0]
+    out = args[1] if len(args) > 1 else os.path.join(here, '..', 'data')
     out = os.path.abspath(out)
     os.makedirs(out, exist_ok=True)
     files = []
@@ -239,6 +344,8 @@ def main():
     with open(os.path.join(out, 'manifest.json'), 'w') as f:
         json.dump({'files': files}, f)
     print('wrote %d files to %s' % (len(files), out))
+    if ja:
+        add_japanese(ja, out)
     return 0
 
 

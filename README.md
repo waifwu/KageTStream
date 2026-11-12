@@ -24,6 +24,16 @@ translation by swapping `nscript.dat` / `nscriptoriginal.dat` first):
 python3 tools/extract.py "/path/to/Kagetsu Tohya/Game"
 ```
 
+To add the Japanese script (from an original Japanese copy: its `nscript.dat`,
+the folder holding it, or the disc image as `.bin`, `.cue` or `.iso`):
+
+```bash
+python3 tools/extract.py --ja "/path/to/Kagetsu Tohya.cue"
+```
+
+This writes `data/script-ja.txt` and lists it in the manifest; nothing else in
+`data/` is touched. The pictures and sound are the ones already extracted.
+
 ## The interface
 
 Everything is drawn inside the picture and scales with it; there is no
@@ -32,8 +42,8 @@ paper, slate ink in a Palatino face, thin rules that run in from the edge of the
 screen, a lower-case "back", and the twilight field behind anything shown over
 the story.
 
-* **Opening page** — four plates over the twilight field: About, Controls, Save
-  data, Play. It opens with none chosen, so a stray click starts nothing; the
+* **Opening page** — four plates over the twilight field: About (with a link to
+  the source on GitHub), Controls, Save data, Play. It opens with none chosen, so a stray click starts nothing; the
   Play page's "press any button" starts the game (and is the click a browser
   needs before it will play sound).
 * **The game's own menus** — the title, Start game and each story's page are
@@ -78,13 +88,31 @@ the story.
   guide is on and which ending it leads to. On the flowchart the day's route is
   drawn in amber. `node tools/guide-check.mjs [normal|true]` plays the whole
   walkthrough through the real script and reports any step that does not match
-  a choice the game offers (none, for either ending).
+  a choice the game offers (none, for either ending). Add `ja` to play the
+  Japanese script the same way.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the game's own four switches (instant effects,
   skip parts already read, daily message, skip explicit content), music and
   effect volume, the glow around the picture, fullscreen. The game's "Game
   settings" entry opens this page.
-* **Unlock everything** (Settings, under Progress; off by default) — asks
+* **Language** (the opening page's Play tab, and Settings; shown when the data
+  holds the Japanese script) — English or 日本語. On the opening page nothing is
+  running yet, so the other script is simply loaded and the Play tab comes back.
+  From Settings it asks first, then starts again from the opening page with the
+  other script. What has been read, the gallery, the flowchart and the
+  guide's place carry over, because the two scripts keep the same scenes under
+  the same labels; saved games are kept separately for each language.
+  The interface follows the story's language (`js/i18n.js`). Where the game has
+  words of its own they are the game's: the menu entries painted on its Japanese
+  pictures (the title, Start game, the ten dreams, the summer festivals,
+  Options, Game settings), the names its script gives saving, loading and the
+  right-click menu, the name each scene gives itself, and each choice as the
+  Japanese script writes it. "back", "op", "a day", "ep" and "help" stay as they
+  are, because the Japanese game writes them that way too. The pages this port
+  added are translated. The flowchart is still laid out from the English script,
+  and with the guide on a Japanese choice is matched through the English choice
+  that leads to the same place.
+* **Unlock everything** (Settings; off by default) — asks
   first, then opens every scene on the flowchart (each can be read on its own),
   every picture and track in the Gallery, and every story on the Start game
   pages (Ep, Summer Festivals, all ten dreams). It is a view laid over your own
@@ -139,14 +167,16 @@ js/audio.js             music and sound effects
 js/input.js             mouse / touch / keyboard
 js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
-tools/extract.py        unpacks a game folder into data/
+js/i18n.js              the interface's words in Japanese
+tools/extract.py        unpacks a game folder into data/; --ja adds the Japanese script
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script
 data/                   extracted game data (generated)
 ```
 
 `node tools/dryrun.mjs 150` plays the script 150 times with random choices and
-no display, and prints any script warnings.
+no display, and prints any script warnings. A fourth argument names another
+script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt`.
 
 ## Known differences from the Windows build
 

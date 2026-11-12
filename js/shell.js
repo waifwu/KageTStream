@@ -6,18 +6,38 @@
 // so the engine can simply await it from wherever it is waiting.
 
 import { parseCond } from './flowchart-model.js';
+import { t, when as whenJa } from './i18n.js';
+
+// (several functions below have a `t` of their own: there the wording is asked of `tr`)
+const tr = t;
 
 const SW = 1280, SH = 960;
 
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
-  if (text !== undefined) e.textContent = text;
+  if (text !== undefined) e.textContent = t(text);
   return e;
 };
 const pad2 = (n) => String(n).padStart(2, '0');
+// A page's title and tabs stand on one line with a count at its far end. Where the words are too
+// long for that (another language's), the title and tabs are set smaller until they end before
+// the count begins. The 90px before the title is the page's margin and stays as it is.
+const fitHead = (head, count) => {
+  head.style.removeProperty('--fit');
+  const h = head.getBoundingClientRect(), c = count.getBoundingClientRect();
+  if (!h.width || !c.width || !head.offsetWidth) return;
+  const unit = h.width / head.offsetWidth;          // the stage is scaled as a whole
+  const room = (c.left - h.left) / unit - 30, natural = head.offsetWidth, margin = 90;
+  if (natural > room) head.style.setProperty('--fit', Math.max(0.55, (room - margin) / (natural - margin)).toFixed(3));
+};
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const when = (t) => {
+const when = (time) => {
+  const ja = whenJa(time);
+  if (ja) return ja;
+  return whenEn(time);
+};
+const whenEn = (t) => {
   const d = new Date(t);
   return d.getDate() + ' ' + MONTHS[d.getMonth()] + '  ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
 };
@@ -31,6 +51,10 @@ export class Shell {
     this.ambient = document.getElementById('ambient');
     this.input = null;
     this.everything = false;      // "Unlock everything" is on (main.js sets it): the pages' counts say so
+    // A choice of the story, in the words of the script that is running (main.js sets these when
+    // that is not the script the flowchart and the walkthrough were read from).
+    this.word = (s) => s;         // a choice exactly as the reference script writes it
+    this.stepWord = (s) => s;     // a choice as the walkthrough words it
     this.layers = [];
     this.leaving = [];
     this.homeOpen = false;
@@ -204,7 +228,7 @@ export class Shell {
   }
   toast(msg) {
     const t = this.toastEl;
-    t.textContent = msg;
+    t.textContent = tr(msg);
     t.classList.add('on');
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
@@ -513,7 +537,7 @@ export class Shell {
       const list = el('div', 'gp-list' + (items.length > 7 ? ' long' : ''));
       for (const it of items) {
         const b = ctl.nav(el('button', 'gp-item' + (it.guide ? ' guided' : ''), it.label), () => ctl.done(it.no));
-        if (it.guide) { b.title = 'The guide begins the day here'; b.appendChild(el('span', 'moon')); }
+        if (it.guide) { b.title = tr('The guide begins the day here'); b.appendChild(el('span', 'moon')); }
         list.appendChild(b);
       }
       layer.appendChild(list);
@@ -560,7 +584,7 @@ export class Shell {
         const next = finished ? null : days[at - 1];
         ctl.items.length = 0;
         ctl.cur = -1;
-        note.textContent = at - 1 + ' of ' + total + ' done';
+        note.textContent = tr(at - 1 + ' of ' + total + ' done');
         left.innerHTML = '';
         right.innerHTML = '';
 
@@ -600,7 +624,7 @@ export class Shell {
         days.forEach((d, i) => {
           const state = i + 1 < at ? 'done' : i + 1 === at ? 'next' : 'later';
           const b = el('button', 'gd-day ' + state + (i + 1 === shown ? ' shown' : ''), String(d.n));
-          b.title = state === 'done' ? 'Day ' + d.n + ': done' : state === 'next' ? 'Day ' + d.n + ': next up' : 'Day ' + d.n + ': still to come';
+          b.title = tr(state === 'done' ? 'Day ' + d.n + ': done' : state === 'next' ? 'Day ' + d.n + ': next up' : 'Day ' + d.n + ': still to come');
           ctl.nav(b, () => { shown = i + 1; render(); });
           grid.appendChild(b);
         });
@@ -609,7 +633,7 @@ export class Shell {
         for (const [cls, label] of [['done', 'Done'], ['next', 'Next up'], ['later', 'Still to come'], ['shown', 'Shown on the right']]) {
           const k = el('span', 'gd-keyitem');
           k.appendChild(el('span', 'gd-day mini ' + cls));
-          k.append(label);
+          k.append(tr(label));
           key.appendChild(k);
         }
         left.appendChild(key);
@@ -632,7 +656,7 @@ export class Shell {
         if (d.steps.length) {
           right.appendChild(el('div', 'gd-sub steps', 'Choices to take, in order'));
           const ol = el('ol', 'gd-steps');
-          for (const st of d.steps) ol.appendChild(el('li', null, st.text));
+          for (const st of d.steps) ol.appendChild(el('li', null, this.stepWord(st.text)));
           right.appendChild(ol);
         } else right.appendChild(el('div', 'gd-entry', 'No choices are made in this one.'));
         if (d.quiz === 'miss') right.appendChild(el('div', 'gd-note', 'There is a quiz in this one, and the walkthrough has you miss a question on purpose, so nothing is marked in it.'));
@@ -683,7 +707,9 @@ export class Shell {
         const cat = cats[index];
         tabs.forEach((b, k) => b.classList.toggle('on', k === index));
         const open = cat.items.filter((it) => it.unlocked);
-        count.textContent = this.everything ? 'All ' + cat.items.length + ' unlocked' : open.length + ' of ' + cat.items.length + ' seen';
+        count.textContent = tr(this.everything ? 'All ' + cat.items.length + ' unlocked' : open.length + ' of ' + cat.items.length + ' seen');
+        fitHead(head, count);
+        requestAnimationFrame(() => fitHead(head, count));
         scroll.innerHTML = '';
         scroll.scrollTop = 0;
         ctl.items.length = 0;
@@ -790,7 +816,7 @@ export class Shell {
         if (t.locked) {
           // not met in the story yet: no name, and nothing to press
           b.disabled = true;
-          b.title = 'Not heard in the story yet';
+          b.title = tr('Not heard in the story yet');
         } else {
           ctl.nav(b, () => { if (api.state().no === t.no) api.toggle(); else api.play(t.no); paint(); });
           rows.push([b, t]);
@@ -833,12 +859,12 @@ export class Shell {
         const st = api.state();
         const t = tracks.find((x) => x.no === st.no);
         rows.forEach(([b, tr]) => { b.classList.toggle('playing', tr.no === st.no && !st.paused); b.classList.toggle('chosen', tr.no === st.no); });
-        name.textContent = t ? t.title : open.length ? 'Choose a track' : 'No music heard in the story yet';
+        name.textContent = tr(t ? t.title : open.length ? 'Choose a track' : 'No music heard in the story yet');
         name.classList.toggle('idle', !t);
         for (const b of [prev, play, next]) b.disabled = !open.length;
         const showPlay = !t || st.paused;
         if (showPlay !== shownPlay) { play.innerHTML = icon(showPlay ? ICON.play : ICON.pause, 34); shownPlay = showPlay; }
-        repeat.textContent = api.repeat ? 'Repeat' : 'Play through';
+        repeat.textContent = tr(api.repeat ? 'Repeat' : 'Play through');
         seek.disabled = !t || !st.duration;
         if (!dragging) {
           seek.value = st.duration ? Math.round((st.time / st.duration) * 1000) : 0;
@@ -923,12 +949,20 @@ export class Shell {
     const svg = (tag, attrs, text) => {
       const e = document.createElementNS(NS, tag);
       for (const k in attrs) e.setAttribute(k, attrs[k]);
-      if (text !== undefined) e.textContent = text;
+      if (text !== undefined) e.textContent = tr(text);
       return e;
     };
     const wrap = (str, max) => {
       const out = [];
       let line = '';
+      // a name without spaces between its words (Japanese) breaks by the letter; a full-width
+      // letter takes the room of about two
+      if (!str.includes(' ') && /[^\x00-\xff]/.test(str)) {
+        const per = Math.floor(max / 2) - 1;
+        for (let i = 0; i < str.length; i += per) out.push(str.slice(i, i + per));
+        if (out.length > 2) { out.length = 2; out[1] = out[1].slice(0, per - 1) + '…'; }
+        return out;
+      }
       for (const w of str.split(' ')) {
         if (line && (line + ' ' + w).length > max) { out.push(line); line = w; } else line = line ? line + ' ' + w : w;
       }
@@ -980,7 +1014,7 @@ export class Shell {
       const show = (index, focus) => {
         const t = tabs[index], chart = t.chart, isSeen = seenOf[index];
         const named = (n) => isSeen.get(n.id) || (t.open && t.open.has(n.id));
-        const nameOf = (n) => n.name || n.title || NONAME;
+        const nameOf = (n) => tr(this.word(n.name || n.title || NONAME));
         const inEdges = new Map(chart.nodes.map((n) => [n.id, []]));
         for (const e of chart.edges) inEdges.get(e.to).push(e);
         tabButtons.forEach((b, k) => b.classList.toggle('on', k === index));
@@ -990,8 +1024,10 @@ export class Shell {
         legend.innerHTML = '';
         if (t.note) legend.appendChild(el('span', 'fc-note', t.note));
         const scenes = chart.nodes.filter((n) => n.kind === 'scene');
-        count.textContent = opts.unlocked ? 'All ' + scenes.length + ' scenes unlocked'
-          : scenes.filter((n) => isSeen.get(n.id)).length + ' of ' + scenes.length + ' scenes read';
+        count.textContent = tr(opts.unlocked ? 'All ' + scenes.length + ' scenes unlocked'
+          : scenes.filter((n) => isSeen.get(n.id)).length + ' of ' + scenes.length + ' scenes read');
+        fitHead(head, count);
+        requestAnimationFrame(() => fitHead(head, count));
 
         // What is drawn. By default only what has been reached: the scenes read, and the next
         // step from each (through any turn in the road). "Everything" draws the whole chart.
@@ -1151,25 +1187,25 @@ export class Shell {
         const condEl = (text) => {
           const box = el('span', 'how');
           parseCond(text).forEach((term, k) => {
-            if (k) box.append(' and ');
+            if (k) box.append(tr(' and '));
             const setters = (chart.setters.get(term.name) || []).filter((fid) => chart.byId.has(fid) && chart.byId.get(fid).kind === 'scene');
             const least = term.op === '>' ? term.n + 1 : term.n;
             const most = term.op === '<' ? term.n : term.n + 1;
             const up = term.op === '>=' || term.op === '>';
             const down = term.op === '<' || term.op === '<=';
             const many = up ? least > 1 : down ? most > 1 : true;
-            box.append(up ? (many ? 'after ' + least + ' of ' : 'after ') : down ? (many ? 'with fewer than ' + most + ' of ' : 'before ') : 'depending on ');
-            if (!setters.length) box.append('something outside the day');
+            box.append(tr(up ? (many ? 'after ' + least + ' of ' : 'after ') : down ? (many ? 'with fewer than ' + most + ' of ' : 'before ') : 'depending on '));
+            if (!setters.length) box.append(tr('something outside the day'));
             else {
-              setters.slice(0, 5).forEach((fid, n) => { if (n) box.append(many ? ', ' : ' or '); box.appendChild(refTo(fid)); });
-              if (setters.length > 5) box.append(' and ' + (setters.length - 5) + ' more');
+              setters.slice(0, 5).forEach((fid, n) => { if (n) box.append(tr(many ? ', ' : ' or ')); box.appendChild(refTo(fid)); });
+              if (setters.length > 5) box.append(tr(' and ' + (setters.length - 5) + ' more'));
             }
-            if (many && opts.value) box.append(' (now ' + opts.value(term.name) + ')');
+            if (many && opts.value) box.append(tr(' (now ' + opts.value(term.name) + ')'));
           });
           return box;
         };
         const howEl = (e) => {
-          if (e.kind === 'choice') return el('span', 'how', '“' + e.text + '”');
+          if (e.kind === 'choice') return el('span', 'how', '“' + this.word(e.text) + '”');
           if (e.kind === 'if') return prefs.hints ? condEl(e.text) : el('span', 'how', 'depending on what has happened');
           return el('span', 'how', e.kind === 'else' ? 'otherwise' : 'then');
         };
@@ -1234,7 +1270,7 @@ export class Shell {
             const ways = inEdges.get(id).filter((e) => vis.has(e.from));
             rows('How to get here', ways.map((e) => {
               const how = howEl(e);
-              how.prepend(e.kind === 'choice' ? 'Choose ' : '');
+              how.prepend(e.kind === 'choice' ? tr('Choose ') : '');
               const from = chart.byId.get(e.from);
               const b = el('button', 'to', 'From ' + (from.kind === 'gate' ? 'a turn in the road' : isSeen.get(e.from) ? nameOf(from) : DOTS));
               b.addEventListener('click', (ev) => { ev.stopPropagation(); select(e.from); centre(from); });
@@ -1348,7 +1384,7 @@ export class Shell {
 
   // ---------------------------------------------------------------- opening page
   // tabs: [{ plate, build(panel) }]; the last tab's page starts the game.
-  showHome({ art, brand, title, sub, line, foot, tabs, onStart }) {
+  showHome({ art, brand, title, sub, line, foot, tabs, onStart, open = -1 }) {
     const home = this.home;
     this.homeOpen = true;
     this.syncModal();
@@ -1390,6 +1426,7 @@ export class Shell {
       strip.appendChild(p);
     });
     home.addEventListener('click', (e) => { if (e.target === home || e.target === intro) choose(-1); });
+    if (open >= 0 && open < tabs.length) choose(open);
     this.homeKey = (e) => {
       if (e.target && e.target.tagName === 'INPUT') return false;
       const n = tabs.length;
@@ -1403,7 +1440,7 @@ export class Shell {
       return true;
     };
   }
-  setHomeStatus(text) { if (this.homeStatus) this.homeStatus.textContent = text; }
+  setHomeStatus(text) { if (this.homeStatus) this.homeStatus.textContent = tr(text); }
   closeHome() {
     if (!this.home.isConnected) return;
     this.home.classList.add('leaving');
@@ -1430,6 +1467,28 @@ export const h = {
   actions: (panel, actions) => {
     const g = el('div', 'hm-actions');
     for (const [label, fn, cls] of actions) { const b = el('button', 'hm-link' + (cls ? ' ' + cls : ''), label); b.addEventListener('click', fn); g.appendChild(b); }
+    panel.appendChild(g);
+  },
+  // a link that leaves the page
+  link: (panel, lead, text, href) => {
+    const p = el('p');
+    if (lead) p.appendChild(document.createTextNode(lead + ' '));
+    const a = el('a', 'hm-link', text);
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    p.appendChild(a);
+    panel.appendChild(p);
+  },
+  // one of a few: [[label, value]], the current value, and what to do when another is taken
+  choice: (panel, label, options, current, fn) => {
+    const g = el('div', 'hm-choice');
+    g.appendChild(el('span', 'k', label));
+    for (const [text, value] of options) {
+      const b = el('button', 'hm-link' + (value === current ? ' on' : ''), text);
+      if (value !== current) b.addEventListener('click', (e) => { e.stopPropagation(); fn(value); });
+      g.appendChild(b);
+    }
     panel.appendChild(g);
   },
   press: (panel, label, enabled, fn) => {

@@ -1,7 +1,10 @@
 // Plays the whole walkthrough through the real script, headlessly, and reports
 // every day on which a step of the guide did not match a choice the game offered.
 //
-//   node tools/guide-check.mjs [normal|true] [-v]
+//   node tools/guide-check.mjs [normal|true] [ja] [-v]
+//
+// With "ja" it plays the Japanese script (data/script-ja.txt), reading each choice through its
+// English counterpart as the player does.
 //
 // It starts from an empty save, as the walkthrough assumes, presses the menus
 // the way a reader would (Start game, the story, then "a day" / "op" / "ep" as
@@ -10,11 +13,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Engine, Signal } from '../js/engine.js';
-import { Guide } from '../js/guide.js';
+import { Guide, choiceTranslator } from '../js/guide.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const data = path.join(here, '..', 'data');
-const script = fs.readFileSync(path.join(data, 'script.txt'), 'utf8');
+const english = fs.readFileSync(path.join(data, 'script.txt'), 'utf8');
+const japanese = process.argv.includes('ja');
+const script = japanese ? fs.readFileSync(path.join(data, 'script-ja.txt'), 'utf8') : english;
+const told = japanese ? choiceTranslator(script, english) : null;
 const ending = process.argv.includes('true') ? 'true' : 'normal';
 const verbose = process.argv.includes('-v');
 
@@ -68,7 +74,8 @@ let engine = null;
 const ui = {
   clickWait: async () => {},
   systemCall: async () => {},
-  async select(texts) {
+  async select(shown, labels) {
+    const texts = told ? told(shown, labels) : shown;
     const want = guide.suggest(texts);
     let pick = want;
     const short = (x) => x.replace(/`/g, '').trim().split(/\s+/).slice(0, 4).join(' ');

@@ -8,9 +8,24 @@ import { Storage } from './storage.js';
 import { UI } from './ui.js';
 import { Shell, h } from './shell.js';
 import { bgOverride, hideSprite } from './skins.js';
-import { Guide } from './guide.js';
+import { Guide, choiceTranslator, choiceBack } from './guide.js';
+import { setLang, t } from './i18n.js';
 
 const DATA = 'data/';
+const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja']];
+
+// What the Japanese script calls its scenes. Each says so in the question it asks before a re-read
+// ("ここは、「学校・昼休み～食堂。…」のシーンです。"): the place before the first "・", then the name.
+function sceneNames(src) {
+  const out = new Map();
+  const re = /^[ \t]*\*(s\d+)\b[^\n]*\n(?:(?![ \t]*\*)[^\n]*\n){0,10}?[ \t\u3000;]*ここは_?、「(.*?)_?」のシーンです/gm;
+  for (const m of src.matchAll(re)) {
+    const title = m[2].replace(/_/g, '');
+    const cut = title.indexOf('・');
+    out.set(m[1].toLowerCase(), cut > 0 && cut <= 8 ? { zone: title.slice(0, cut), name: title.slice(cut + 1) } : { zone: '', name: title });
+  }
+  return out;
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const frame = () => new Promise((r) => (document.hidden ? setTimeout(r, 16) : requestAnimationFrame(() => r())));
 
@@ -32,13 +47,23 @@ async function boot() {
   const autostart = new URLSearchParams(location.search).has('autostart');
 
   // -------------------------------------------------------------- data
-  let manifest = null, script = null, failed = false, guideText = '';
+  // The story runs from one script. Where the data also holds the Japanese one (script-ja.txt,
+  // see tools/extract.py --ja) Settings offers the choice, and `lang` is the one in use. The English
+  // script is read either way: the flowchart, the track names and the guide are made from it, so
+  // those pages are the same in both languages.
+  let manifest = null, script = null, refScript = null, lang = 'en', failed = false, guideText = '';
   const loading = (async () => {
     try {
       const [m, s] = await Promise.all([fetch(DATA + 'manifest.json'), fetch(DATA + 'script.txt')]);
       if (!m.ok || !s.ok) throw new Error('missing');
       manifest = await m.json();
-      script = await s.text();
+      script = refScript = await s.text();
+      if (settings.lang === 'ja' && manifest.files.includes('script-ja.txt')) {
+        try {
+          const j = await fetch(DATA + 'script-ja.txt');
+          if (j.ok) { script = await j.text(); lang = 'ja'; }
+        } catch (e) { /* the English script stands */ }
+      }
       if (manifest.files.includes('guide.txt')) {
         try { const g = await fetch(DATA + 'guide.txt'); if (g.ok) guideText = await g.text(); } catch (e) { /* no guide */ }
       }
@@ -51,6 +76,23 @@ async function boot() {
 
   const storage = new Storage('nsweb:game:');
   const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  // The interface speaks the story's language. The setting is known at once; whether the data
+  // really holds the Japanese script is known when it has loaded, and is put right then.
+  const wording = (l) => {
+    setLang(l);
+    document.documentElement.lang = l;
+    // the parts of the page that are written in index.html
+    for (const n of document.querySelectorAll('#quickbar .plate, #modes .chip, #qb-handle')) {
+      for (const c of n.childNodes) if (c.nodeType === 3 && c.data.trim()) { n.dataset.en = n.dataset.en || c.data.trim(); c.data = t(n.dataset.en); }
+      for (const a of ['title', 'aria-label']) {
+        if (!n.hasAttribute(a)) continue;
+        const key = 'en' + a.replace('-', '');
+        n.dataset[key] = n.dataset[key] || n.getAttribute(a);
+        n.setAttribute(a, t(n.dataset[key]));
+      }
+    }
+  };
+  wording(settings.lang === 'ja' ? 'ja' : 'en');
   const applyFont = () => {
     if (!FONTS[settings.font]) settings.font = 'original';
     setStoryFont(settings.font);
@@ -76,6 +118,7 @@ async function boot() {
       h.head(p, 'What this is');
       h.p(p, 'Kagetsu Tohya, playing in a web browser. A small engine written in JavaScript reads the game’s own script, pictures, sound and music as they are in your copy; nothing in them was rewritten or re-encoded.');
       h.p(p, 'An unofficial fan project, not affiliated with TYPE-MOON. Please support the official release.', 'fine');
+      h.link(p, 'The source is on GitHub:', 'github.com/waifwu/KageTStream', 'https://github.com/waifwu/KageTStream');
       h.head(p, 'How it was taken apart');
       h.rows(p, [
         ['The program', 'ONScripter-EN, an open reimplementation of NScripter. Its behaviour was followed from its public source.'],
@@ -125,6 +168,14 @@ async function boot() {
       h.p(p, 'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.');
       h.p(p, 'A browser plays no sound until the page has been clicked, so the game begins with a press.');
       if (failed) h.p(p, 'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.', 'fine');
+      if (manifest && manifest.files.includes('script-ja.txt')) {
+        h.choice(p, 'Language', LANGUAGES, lang, (value) => {
+          settings.lang = value;
+          storage.saveSettings(settings);
+          location.replace(location.pathname + '#play');
+          location.reload();
+        });
+      }
       h.press(p, failed ? 'No game data' : ready ? 'press any button' : 'Loading…', ready, () => start());
       p.addEventListener('click', (e) => { if (ready && e.target === p) start(); });
     } },
@@ -139,7 +190,9 @@ async function boot() {
       foot: 'Unofficial · not affiliated with TYPE-MOON',
       tabs,
       onStart: () => { if (ready) start(); },
+      open: location.hash === '#play' ? tabs.length - 1 : -1,     // back from changing the language there
     });
+    if (location.hash === '#play') history.replaceState(null, '', location.pathname + location.search);
     shell.setHomeStatus('Loading the game’s script…');
   }
   document.getElementById('import-file').addEventListener('change', async (ev) => {
@@ -161,6 +214,14 @@ async function boot() {
   // -------------------------------------------------------------- engine
   const fitScale = Math.min(window.innerWidth / W, window.innerHeight / H);
   const scale = Math.max(1, Math.min(3, Math.ceil(fitScale * (window.devicePixelRatio || 1) - 0.25)));
+  storage.slotPrefix = lang === 'ja' ? 'ja:' : '';
+  wording(lang);
+  if (lang === 'ja') {
+    // the story's own words for what the flowchart and the walkthrough have in English
+    const back = choiceBack(script, refScript);
+    shell.word = (s) => back.exact(s) || s;
+    shell.stepWord = (s) => back.near(s) || s;
+  }
   const loader = new Loader(DATA, manifest);
   const gfx = new Gfx(canvas, loader, scale);
   const text = new TextLayer(gfx);
@@ -255,14 +316,12 @@ async function boot() {
       { key: 'autoPace', label: 'Auto-advance pace', options: [['Slow', 0], ['Normal', 1], ['Fast', 2]] },
     ];
     if (guide.available) story.push({ key: 'guide', label: 'Guide: mark the choices to take', options: onOff });
-    if (['effectskip', 'sceneskip', 'wordskip', 'eroskip'].every((n) => engine.numalias.has(n))) {
-      story.push(
-        { key: 'g:effects', label: 'Display effects instantly', options: onOff },
-        { key: 'g:scenes', label: 'Skip parts previously read', options: onOff },
-        { key: 'g:daily', label: 'Display daily message at startup', options: onOff },
-        { key: 'g:adult', label: 'Skip explicit sexual content', options: onOff },
-      );
+    for (const [key, name, label] of [['g:effects', 'effectskip', 'Display effects instantly'], ['g:scenes', 'sceneskip', 'Skip parts previously read'],
+      ['g:daily', 'wordskip', 'Display daily message at startup'], ['g:adult', 'eroskip', 'Skip explicit sexual content']]) {
+      if (engine.numalias.has(name)) story.push({ key, label, options: onOff });
     }
+    const more = [{ key: 'unlockAll', label: 'Unlock everything', options: onOff }];
+    if (manifest.files.includes('script-ja.txt')) more.unshift({ key: 'lang', label: 'Language', options: LANGUAGES });
     return shell.config([
       { title: 'The story', rows: story },
       { title: 'Sound and picture', rows: [
@@ -272,11 +331,20 @@ async function boot() {
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
         { key: 'full', label: 'Fullscreen', options: onOff },
       ] },
-      { title: 'Progress', under: true, rows: [
-        { key: 'unlockAll', label: 'Unlock everything', options: onOff },
-      ] },
+      { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
-      : key === 'unlockAll' ? !!settings.unlockAll : settings[key]), async (key, value) => {
+      : key === 'unlockAll' ? !!settings.unlockAll : key === 'lang' ? lang : settings[key]), async (key, value) => {
+      if (key === 'lang') {
+        if (value === lang) return;
+        if (!(await shell.confirm(value === 'ja' ? 'Switch the story to Japanese?' : 'Switch the story to English?',
+          'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; '
+          + 'saved games are kept separately for each language, so the day in progress is not carried across.'))) return;
+        settings.lang = value;
+        saveSettings();
+        engine.flushGlobals(true);
+        location.href = location.pathname;
+        return;
+      }
       if (key === 'unlockAll') {
         if (!!settings.unlockAll === value) return;
         if (value && !(await shell.confirm('Unlock everything?',
@@ -308,6 +376,10 @@ async function boot() {
     gfx, text, audio, input, storage, loader, ui, shell,
     sleep, frame, openConfig,
     unlocked: () => !!settings.unlockAll,
+    refScript,                                   // the English script: the flowchart and track names are read from it
+    sceneNames: lang === 'ja' ? sceneNames(script) : null,
+    // the options of a choice in the walkthrough's (English) wording, for the guide
+    guideTexts: lang === 'en' ? null : choiceTranslator(script, refScript),
     flowPrefs: { all: !!settings.flowAll, hints: !!settings.flowHints },
     saveFlowPrefs: () => { settings.flowAll = host.flowPrefs.all; settings.flowHints = host.flowPrefs.hints; saveSettings(); },
     yield: () => sleep(0),
