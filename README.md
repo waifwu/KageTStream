@@ -70,9 +70,10 @@ the story.
 
 * **Opening page** — five plates over the twilight field: About (with a link to
   the source on GitHub), Controls, Save data, Download (the desktop program),
-  Play. It opens with none chosen, so a stray click starts nothing; the
-  Play page's "press any button" starts the game (and is the click a browser
-  needs before it will play sound).
+  Play. It opens with none chosen, so a stray click starts nothing. The Play
+  page has the language and picture-shape switches, and "press any button"
+  in the middle of the space below them; that press starts the game (and is
+  the click a browser needs before it will play sound).
 * **The game's own menus** — the title, Start game and each story's page are
   redrawn in the same style (`js/skins.js`). The script still shows each screen,
   offers only what is unlocked and decides what an entry does; only the drawing
@@ -173,6 +174,12 @@ the story.
   story goes on recording what you really read. Switching it off shows your own
   progress again, including anything read while it was on. The day's own
   branching is left alone, so the story still plays as your progress has it.
+* **Loading** — the game's files arrive as they are needed. While the story
+  waits for a click, the next pictures the script names are fetched ahead
+  (`Engine.upcomingImages` in `js/engine.js`, `Loader.prefetch` in `js/gfx.js`),
+  and a picture that fails to load is tried twice more before it is given up.
+  Story music that loops streams at once and is swapped for a gapless loop
+  once it has been decoded (`js/audio.js`).
 
 ## Controls
 
@@ -260,6 +267,9 @@ repository. Every push to `main` builds and publishes to
 
 * Build command: `mkdir -p dist && cp index.html favicon.ico 404.html _headers dist/ && cp -R css js data dist/`
 * Output directory: `dist`
+* Both are set on the Pages project (dashboard: Workers & Pages → `kagetsu` →
+  Settings → Build), not in this repository. A new file at the top level is
+  published only once it is added to the build command there.
 * Only `index.html`, `favicon.ico`, `404.html`, `_headers`, `css/`, `js/` and
   `data/` are published. `README.md` and `tools/` stay in the repository.
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
@@ -269,9 +279,13 @@ repository. Every push to `main` builds and publishes to
   changes them.
 * `404.html` answers any unknown path with a 404 status and a link back to the
   game, so a missing asset is an error rather than the opening page.
-* While the story waits for a click, the next pictures the script names are
-  fetched ahead (`Engine.upcomingImages`, `Loader.prefetch`), and a picture that
-  fails to load is tried twice more before it is given up.
+* To check a deploy: a game file should carry the year-long cache and an
+  unknown path should be a 404.
+
+  ```bash
+  curl -sI https://kagetsu.pages.dev/data/cd/track02.ogg | grep -i cache-control
+  curl -s -o /dev/null -w "%{http_code}\n" https://kagetsu.pages.dev/no-such-file
+  ```
 * Pages does not answer byte-range requests for these files, so a streamed
   track cannot be seeked and its length is a guess. The music player therefore
   fetches each track whole and plays it from memory (`js/audio.js`).
