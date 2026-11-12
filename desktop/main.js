@@ -1,4 +1,5 @@
-// The desktop build: one window showing the same pages the site serves.
+// The desktop build: one window showing the game, from the same files the site serves.
+// (js/main.js sees the app: scheme and passes over the site's opening page.)
 //
 // The player needs a real origin (ES modules, fetch, localStorage), so the files are served to the
 // window over a private scheme, app://kagetsu/, straight from disk. The origin never changes, which
@@ -117,6 +118,7 @@ function openWindow() {
       nodeIntegration: false,
       sandbox: true,
       spellcheck: false,
+      autoplayPolicy: 'no-user-gesture-required',     // no opening page to click first: the music starts with the game
     },
   });
   win.once('ready-to-show', () => win.show());

@@ -177,6 +177,7 @@ const JA = {
 
   // ---- settings
   'Kept in this browser': 'このブラウザに保存されます',
+  'Kept on this computer': 'このコンピュータに保存されます',
   'The story': '物語',
   'Story font': '物語のフォント',
   'Original': 'オリジナル',
@@ -283,8 +284,10 @@ const JA = {
   'macOS · Apple silicon': 'macOS · Appleシリコン',
   'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
     'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
-  'Saves made there are kept apart from this browser’s. The Save data page’s export and import carry them across.':
-    'アプリのセーブはこのブラウザのものとは別に保存されます。「セーブデータ」のページの書き出しと読み込みで移せます。',
+  'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
+    '開くとすぐにゲームが始まります。セーブはこのブラウザのものとは別に保存されます。「設定」の「セーブデータ」で、こちらでファイルに書き出して向こうで読み込めば移せます。逆も同じです。',
+  'Import save data from a file?': 'ファイルからセーブデータを読み込みますか？',
+  'What the file holds replaces what is kept here, and the game starts again.': 'ファイルの内容が、ここに保存されているものと置き換わります。ゲームは最初から始まります。',
   'Every version is on GitHub:': 'すべての版はGitHubにあります：',
   'Play here, in the browser': 'このブラウザで遊ぶ',
   'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.': 'インストールは不要です。ゲームのファイルは遊びながら届き、一日が終わるたびに自動で保存されます。',

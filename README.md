@@ -36,15 +36,16 @@ This writes `data/script-ja.txt` and lists it in the manifest; nothing else in
 
 ## Desktop program
 
-The same pages as a program of its own, for Windows and macOS, with every file
-inside it. Finished builds are on the
+The game as a program of its own, for Windows and macOS, with every file
+inside it. It opens straight into the game: the site's opening page is not
+shown there. Finished builds are on the
 [releases page](https://github.com/waifwu/KageTStream/releases); the opening
 page's **Download** tab links to the latest.
 
 `desktop/` is a small Electron wrapper: one window, and the site's files served
 to it from disk over a private scheme (`app://kagetsu/`), so modules, `fetch`
-and `localStorage` work as they do on the site. Nothing in `js/` is different;
-the Download tab is simply left out there.
+and `localStorage` work as they do on the site. `js/main.js` sees the scheme and starts the
+game at once; nothing else in `js/` is different.
 
 ```bash
 cd desktop
@@ -56,8 +57,8 @@ npm run dist         # build dist/: the Windows installer and zip, both macOS di
 Both systems can be built from a Mac. The builds are not code-signed (the macOS
 one is signed ad hoc, which Apple silicon needs before it will run anything),
 so Windows SmartScreen and macOS Gatekeeper each ask once. Saves are kept in the
-program's own profile, apart from any browser's; export and import carry them
-across. `npm run icon` redraws `build/icon.png` from `tools/make-icon.js`.
+program's own profile, apart from any browser's; Settings has **Save data**
+(export to a file, import from a file) to carry them across. `npm run icon` redraws `build/icon.png` from `tools/make-icon.js`.
 
 ## The interface
 
@@ -68,8 +69,8 @@ screen, a lower-case "back", and the twilight field behind anything shown over
 the story.
 
 * **Opening page** — five plates over the twilight field: About (with a link to
-  the source on GitHub), Controls, Save data, Download (the desktop program;
-  left out inside that program), Play. It opens with none chosen, so a stray click starts nothing; the
+  the source on GitHub), Controls, Save data, Download (the desktop program),
+  Play. It opens with none chosen, so a stray click starts nothing; the
   Play page's "press any button" starts the game (and is the click a browser
   needs before it will play sound).
 * **The game's own menus** — the title, Start game and each story's page are
@@ -119,7 +120,8 @@ the story.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the game's own four switches (instant effects,
   skip parts already read, daily message, skip explicit content), music and
-  effect volume, the glow around the picture, fullscreen. The game's "Game
+  effect volume, the glow around the picture, fullscreen, and save data to and
+  from a file. The game's "Game
   settings" entry opens this page.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
   holds the Japanese script) — English or 日本語. On the opening page nothing is
@@ -161,7 +163,8 @@ the story.
 | M / F | Mute / fullscreen |
 
 Saves live in the browser's `localStorage` for this address; the opening page's
-**Save data** tab exports them to a file, imports them, or erases them.
+**Save data** tab exports them to a file, imports them, or erases them, and
+Settings has the export and import too.
 
 ## How it was taken apart
 
