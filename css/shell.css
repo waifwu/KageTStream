@@ -114,6 +114,17 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 :root:lang(ja) .cg.locked::after { content: "未見"; }
 :root:lang(ja) .cf-sec, :root:lang(ja) .hm-plate, :root:lang(ja) .hm-press, :root:lang(ja) #quickbar .plate,
 :root:lang(ja) .hm-choice .k, :root:lang(ja) .hm-facts div, :root:lang(ja) .hm-brand, :root:lang(ja) .gd-sub, :root:lang(ja) .fc-sub { letter-spacing: .12em; text-indent: 0; }
+/* Portuguese and Spanish: the same words, and the opening page's plates set closer so their longer
+   names ("Dados salvos", "Acerca de") still end before the brand at the left */
+:root:lang(pt) .slot.empty .thumb::after { content: "Vazio"; }
+:root:lang(pt) .cg.locked::after { content: "Ainda não vista"; }
+:root:lang(es) .slot.empty .thumb::after { content: "Vacío"; }
+:root:lang(es) .cg.locked::after { content: "Aún no vista"; }
+:root:lang(pt) .hm-strip.tight .hm-plate, :root:lang(es) .hm-strip.tight .hm-plate { padding: 0 14px; letter-spacing: .16em; text-indent: .16em; }
+:root:lang(pt) .hm-choice .k, :root:lang(es) .hm-choice .k { min-width: 270px; }
+/* the quick bar's plates are as wide as their (longer) words, set closer: "Configuración" */
+:root:lang(pt) #quickbar .plate, :root:lang(es) #quickbar .plate { width: auto; padding: 0 10px 12px; letter-spacing: .14em; text-indent: .14em; }
+:root:lang(pt) #quickbar, :root:lang(es) #quickbar { padding-right: 64px; }      /* clear of the moon at the corner */
 .hm-choice { display: flex; align-items: baseline; gap: 34px; margin: 26px 0 0; }
 .hm-choice + .hm-choice { margin-top: 14px; }
 .hm-choice .k { min-width: 170px; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
@@ -123,8 +134,10 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 .hm-press { display: block; margin: 46px auto 10px; padding: 14px 40px; font-size: 27px; letter-spacing: .42em; text-indent: .42em; text-transform: uppercase; color: var(--ink); animation: blink 2.2s ease-in-out infinite; }
 /* the Play page: "press any button" in the middle of the space left under the switches */
 .hm-panel.hm-play { display: flex; flex-direction: column; align-items: flex-start; }
-.hm-play > :nth-last-child(2) { margin-bottom: 24px; }
 .hm-play > p + .hm-choice { margin-top: 12px; }     /* margins do not collapse in a flex box: 14 + 12 = the usual 26 */
+/* the space under the switches, out to the panel's edges and foot (its padding), starts the game */
+.hm-play .hm-start { flex: 1 0 auto; align-self: stretch; display: flex; margin: 0 -64px -30px; padding: 24px 64px 30px; }
+.hm-play .hm-start.go { cursor: pointer; }
 .hm-play .hm-press { margin: auto; }
 .hm-press[disabled] { animation: none; opacity: .45; cursor: default; letter-spacing: .1em; text-transform: none; font-style: italic; }
 @keyframes blink { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
@@ -287,7 +300,10 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .gtitle .gt-secret { position: absolute; cursor: default; }
 /* a page of the game's menus */
 .gpage .gp-list { position: absolute; left: 150px; top: 218px; display: flex; flex-direction: column; align-items: flex-start; }
-.gp-item { font-size: 40px; line-height: 78px; padding-right: 10px; white-space: nowrap; color: var(--ink-soft); transition: color .12s, transform .18s; }
+.gp-item { font-size: 40px; line-height: 78px; padding-right: 10px; white-space: pre; color: var(--ink-soft); transition: color .12s, transform .18s; }
+/* a name too long for one line (the Spanish story's) is given its line break, as the patch's picture has it */
+.gpage .page-title { white-space: pre; }
+.gp-item.two { line-height: 50px; padding-top: 14px; padding-bottom: 14px; }
 .gp-list.long .gp-item { font-size: 34px; line-height: 61px; }
 .gp-item.cur { color: var(--ink); transform: translateX(16px); }
 .rulecursor.ink { background: linear-gradient(to right, rgba(92, 102, 140, .35), var(--rule) 45%); height: 1.5px; }
@@ -485,7 +501,7 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 :root:lang(ja) #phone-note button { font-style: normal; }
 
 /* ------------------------------------------------------------------ 16:9
-   Settings > Picture shape. The stage is as high as before and a third wider (1706.67 x 960).
+   Settings > Aspect ratio. The stage is as high as before and a third wider (1706.67 x 960).
    Paper, veils, rules and anything set from an edge or the middle follow by themselves; what is
    here are the pages whose columns and grids were measured out for 1280. */
 #stage.wide { width: 1706.667px; }

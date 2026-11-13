@@ -570,7 +570,8 @@ export class Shell {
       layer.appendChild(rule);
       const list = el('div', 'gp-list' + (items.length > 7 ? ' long' : ''));
       for (const it of items) {
-        const b = ctl.nav(el('button', 'gp-item' + (it.guide ? ' guided' : ''), it.label), () => ctl.done(it.no));
+        const two = tr(it.label).includes('\n') ? ' two' : '';         // a name set on two lines
+        const b = ctl.nav(el('button', 'gp-item' + (it.guide ? ' guided' : '') + two, it.label), () => ctl.done(it.no));
         if (it.guide) { b.title = tr('The guide begins the day here'); b.appendChild(el('span', 'moon')); }
         list.appendChild(b);
       }
@@ -1575,6 +1576,16 @@ export const h = {
     b.disabled = !enabled;
     if (enabled) b.addEventListener('click', fn);
     panel.appendChild(b);
+    return b;
+  },
+  // The Play page's space under its switches, down to the panel's foot, with "press any button" in
+  // the middle: a click anywhere in it starts the game. Nothing above it does, so a click that
+  // misses a switch is not taken for one.
+  startArea: (panel, label, enabled, fn) => {
+    const area = el('div', 'hm-start' + (enabled ? ' go' : ''));
+    const b = h.press(area, label, enabled, fn);
+    if (enabled) area.addEventListener('click', (e) => { if (e.target === area) fn(); });
+    panel.appendChild(area);
     return b;
   },
 };

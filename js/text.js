@@ -88,17 +88,20 @@ function apply(st, o) {
     st.glyphs.push(g);
     return g;
   };
+  // `soft`: the line began because the one before was full, not at a line end of the script
   switch (o.t) {
     case 'c': {
       const a = adv(o.c);
-      if (st.x > 0 && st.x + a > st.lineW + 0.01) { st.x = 0; st.line++; }
+      if (st.x > 0 && st.x + a > st.lineW + 0.01) { st.x = 0; st.line++; st.soft = true; }
       const g = glyph(o.c);
       st.x += a;
       return g;
     }
     case 's': {
+      // spaces at the start of a line that began by wrapping are not drawn: the wrap stands for them
+      if (st.soft && st.x === 0) return glyph(' ', true);
       const a = adv(' ');
-      if (st.x + a > st.lineW) { st.x = 0; st.line++; return glyph(' ', true); }
+      if (st.x + a > st.lineW) { st.x = 0; st.line++; st.soft = true; return glyph(' ', true); }
       const g = glyph(' ');
       st.x += a;
       return g;
@@ -106,12 +109,12 @@ function apply(st, o) {
     case 'w': {
       let w = 0;
       for (const ch of o.s) w += adv(ch);
-      if (st.x > 0 && st.x + w > st.lineW && w <= st.lineW) { st.x = 0; st.line++; }
+      if (st.x > 0 && st.x + w > st.lineW && w <= st.lineW) { st.x = 0; st.line++; st.soft = true; }
       return null;
     }
-    case 'n': st.x = 0; st.line++; return null;
-    case 'e': if (st.x > 0) { st.x = 0; st.line++; } return null;
-    case 'l': st.x = o.x * st.pitch; st.line = o.y; return null;
+    case 'n': st.x = 0; st.line++; st.soft = false; return null;
+    case 'e': if (st.x > 0) { st.x = 0; st.line++; } st.soft = false; return null;
+    case 'l': st.x = o.x * st.pitch; st.line = o.y; st.soft = false; return null;
     default: return null;
   }
 }

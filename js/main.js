@@ -12,7 +12,11 @@ import { Guide, choiceTranslator, choiceBack } from './guide.js';
 import { setLang, t } from './i18n.js';
 
 const DATA = 'data/';
-const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja']];
+// The story's languages. English is data/script.txt; each other one is data/script-<code>.txt and is
+// offered only where the data holds it (tools/extract.py --ja / --pt / --es).
+const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja'], ['Portugu\u00eas', 'pt'], ['Espa\u00f1ol', 'es']];
+const scriptOf = (l) => 'script-' + l + '.txt';
+const SWITCH = { en: 'Switch the story to English?', ja: 'Switch the story to Japanese?', pt: 'Switch the story to Portuguese?', es: 'Switch the story to Spanish?' };
 
 // What the Japanese script calls its scenes. Each says so in the question it asks before a re-read
 // ("ここは、「学校・昼休み～食堂。…」のシーンです。"): the place before the first "・", then the name.
@@ -23,6 +27,20 @@ function sceneNames(src) {
     const title = m[2].replace(/_/g, '');
     const cut = title.indexOf('・');
     out.set(m[1].toLowerCase(), cut > 0 && cut <= 8 ? { zone: title.slice(0, cut), name: title.slice(cut + 1) } : { zone: '', name: title });
+  }
+  return out;
+}
+// The same in the Portuguese and Spanish scripts, which ask as the English one does: Essa cena é
+// "Mansão - Manhã - …", Esta escena es "Mansión - Mañana - …". The place is what comes before the
+// first dash or colon, as the English titles are split.
+const SCENE_IS = { pt: 'Essa cena é', es: 'Esta escena es' };
+function sceneNamesLatin(src, lead) {
+  const out = new Map();
+  const re = new RegExp('^[ \\t]*\\*(s\\d+)\\b[^\\n]*\\n(?:(?![ \\t]*\\*)[^\\n]*\\n){0,10}?[^\\n]*?' + lead + '\\s*["“]([^\\n]*)', 'gm');
+  for (const m of src.matchAll(re)) {
+    const title = m[2].replace(/["”]\s*$/, '').replace(/\.$/, '').trim();
+    const cut = /^([\p{L}' ]{3,22}?)\s*(?:-|:|–|—)\s+(.+)$/u.exec(title);
+    out.set(m[1].toLowerCase(), cut ? { zone: cut[1].trim(), name: cut[2].trim() } : { zone: '', name: title });
   }
   return out;
 }
@@ -83,21 +101,22 @@ async function boot() {
   const autostart = DESKTOP || new URLSearchParams(location.search).has('autostart');
 
   // -------------------------------------------------------------- data
-  // The story runs from one script. Where the data also holds the Japanese one (script-ja.txt,
-  // see tools/extract.py --ja) Settings offers the choice, and `lang` is the one in use. The English
-  // script is read either way: the flowchart, the track names and the guide are made from it, so
-  // those pages are the same in both languages.
+  // The story runs from one script. Where the data also holds another language's (script-ja.txt,
+  // script-pt.txt, script-es.txt: see tools/extract.py) Settings offers the choice, and `lang` is the
+  // one in use. The English script is read either way: the flowchart, the track names and the guide
+  // are made from it, so those pages are the same in every language.
   let manifest = null, script = null, refScript = null, lang = 'en', failed = false, guideText = '';
+  const languages = () => LANGUAGES.filter(([, l]) => l === 'en' || (manifest && manifest.files.includes(scriptOf(l))));
   const loading = (async () => {
     try {
       const [m, s] = await Promise.all([fetch(DATA + 'manifest.json'), fetch(DATA + 'script.txt')]);
       if (!m.ok || !s.ok) throw new Error('missing');
       manifest = await m.json();
       script = refScript = await s.text();
-      if (settings.lang === 'ja' && manifest.files.includes('script-ja.txt')) {
+      if (settings.lang && settings.lang !== 'en' && manifest.files.includes(scriptOf(settings.lang))) {
         try {
-          const j = await fetch(DATA + 'script-ja.txt');
-          if (j.ok) { script = await j.text(); lang = 'ja'; }
+          const j = await fetch(DATA + scriptOf(settings.lang));
+          if (j.ok) { script = await j.text(); lang = settings.lang; }
         } catch (e) { /* the English script stands */ }
       }
       if (manifest.files.includes('guide.txt')) {
@@ -125,7 +144,7 @@ async function boot() {
     + 'The Gallery still shows every picture whole, and 4:3 can be chosen again at any time.', undefined, 0)) === true;
   shell.setWide(settings.wide);
   // The interface speaks the story's language. The setting is known at once; whether the data
-  // really holds the Japanese script is known when it has loaded, and is put right then.
+  // really holds that language's script is known when it has loaded, and is put right then.
   const wording = (l) => {
     setLang(l);
     document.documentElement.lang = l;
@@ -140,7 +159,7 @@ async function boot() {
       }
     }
   };
-  wording(settings.lang === 'ja' ? 'ja' : 'en');
+  wording(settings.lang || 'en');
   if (onPhone()) phoneNotice();
   const applyFont = () => {
     if (!FONTS[settings.font]) settings.font = 'original';
@@ -237,24 +256,23 @@ async function boot() {
       h.head(p, 'Play here, in the browser');
       h.p(p, 'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.');
       if (failed) h.p(p, 'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.', 'fine');
-      if (manifest && manifest.files.includes('script-ja.txt')) {
-        h.choice(p, 'Language', LANGUAGES, lang, (value) => {
+      if (languages().length > 1) {
+        h.choice(p, 'Language', languages(), lang, (value) => {
           settings.lang = value;
           storage.saveSettings(settings);
           location.replace(location.pathname + '#play');
           location.reload();
         });
       }
-      // the same switch as Settings > Picture shape, here before the game begins
-      h.choice(p, 'Picture shape', [['4:3', false], ['16:9', true]], !!settings.wide, async (value) => {
+      // the same switch as Settings > Aspect ratio, here before the game begins
+      h.choice(p, 'Aspect ratio', [['4:3', false], ['16:9', true]], !!settings.wide, async (value) => {
         if (value && !(await confirmWide())) return;
         settings.wide = value;
         storage.saveSettings(settings);
         applyWide();
         if (shell.homeRefresh) shell.homeRefresh();
       });
-      h.press(p, failed ? 'No game data' : ready ? 'press any button' : 'Loading…', ready, () => start());
-      p.addEventListener('click', (e) => { if (ready && e.target === p) start(); });
+      h.startArea(p, failed ? 'No game data' : ready ? 'press any button' : 'Loading…', ready, () => start());
     } },
   ];
   if (!autostart) {
@@ -292,15 +310,17 @@ async function boot() {
   // -------------------------------------------------------------- engine
   const fitScale = Math.min(window.innerWidth / W, window.innerHeight / H);
   const scale = Math.max(1, Math.min(3, Math.ceil(fitScale * (window.devicePixelRatio || 1) - 0.25)));
-  storage.slotPrefix = lang === 'ja' ? 'ja:' : '';
+  storage.slotPrefix = lang === 'en' ? '' : lang + ':';
   wording(lang);
-  if (lang === 'ja') {
+  if (lang !== 'en') {
     // the story's own words for what the flowchart and the walkthrough have in English
     const back = choiceBack(script, refScript);
     shell.word = (s) => back.exact(s) || s;
     shell.stepWord = (s) => back.near(s) || s;
   }
-  const loader = new Loader(DATA, manifest);
+  // a language's own pictures and sounds (data/pt/..., data/es/...) stand in for the shared ones
+  const own = lang + '/';
+  const loader = new Loader(DATA, manifest, manifest.files.some((f) => f.startsWith(own)) ? own : '');
   const gfx = new Gfx(canvas, loader, scale, settings.wide);
   const text = new TextLayer(gfx);
   gfx.text = text;
@@ -348,7 +368,7 @@ async function boot() {
   };
   const input = new Input(canvas, onKey);
   shell.input = input;
-  // Settings > Picture shape, changed while the game runs: the stage, the game's picture and
+  // Settings > Aspect ratio, changed while the game runs: the stage, the game's picture and
   // where the pointer is taken to be all follow.
   applyWide = () => {
     shell.setWide(settings.wide);
@@ -410,14 +430,14 @@ async function boot() {
     }
     const more = [{ key: 'unlockAll', label: 'Unlock everything', options: onOff },
       { key: 'savefile', label: 'Save data', options: [['Export to a file', 'export'], ['Import from a file', 'import']] }];
-    if (manifest.files.includes('script-ja.txt')) more.unshift({ key: 'lang', label: 'Language', options: LANGUAGES });
+    if (languages().length > 1) more.unshift({ key: 'lang', label: 'Language', options: languages() });
     return shell.config([
       { title: 'The story', rows: story },
       { title: 'Sound and picture', rows: [
         { key: 'bgmVol', label: 'Music', range: true },
         { key: 'seVol', label: 'Sound effects', range: true },
         { key: 'muted', label: 'Sound', options: [['On', false], ['Off', true]] },
-        { key: 'wide', label: 'Picture shape', options: [['4:3', false], ['16:9', true]] },
+        { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
         { key: 'full', label: 'Fullscreen', options: onOff },
       ] },
@@ -426,7 +446,7 @@ async function boot() {
       : key === 'unlockAll' ? !!settings.unlockAll : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
       if (key === 'lang') {
         if (value === lang) return;
-        if (!(await shell.confirm(value === 'ja' ? 'Switch the story to Japanese?' : 'Switch the story to English?',
+        if (!(await shell.confirm(SWITCH[value] || SWITCH.en,
           'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; '
           + 'saved games are kept separately for each language, so the day in progress is not carried across.'))) return;
         settings.lang = value;
@@ -479,7 +499,7 @@ async function boot() {
     sleep, frame, openConfig,
     unlocked: () => !!settings.unlockAll,
     refScript,                                   // the English script: the flowchart and track names are read from it
-    sceneNames: lang === 'ja' ? sceneNames(script) : null,
+    sceneNames: lang === 'ja' ? sceneNames(script) : SCENE_IS[lang] ? sceneNamesLatin(script, SCENE_IS[lang]) : null,
     // the options of a choice in the walkthrough's (English) wording, for the guide
     guideTexts: lang === 'en' ? null : choiceTranslator(script, refScript),
     flowPrefs: { all: !!settings.flowAll, hints: !!settings.flowHints },

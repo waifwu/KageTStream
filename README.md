@@ -11,11 +11,15 @@ It is deployed at <https://kagetsu.pages.dev/> (see Deployment below).
 To run it locally, from this folder (the one with `index.html`):
 
 ```bash
-python3 -m http.server 8765
+python3 tools/serve.py 8765
 ```
 
 Then open <http://localhost:8765/>. It has to be served over HTTP — opening
-`index.html` from disk will not work (ES modules and `fetch`).
+`index.html` from disk will not work (ES modules and `fetch`). `tools/serve.py`
+is `python3 -m http.server` with one header more, telling the browser to ask
+again before using its own copy of a file. Without it a browser keeps scripts
+for hours by its own rule of thumb, and after an update can run new files
+beside old ones, which breaks the page until a hard reload.
 
 `data/` is already extracted. To rebuild it (or to point the player at the old
 translation by swapping `nscript.dat` / `nscriptoriginal.dat` first):
@@ -33,6 +37,47 @@ python3 tools/extract.py --ja "/path/to/Kagetsu Tohya.cue"
 
 This writes `data/script-ja.txt` and lists it in the manifest; nothing else in
 `data/` is touched. The pictures and sound are the ones already extracted.
+
+To add the Portuguese translation (the Seven Nights patch: its game folder, the
+one holding `nscript.dat` and `arc.nsa`):
+
+```bash
+python3 tools/extract.py --pt "/path/to/Kagetsu Tohya Patch Final/Kagetsu Tohya"
+```
+
+This writes `data/script-pt.txt` and puts every picture and sound of the
+patch's archive that is not already in `data/arc/` with the same contents under
+`data/pt/arc/` (132 files, about 18 MB: its translated menus, gallery pages,
+credits and the like). While the story runs in Portuguese the player looks
+there first. The patch writes the letters with accents as the codes of
+half-width katakana, which its own `default.ttf` draws as those letters; the
+script is written out with the letters themselves, so every story font shows
+them and the game's own font is not needed.
+
+The Spanish translation (Saki's patch, version 1.3: the folder holding its
+`nscript.dat` and `arc.nsa`) is added the same way:
+
+```bash
+python3 tools/extract.py --es "/path/to/Kagetsu Tohya versión 1_3 FINAL"
+```
+
+It writes `data/script-es.txt` and `data/es/arc/` (154 files, about 35 MB,
+among them the song of the ending, `mp3/end.mp3`). Its letters with accents
+(and ¿, ¡, ñ) are hidden the same way and come out as themselves. The script
+is also put right in a few places that are wrong in the Windows build too:
+
+* eight characters typed in Windows-1252, which Shift-JIS reads as part of a
+  kanji with the letter after them or as a code no font draws (“Escuela,
+  crème, área, quién, a "¡" and two click waits), are read back as written;
+* the daily message is picked again while it is one of the last three shown,
+  by "skip"ping back to the line that draws it. The patch put two comments and
+  a blank line in between, so the skip lands on the blank line and the game
+  hangs as it starts, about one time in seventy. The skips are lengthened;
+* `jump##SKIPPED`, an unknown command where the Portuguese patch has `jumpf`,
+  which ran every daily message after the 57th into the 57th's text.
+
+No line of the script moves. Three of the English patch's translator cards
+that the Spanish credits still name are in neither archive, and are skipped.
 
 ## Desktop program
 
@@ -76,9 +121,10 @@ the story.
 * **Opening page** — five plates over the twilight field: About (with a link to
   the source on GitHub), Controls, Save data, Download (the desktop program),
   Play. It opens with none chosen, so a stray click starts nothing. The Play
-  page has the language and picture-shape switches, and "press any button"
-  in the middle of the space below them; that press starts the game (and is
-  the click a browser needs before it will play sound).
+  page has the language and aspect-ratio switches, and "press any button"
+  in the middle of the space below them. A click anywhere in that space, down
+  to the panel's foot, starts the game (and is the click a browser needs before
+  it will play sound); a click above it, among the switches, does not.
 * **The game's own menus** — the title, Start game and each story's page are
   redrawn in the same style (`js/skins.js`). The script still shows each screen,
   offers only what is unlocked and decides what an entry does; only the drawing
@@ -128,16 +174,16 @@ the story.
   guide is on and which ending it leads to. On the flowchart the day's route is
   drawn in amber. `node tools/guide-check.mjs [normal|true]` plays the whole
   walkthrough through the real script and reports any step that does not match
-  a choice the game offers (none, for either ending). Add `ja` to play the
-  Japanese script the same way.
+  a choice the game offers (none, for either ending). Add `ja`, `pt` or `es`
+  to play the Japanese, Portuguese or Spanish script the same way.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the guide's marks, the game's own four
   switches (instant effects, skip parts already read, daily message, skip
-  explicit content), music and effect volume, sound on or off, the picture's
-  shape (4:3 or 16:9), the glow around the picture, fullscreen, the language,
+  explicit content), music and effect volume, sound on or off, the aspect
+  ratio (4:3 or 16:9), the glow around the picture, fullscreen, the language,
   Unlock everything, and save data to and from a file. The game's "Game
   settings" entry opens this page.
-* **16:9** (Settings, *Picture shape*; off by default) — the game without the
+* **16:9** (Settings, *Aspect ratio*; off by default) — the game without the
   bare strips at its sides on a wide screen. The script still works in its own
   640×480, which stands in the middle of an 854×480 view (`js/gfx.js`):
   backgrounds are enlarged until they are as wide as the view, so an eighth of
@@ -158,11 +204,12 @@ the story.
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
   the resolution the picture is drawn at, so they stay as sharp as the text.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
-  holds the Japanese script) — English or 日本語. On the opening page nothing is
+  holds another language's script) — English, 日本語, Português or Español, each offered
+  when its script is in `data/`. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
   From Settings it asks first, then starts again from the opening page with the
   other script. What has been read, the gallery, the flowchart and the
-  guide's place carry over, because the two scripts keep the same scenes under
+  guide's place carry over, because the scripts keep the same scenes under
   the same labels; saved games are kept separately for each language.
   The interface follows the story's language (`js/i18n.js`). Where the game has
   words of its own they are the game's: the menu entries painted on its Japanese
@@ -174,6 +221,26 @@ the story.
   added are translated. The flowchart is still laid out from the English script,
   and with the guide on a Japanese choice is matched through the English choice
   that leads to the same place.
+  Portuguese is the Seven Nights patch (see Run it, `--pt`). It is a
+  translation of the English patch, with its own pictures for the menus, the
+  gallery, the endings and the credits, and its own opening notice and daily
+  messages. The interface is in Brazilian Portuguese, and its words for the
+  game's own entries are the patch's: Iniciar Jogo, Carregar Jogo, Opções, the
+  dreams as its pictures name them, Salvar Jogo and Carregar Jogo from its
+  right-click menu, a save slot an "Arquivo". It keeps "op", "a day" and "ep",
+  and writes "Voltar" and "Ajuda". The scenes carry the names the Portuguese
+  script gives them (Essa cena é "Mansão - Manhã - …").
+  Spanish is Saki's patch (see Run it, `--es`), also a translation of the
+  English one, with its own pictures and daily messages. The interface is in
+  Spanish, in the patch's words where it has them: Iniciar juego, Reanudar
+  juego, Opciones, Ilustraciones, the dreams as its pictures name them, Guardar
+  partida and Cargar partida from its right-click menu, a save slot a
+  "Memoria". It translates more than the Portuguese patch: the story's name (El
+  Crepúsculo de la Luna Herbal, Un Cuento de Hadas de la Princesa, set on two
+  lines as on its picture), "un día", "Regresar" and "Ayuda"; only "op" and "ep"
+  stay. Its scenes carry their own names too (Esta escena es "Mansión - …").
+  The opening page's plates and the quick bar are set a little closer in
+  Portuguese and Spanish, so their longer words fit.
 * **Unlock everything** (Settings; off by default) — asks
   first, then opens every scene on the flowchart (each can be read on its own),
   every picture and track in the Gallery, and every story on the Start game
@@ -239,18 +306,19 @@ js/audio.js             music and sound effects
 js/input.js             mouse / touch / keyboard
 js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
-js/i18n.js              the interface's words in Japanese
+js/i18n.js              the interface's words in Japanese, Portuguese and Spanish
 desktop/main.js         the desktop program: the window, and the files served to it
 desktop/tools/make-icon.js  draws the program's icons and the site's favicon.ico
-tools/extract.py        unpacks a game folder into data/; --ja adds the Japanese script
+tools/extract.py        unpacks a game folder into data/; --ja / --pt / --es add another language
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script
-data/                   extracted game data (generated)
+tools/serve.py          the local server for playing: http.server, telling the browser not to keep stale copies
+data/                   extracted game data (generated); data/pt/, data/es/ the patches' own pictures and sounds
 ```
 
 `node tools/dryrun.mjs 150` plays the script 150 times with random choices and
 no display, and prints any script warnings. A fourth argument names another
-script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt`.
+script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt` (or `data/script-pt.txt`).
 
 ## Known differences from the Windows build
 
@@ -259,6 +327,16 @@ script: `node tools/dryrun.mjs 30 400000 1 data/script-ja.txt`.
   cross-fade; this script never uses them.
 * Five lines of prose in the translation lost their leading back-tick. The
   Windows engine silently drops them; here they are shown as text.
+* The Japanese, Portuguese and Spanish daily messages are string variables
+  shown as lines of text (`$msgline0`). Their text is read as the script's own
+  text is: "@" and "\" wait for a click, "_" is not drawn. The Portuguese ones
+  are laid out for the Windows engine's grid of half-width cells, with "^" for
+  each blank and a run of blanks to fill a line where the next word should start
+  a new one. Here they wrap at their words: such a run becomes a new line, and
+  any other blank a space (`variableText` in `js/engine.js`). The Spanish script
+  asks for ONScripter-EN's English mode (`english`) and writes plain spaces, so
+  its messages are typed as one-byte text, which keeps them. Where a line
+  wraps, spaces at the start of the next one are not drawn (`js/text.js`).
 * Where the script hides the click cursor (the daily messages, among others) it
   sets it to `icon\hollow.bmp`, a single sky-blue pixel, which the English patch
   asks for opaque (the original's transparent form crashed ONScripter-EN when
@@ -290,10 +368,11 @@ repository. Every push to `main` builds and publishes to
 * Only `index.html`, `favicon.ico`, `404.html`, `_headers`, `css/`, `js/` and
   `data/` are published. `README.md` and `tools/` stay in the repository.
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
-  (`data/arc/`, `data/cd/`, `data/default.ttf`) for a year without asking
-  again; they never change. The page, `css/`, `js/` and the script, manifest
-  and guide keep Pages' default (`max-age=0, must-revalidate`), since a deploy
-  changes them.
+  (`data/arc/`, `data/cd/`, `data/default.ttf`, and the translation patches'
+  `data/pt/arc/` and `data/es/arc/`) for a year without asking again; they
+  never change. The page, `css/`, `js/` and the scripts, manifest and guide
+  keep Pages' default (`max-age=0, must-revalidate`), since a deploy changes
+  them.
 * `404.html` answers any unknown path with a 404 status and a link back to the
   game, so a missing asset is an error rather than the opening page.
 * To check a deploy: a game file should carry the year-long cache and an

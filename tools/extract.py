@@ -3,9 +3,11 @@
 
     python3 tools/extract.py "<path to Game folder>" [output dir, default: ./data]
     python3 tools/extract.py --ja "<Japanese nscript.dat, its folder, or the disc image (.bin/.cue/.iso)>"
+    python3 tools/extract.py --pt "<the Portuguese patch's game folder>"
+    python3 tools/extract.py --es "<the Spanish patch's folder>"
 
-The second form adds the Japanese script to the data that is already there (it can also be
-given together with the first). With it the player offers a language switch.
+The other forms add another language to the data that is already there (any of them can also be
+given together with the first, or with one another). With one the player offers a language switch.
 
 What it does
   * nscript.dat   -> data/script.txt   (XOR 0x84 de-obfuscation, Shift-JIS -> UTF-8)
@@ -14,6 +16,9 @@ What it does
   * default.ttf   -> data/default.ttf
   * Walkthrough.txt (next to the game, or in ../Extras) -> data/guide.txt
   * --ja <source> -> data/script-ja.txt (the same de-obfuscation; read straight off a disc image)
+  * --pt <folder> -> data/script-pt.txt, and data/pt/arc/... for the pictures and sounds of its
+                     archives that differ from the ones in data/arc/ or are not there at all
+  * --es <folder> -> data/script-es.txt and data/es/arc/..., the same way
   * data/manifest.json lists every extracted file (lower-case, forward slashes).
 
 Nothing is re-encoded: images and audio are written byte-for-byte as stored.
@@ -249,21 +254,146 @@ def add_japanese(src, out):
     print('japanese script: %d lines' % text.count('\n'))
 
 
+# The translation patches keep the game's Shift-JIS script and give their letters with accents the
+# codes of half-width katakana, which each patch's own default.ttf draws as those letters. Here they
+# become the letters themselves, so any font shows them, and the patch's font is not needed.
+
+# Portuguese (Seven Nights)
+PT_LETTERS = dict(zip(range(0xFF66, 0xFF7E), 'õáíúéóãâêçÇÁÍÚÉÓÕôÔÃÂÊàÀ'))
+
+# Spanish (Saki). Three of its ¿ and ¡ were typed as Windows-1252 bytes (0xBF, 0xA1), which read as
+# half-width katakana too (ｿ, ｡); the Windows game shows those as katakana. They are the marks meant.
+ES_LETTERS = {0xFF67: 'á', 0xFF68: 'í', 0xFF69: 'ú', 0xFF6A: 'é', 0xFF6B: 'ó', 0xFF6F: 'ü', 0xFF71: 'Á',
+              0xFF72: 'Í', 0xFF73: 'Ú', 0xFF74: 'É', 0xFF75: 'Ó', 0xFF77: '¡', 0xFF82: 'Ü', 0xFF83: 'ñ',
+              0xFF86: 'Ñ', 0xFF9A: '¿', 0xFF7F: '¿', 0xFF61: '¡'}
+
+
+def portuguese_text(raw):
+    return raw.decode('cp932', 'replace').translate(PT_LETTERS)
+
+
+def spanish_text(raw):
+    """The Spanish script also has a few characters typed in Windows-1252 that Shift-JIS reads as
+    part of a kanji with the letter after them (“E, èm, ár, én), and a few stray 0xF4 bytes, which
+    take the next byte into a character of the user-defined area that no font draws (one of them a
+    click wait "@", one a "¡"). Such a pair, standing in Latin text outside a comment (the comments
+    are the original Japanese, whose kanji can have the same bytes), is read back as the two
+    Windows-1252 characters, and a stray byte is dropped so the next one is read on its own."""
+    out, i, n = [], 0, len(raw)
+    comment = raw[:64].lstrip(b' \t')[:1] == b';'
+    while i < n:
+        b = raw[i]
+        if b == 0x0A:
+            comment = raw[i + 1:i + 1 + 64].lstrip(b' \t')[:1] == b';'
+        if 0x81 <= b <= 0x9F or 0xE0 <= b <= 0xFC:            # the lead byte of a two-byte character
+            t = raw[i + 1] if i + 1 < n else 0
+            if 0xF0 <= b <= 0xF9:                               # the user-defined area
+                i += 1
+                continue
+            latin = bool(out) and out[-1].isascii() and not comment
+            if latin and (b in (0x93, 0x94) or 0xE0 <= b <= 0xEF) and (0x41 <= t <= 0x5A or 0x61 <= t <= 0x7A):
+                out.append(bytes([b, t]).decode('cp1252'))
+            else:
+                out.append(raw[i:i + 2].decode('cp932', 'replace'))
+            i += 2
+            continue
+        out.append(bytes([b]).decode('cp932', 'replace'))
+        i += 1
+    return repaired(''.join(out).translate(ES_LETTERS), ES_REPAIRS)
+
+
+# Two slips in the Spanish script that stop the game, each put right without moving a line:
+#  * The daily message is picked again while it is one of the last three shown ("skip -1/-2/-3"
+#    back to "rnd"). The patch put two comments and a blank line in between, so the skips land on
+#    the blank line and test the same number for ever: the game hangs as it starts, about one time
+#    in seventy, in the Windows build too. They are made to reach "rnd" again.
+#  * "jumpf" written "jump##SKIPPED, try again", an unknown command: every message after the 57th
+#    would run into the 57th's text. The Portuguese patch has "jumpf" there.
+ES_REPAIRS = [
+    ('rnd %msgno,218\n;rnd2  %msgno,180,218\n;rnd2  %msgno,208,218\n\n'
+     'if %msgno==%lastmsgno0 skip -1\nif %msgno==%lastmsgno1 skip -2\nif %msgno==%lastmsgno2 skip -3\n',
+     'rnd %msgno,218\n;rnd2  %msgno,180,218\n;rnd2  %msgno,208,218\n\n'
+     'if %msgno==%lastmsgno0 skip -4\nif %msgno==%lastmsgno1 skip -5\nif %msgno==%lastmsgno2 skip -6\n'),
+    ('if %msgno!=57 jump##SKIPPED, try again\n', 'if %msgno!=57 jumpf ;jump##SKIPPED, try again\n'),
+]
+
+
+def repaired(text, repairs):
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    for old, new in repairs:
+        if text.count(old) == 1:
+            text = text.replace(old, new)
+        else:
+            print('note: a known slip of the script was not found as expected (another version of the patch?):',
+                  old.strip().split('\n')[-1])
+    return text
+
+
+PATCHES = {'pt': ('portuguese', portuguese_text), 'es': ('spanish', spanish_text)}
+
+
+def add_patch(code, src, out):
+    """Writes data/script-<code>.txt from a translation patch's game folder (or its nscript.dat),
+    and puts every member of its archives that data/arc/ lacks, or holds with other contents, under
+    data/<code>/arc/: the player looks there first while the story runs in that language."""
+    name, text_of = PATCHES[code]
+    folder = src if os.path.isdir(src) else os.path.dirname(os.path.abspath(src))
+    dat = os.path.join(src, 'nscript.dat') if os.path.isdir(src) else src
+    raw = bytes(b ^ 0x84 for b in open(dat, 'rb').read())
+    text = text_of(raw).replace('\r\n', '\n').replace('\r', '\n')
+    script = 'script-%s.txt' % code
+    with open(os.path.join(out, script), 'wb') as f:
+        f.write(text.encode('utf-8'))
+    added = {script}
+    root = os.path.join(out, code)
+    names = sorted(n for n in os.listdir(folder) if n.lower().endswith('.nsa'))
+    for n in reversed(names):               # later archives win, as in the engine's search order
+        cnt = 0
+        for member, data in read_nsa(os.path.join(folder, n)):
+            rel = 'arc/' + norm(member)
+            if code + '/' + rel in added:
+                continue
+            shared = os.path.join(out, *rel.split('/'))
+            if os.path.exists(shared) and open(shared, 'rb').read() == data:
+                continue
+            dst = os.path.join(root, *rel.split('/'))
+            if not os.path.abspath(dst).startswith(root + os.sep):
+                raise ValueError('unsafe path in archive: ' + rel)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            with open(dst, 'wb') as f:
+                f.write(data)
+            added.add(code + '/' + rel)
+            cnt += 1
+        print('%s: %d files of its own' % (n, cnt))
+    mpath = os.path.join(out, 'manifest.json')
+    manifest = json.load(open(mpath)) if os.path.exists(mpath) else {'files': []}
+    keep = [f for f in manifest['files'] if not f.startswith(code + '/') and f != script]
+    manifest['files'] = sorted(set(keep) | added)
+    with open(mpath, 'w') as f:
+        json.dump(manifest, f)
+    print('%s script: %d lines' % (name, text.count('\n')))
+
+
 def main():
     args = sys.argv[1:]
-    ja = None
-    if '--ja' in args:
-        k = args.index('--ja')
-        if k + 1 >= len(args):
-            print(__doc__)
-            return 1
-        ja = args[k + 1]
-        del args[k:k + 2]
+    extra = {}
+    for flag in ('--ja', '--pt', '--es'):
+        if flag in args:
+            k = args.index(flag)
+            if k + 1 >= len(args):
+                print(__doc__)
+                return 1
+            extra[flag[2:]] = args[k + 1]
+            del args[k:k + 2]
+    ja = extra.pop('ja', None)
     here = os.path.dirname(os.path.abspath(__file__))
-    if not args and ja:                 # only the Japanese script, into the data that is there
+    if not args and (ja or extra):      # only other languages, into the data that is there
         out = os.path.abspath(os.path.join(here, '..', 'data'))
         os.makedirs(out, exist_ok=True)
-        add_japanese(ja, out)
+        if ja:
+            add_japanese(ja, out)
+        for code, src in extra.items():
+            add_patch(code, src, out)
         return 0
     if not args:
         print(__doc__)
@@ -346,6 +476,8 @@ def main():
     print('wrote %d files to %s' % (len(files), out))
     if ja:
         add_japanese(ja, out)
+    for code, src in extra.items():
+        add_patch(code, src, out)
     return 0
 
 

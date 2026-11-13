@@ -1,14 +1,17 @@
-// The interface's words in Japanese, for when the story runs from the Japanese script.
+// The interface's words in Japanese, Portuguese and Spanish, for when the story runs from the
+// Japanese script or from the Portuguese or Spanish patch's.
 //
-// The interface is written in English; t() gives the Japanese for a string it knows and hands
-// anything else back as it is. Words the game has of its own are the game's: its menu pictures
-// (the title, Start game, the dreams, the summer festivals, Options, Game settings), the names
-// its script gives saving and loading, and the places its scenes name. "back", "op", "a day",
-// "ep" and "help" stay as they are, because the Japanese game writes them that way too. The rest
-// (the pages this port added) is translated.
+// The interface is written in English; t() gives the story's language for a string it knows and
+// hands anything else back as it is. Words the game has of its own are the game's: its menu
+// pictures (the title, Start game, the dreams, the summer festivals, Options, Game settings), the
+// names its script gives saving and loading, and the places its scenes name. In Japanese "back",
+// "op", "a day", "ep" and "help" stay as they are, because the Japanese game writes them that way
+// too; the Portuguese patch keeps "op", "a day" and "ep" and writes "Voltar" and "Ajuda", and the
+// Spanish one writes "op", "un día", "ep", "Regresar" and "Ayuda". The rest (the pages this port
+// added) is translated.
 
 let lang = 'en';
-export function setLang(l) { lang = l === 'ja' ? 'ja' : 'en'; }
+export function setLang(l) { lang = l === 'ja' || l === 'pt' || l === 'es' ? l : 'en'; }
 export function uiLang() { return lang; }
 
 const JA = {
@@ -193,7 +196,7 @@ const JA = {
   'Music': '音楽',
   'Sound effects': '効果音',
   'Sound': '音',
-  'Picture shape': '画面比率',
+  'Aspect ratio': '画面比率',
   'Glow around the picture': '画面のまわりの光',
   'Fullscreen': '全画面',
   'Language and progress': '言語と進行状況',
@@ -210,6 +213,8 @@ const JA = {
   'Back to your own progress.': '自分の進行状況に戻しました。',
   'Switch the story to Japanese?': '物語を日本語に切り替えますか？',
   'Switch the story to English?': '物語を英語に切り替えますか？',
+  'Switch the story to Portuguese?': '物語をポルトガル語に切り替えますか？',
+  'Switch the story to Spanish?': '物語をスペイン語に切り替えますか？',
   'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; saved games are kept separately for each language, so the day in progress is not carried across.':
     'ゲームは最初のページから始まります。読んだ所、ギャラリー、フローチャートは引き継がれます。セーブは言語ごとに別なので、進行中の一日は引き継がれません。',
   'Advancing by itself.': '自動で進みます。',
@@ -311,6 +316,593 @@ const JA = {
   'Loading…': '読み込み中…',
 };
 
+// The same in Brazilian Portuguese. The game's own words are the Portuguese patch's (Seven Nights):
+// the ones painted on its menu pictures and the ones its script gives the right-click menu.
+const PT = {
+  // ---- the game's own words
+  'Start game': 'Iniciar Jogo',
+  'Resume game': 'Carregar Jogo',
+  'Options': 'Opções',
+  'Graphics mode': 'Galeria de imagens',
+  'Summer Festivals': 'Festival de verão',
+  'Ten Nights of Dream': 'Dez Noites de Sonhos',
+  'Good luck, Ciel-sensei': 'Boa sorte, Ciel-sensei',
+  'A Story for the Evening': 'Uma História para o Anoitecer',
+  'Crimson Moon': 'Lua Carmesim',
+  'Red Demon God': 'Deus Demoníaco Vermelho',
+  'Flower of Thanatos': 'Flor de Thanatos',
+  'Hisui-chan, Inversion Impulse!': 'Hisui-chan, Impulso Inverso!',
+  'The Tohno Family Con Game': 'Esconde-esconde da Família Tohno',
+  'Dawn': 'Alvorecer',
+  'Help': 'Ajuda',
+  'Back': 'Voltar',
+  'Save game': 'Salvar Jogo',
+  'Load game': 'Carregar Jogo',
+  'Text history': 'Histórico de texto',
+  'Display effects instantly': 'Mostrar efeitos instantaneamente',
+  'Skip parts previously read': 'Pular partes previamente lidas',
+  'Display daily message at startup': 'Mostrar mensagem diária ao iniciar',
+  'Morning': 'Manhã',
+  'School': 'Escola',
+  'Mansion': 'Mansão',
+  'Street': 'Ruas',
+  'Night': 'Noite',
+
+  // ---- the quick bar and the marks beside it
+  'Log': 'Histórico',
+  'Skip': 'Pular',
+  'Save': 'Salvar',
+  'Load': 'Carregar',
+  'Hide': 'Ocultar',
+  'Settings': 'Configurações',
+  'Full': 'Tela cheia',
+  'skip': 'pular',
+  'Fast-forwarding. Click to stop (S)': 'Avançando rápido. Clique para parar (S)',
+  'Advancing by itself. Click to stop (A)': 'Avançando sozinho. Clique para parar (A)',
+  'Right-click / Esc': 'Clique direito / Esc',
+  'Mouse wheel up': 'Roda do mouse para cima',
+  'S, or hold Ctrl': 'S, ou segure Ctrl',
+  'Show the picture without text': 'Mostrar a imagem sem o texto',
+  'Quick bar': 'Barra rápida',
+
+  // ---- answers, pages
+  'Yes': 'Sim',
+  'No': 'Não',
+  'On': 'Ligado',
+  'Off': 'Desligado',
+  'Gallery': 'Galeria',
+  'Flowchart': 'Fluxograma',
+  'Music player': 'Reprodutor de música',
+  'Guide': 'Guia',
+  'Now playing': 'Tocando agora',
+  'Right-click or Esc returns to the story': 'Clique direito ou Esc volta para a história',
+  'Scroll past the end to return': 'Role além do fim para voltar',
+  'Reading a scene again': 'Relendo uma cena',
+  'Return to the title screen?': 'Voltar à tela de título?',
+  'The day so far is kept only if it has been saved.': 'O dia até aqui só é mantido se tiver sido salvo.',
+  'Leave the game?': 'Sair do jogo?',
+  'There is nothing to save yet.': 'Ainda não há nada para salvar.',
+  'Choose where to keep this page': 'Escolha onde guardar esta página',
+  'Choose a page to return to': 'Escolha a página para a qual voltar',
+  'The save could not be written.': 'Não foi possível gravar o jogo salvo.',
+  "The browser's storage is full or turned off.": 'O armazenamento do navegador está cheio ou desativado.',
+  'Anything not saved since is left behind.': 'O que não foi salvo desde então fica para trás.',
+  'Nothing has been read yet.': 'Nada foi lido ainda.',
+  'This story has no flowchart.': 'Esta história não tem fluxograma.',
+  'Read this scene again?': 'Ler esta cena de novo?',
+  'It plays by itself and then returns to the title. The day so far is kept only if it has been saved.':
+    'Ela é exibida sozinha e depois volta ao título. O dia até aqui só é mantido se tiver sido salvo.',
+  'The engine stopped on an error.': 'O motor parou por causa de um erro.',
+  'That file is not a save export.': 'Esse arquivo não é uma exportação de jogos salvos.',
+
+  // ---- gallery
+  'Events': 'Eventos',
+  'Submitted art': 'Ilustrações enviadas',
+  'Guest art': 'Ilustrações convidadas',
+  'Not heard in the story yet': 'Ainda não ouvida na história',
+  'Previous track': 'Faixa anterior',
+  'Play / pause': 'Tocar / pausar',
+  'Next track': 'Próxima faixa',
+  'When a track ends: play it again, or go on to the next': 'Quando uma faixa termina: tocá-la de novo ou seguir para a próxima',
+  'Choose a track': 'Escolha uma faixa',
+  'No music heard in the story yet': 'Nenhuma música ouvida na história ainda',
+  'Repeat': 'Repetir',
+  'Play through': 'Em sequência',
+
+  // ---- flowchart
+  'The day': 'O dia',
+  'A scene without a name': 'Uma cena sem nome',
+  'A turn in the road': 'Uma bifurcação',
+  'The story goes on from here by what has happened so far.': 'Daqui em diante a história segue conforme o que aconteceu até agora.',
+  'Scene': 'Cena',
+  'Not yet read.': 'Ainda não lida.',
+  'Not yet opened.': 'Ainda não aberta.',
+  'Read.': 'Lida.',
+  'Open on the game-start page, not yet read.': 'Aberta na página Iniciar Jogo, ainda não lida.',
+  'Still closed.': 'Ainda fechada.',
+  'From here': 'Daqui',
+  'How to get here': 'Como chegar aqui',
+  'Reading this counts towards something later.': 'Ler esta cena conta para algo mais adiante.',
+  'The day can end here.': 'O dia pode terminar aqui.',
+  'Read this scene again': 'Ler esta cena de novo',
+  'Where I am': 'Onde estou',
+  'Fit': 'Ajustar',
+  'Everything': 'Tudo',
+  'Draw the whole chart, or only what has been reached': 'Desenhar o fluxograma inteiro, ou só o que já foi alcançado',
+  'Hints': 'Dicas',
+  'Say in plain words what each branch needs, and how to reach scenes not yet read': 'Dizer com palavras simples o que cada ramificação exige e como chegar às cenas ainda não lidas',
+  'Each dream is opened by something that happens in the day.': 'Cada sonho é aberto por algo que acontece durante o dia.',
+  'These open once all ten dreams have been read.': 'Estes se abrem quando os dez sonhos tiverem sido lidos.',
+  'depending on what has happened': 'dependendo do que aconteceu',
+  'otherwise': 'caso contrário',
+  'then': 'então',
+  'opens a dream': 'abre um sonho',
+  'opened in the day by': 'aberto durante o dia por',
+  'something outside the day': 'algo fora do dia',
+  'Choose ': 'Escolha ',
+  ' and ': ' e ',
+  ' or ': ' ou ',
+  'after ': 'depois de ',
+  'before ': 'antes de ',
+  'depending on ': 'dependendo de ',
+
+  // ---- guide
+  'Mark the choices to take': 'Marcar as escolhas a fazer',
+  'Ending to head for': 'Final a buscar',
+  'True': 'Verdadeiro',
+  'Finished': 'Concluído',
+  'Next up': 'O próximo',
+  'Done': 'Concluído',
+  'Still to come': 'Ainda por vir',
+  'Shown on the right': 'Mostrado à direita',
+  'How it works': 'Como funciona',
+  'Every day of the walkthrough has been played the guide’s way.': 'Todos os dias do detonado foram jogados do jeito do guia.',
+  'Finish one having taken every marked choice, and the next Day becomes next up.': 'Termine um fazendo todas as escolhas marcadas, e o Dia seguinte passa a ser o próximo.',
+  'Take any other choice and the marks stop for that play-through; the same Day stays next up.': 'Faça qualquer outra escolha e as marcas param nessa jogada; o mesmo Dia continua sendo o próximo.',
+  'Choices to take, in order': 'Escolhas a fazer, em ordem',
+  'No choices are made in this one.': 'Não há escolhas neste.',
+  'There is a quiz in this one, and the walkthrough has you miss a question on purpose, so nothing is marked in it.':
+    'Este tem um quiz, e o detonado manda errar uma pergunta de propósito, então nada é marcado nele.',
+  'To play it again with its choices marked. The days after it count as not done.': 'Para jogá-lo de novo com as escolhas marcadas. Os dias depois dele contam como não concluídos.',
+  'If your save is already further along than the guide thinks. The days before it count as done.': 'Se o seu jogo salvo já está mais adiante do que o guia pensa. Os dias antes dele contam como concluídos.',
+  'The guide begins the day here': 'O guia começa o dia aqui',
+  'Which ending shall the guide lead to?': 'Para qual final o guia deve levar?',
+  'The walkthrough gives both. This can be changed on the Guide page.': 'O detonado traz os dois. Isso pode ser mudado na página do Guia.',
+  'Not the guide’s choice: no more marks this play-through, and the same Day stays next up.':
+    'Não é a escolha do guia: sem mais marcas nesta jogada, e o mesmo Dia continua sendo o próximo.',
+
+  // ---- settings
+  'Kept in this browser': 'Guardado neste navegador',
+  'Kept on this computer': 'Guardado neste computador',
+  'The story': 'A história',
+  'Story font': 'Fonte da história',
+  'Serif': 'Serifada',
+  'Sans': 'Sem serifa',
+  'Text speed': 'Velocidade do texto',
+  'Slow': 'Lenta',
+  'Fast': 'Rápida',
+  'Auto-advance pace': 'Ritmo do avanço automático',
+  'Guide: mark the choices to take': 'Guia: marcar as escolhas a fazer',
+  'Skip explicit sexual content': 'Pular conteúdo sexual',
+  'Sound and picture': 'Som e imagem',
+  'Music': 'Música',
+  'Sound effects': 'Efeitos sonoros',
+  'Sound': 'Som',
+  'Aspect ratio': 'Proporção da tela',
+  'Glow around the picture': 'Brilho ao redor da imagem',
+  'Fullscreen': 'Tela cheia',
+  'Language and progress': 'Idioma e progresso',
+  'Progress': 'Progresso',
+  'Language': 'Idioma',
+  'Unlock everything': 'Liberar tudo',
+  'Switch the picture to 16:9?': 'Mudar a imagem para 16:9?',
+  'Backgrounds and event pictures are enlarged to fill the screen, so some of them are cut off at the top and the bottom. The Gallery still shows every picture whole, and 4:3 can be chosen again at any time.':
+    'Os cenários e as imagens de eventos são ampliados para preencher a tela, então alguns ficam cortados em cima e embaixo. A Galeria continua mostrando cada imagem inteira, e 4:3 pode ser escolhido de novo a qualquer momento.',
+  'Unlock everything?': 'Liberar tudo?',
+  'Every scene on the flowchart, every picture and track in the Gallery, and every story on the Start game page opens. Your own progress is not changed and goes on being kept: turn this off again here to go back to it.':
+    'Todas as cenas do fluxograma, todas as imagens e faixas da Galeria e todas as histórias da página Iniciar Jogo se abrem. O seu próprio progresso não muda e continua sendo guardado: desligue isto aqui de novo para voltar a ele.',
+  'Everything is unlocked.': 'Tudo liberado.',
+  'Back to your own progress.': 'De volta ao seu próprio progresso.',
+  'Switch the story to Japanese?': 'Mudar a história para japonês?',
+  'Switch the story to English?': 'Mudar a história para inglês?',
+  'Switch the story to Portuguese?': 'Mudar a história para português?',
+  'Switch the story to Spanish?': 'Mudar a história para espanhol?',
+  'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; saved games are kept separately for each language, so the day in progress is not carried across.':
+    'O jogo recomeça da página inicial. O que você leu, a galeria e o fluxograma são mantidos; os jogos salvos ficam separados para cada idioma, então o dia em andamento não é levado junto.',
+  'Advancing by itself.': 'Avançando sozinho.',
+  'Auto off.': 'Auto desligado.',
+  'Sound off.': 'Som desligado.',
+  'Sound on.': 'Som ligado.',
+
+  // ---- the opening page ("Tsukihime fan disc" stays, as on the patch's title picture)
+  'in the browser': 'no navegador',
+  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.':
+    'Uma versão não oficial para navegador que roda os próprios arquivos do jogo. Escolha uma página acima: Sobre, Controles, Dados salvos, ou Jogar para começar.',
+  'Unofficial · not affiliated with TYPE-MOON': 'Não oficial · sem vínculo com a TYPE-MOON',
+  'For desktop or PC only': 'Apenas para computador',
+  'Please do not play this on a phone or another mobile device. The controls are built for a mouse and a keyboard, not for a touch screen, and the picture and the text come out too small to read.':
+    'Por favor, não jogue isto em um celular ou outro dispositivo móvel. Os controles foram feitos para mouse e teclado, não para tela sensível ao toque, e a imagem e o texto ficam pequenos demais para ler.',
+  'Open it on a desktop or PC instead.': 'Abra em um computador.',
+  'Continue anyway': 'Continuar mesmo assim',
+  'Loading the game’s script…': 'Carregando o script do jogo…',
+  'Game data not found — see the Play page.': 'Dados do jogo não encontrados — veja a página Jogar.',
+  'About': 'Sobre',
+  'Controls': 'Controles',
+  'Save data': 'Dados salvos',
+  'Play': 'Jogar',
+  'What this is': 'O que é isto',
+  'Kagetsu Tohya, playing in a web browser. A small engine written in JavaScript reads the game’s own script, pictures, sound and music as they are in your copy; nothing in them was rewritten or re-encoded.':
+    'Kagetsu Tohya rodando em um navegador. Um pequeno motor escrito em JavaScript lê o script, as imagens, os sons e as músicas do próprio jogo do jeito que estão na sua cópia; nada neles foi reescrito ou recodificado.',
+  'An unofficial fan project, not affiliated with TYPE-MOON. Please support the official release.': 'Um projeto de fã não oficial, sem vínculo com a TYPE-MOON. Por favor, apoie o lançamento oficial.',
+  'The source is on GitHub:': 'O código-fonte está no GitHub:',
+  'How it was taken apart': 'Como foi desmontado',
+  'The program': 'O programa',
+  'ONScripter-EN, an open reimplementation of NScripter. Its behaviour was followed from its public source.': 'ONScripter-EN, uma reimplementação aberta do NScripter. Seu comportamento foi seguido a partir do código-fonte público.',
+  'The script': 'O script',
+  'One file of about 72,000 lines, hidden by a single XOR. It is run as written.': 'Um arquivo de cerca de 72.000 linhas, escondido por um único XOR. Ele é executado como foi escrito.',
+  'The archives': 'Os pacotes',
+  'Two NSA archives holding 1,194 pictures and sound effects.': 'Dois pacotes NSA com 1.194 imagens e efeitos sonoros.',
+  'The music': 'A música',
+  'Seventeen tracks, which the script asks for by number.': 'Dezessete faixas, que o script pede pelo número.',
+  'What is new here': 'O que há de novo aqui',
+  'The menus': 'Os menus',
+  'The title, Start game and each story’s page are redrawn to match one another. The script still decides what every entry does and what is unlocked.':
+    'O título, Iniciar Jogo e a página de cada história foram redesenhados para combinar entre si. O script ainda decide o que cada item faz e o que está liberado.',
+  'On the title, in place of End game: the game’s four picture galleries in one place, the flowchart, the guide, and a music player for the tracks you have heard in the story.':
+    'No título, no lugar de Sair: as quatro galerias de imagens do jogo em um só lugar, o fluxograma, o guia e um reprodutor de música com as faixas que você ouviu na história.',
+  'Drawn from the script’s own flow and laid out by place and time. It shows what you have reached; choosing a scene lights the ways to it and on from it, and hints, if you turn them on, say how to reach the rest.':
+    'Desenhado a partir do próprio fluxo do script e organizado por lugar e horário. Mostra o que você alcançou; escolher uma cena ilumina os caminhos até ela e a partir dela, e as dicas, se você ligá-las, dizem como chegar ao resto.',
+  'Optional, and off until you turn it on. It follows the walkthrough that came with the copy, one day at a time, and marks the choice to take.':
+    'Opcional, e desligado até você ligá-lo. Segue o detonado que veio com a cópia, um dia de cada vez, e marca a escolha a fazer.',
+  'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': 'Uma página para tudo: a fonte da história, a velocidade do texto, o som e as quatro opções do próprio jogo.',
+  'Saves': 'Jogos salvos',
+  'Twenty slots with a picture and a line of the page, kept in this browser.': 'Vinte espaços, cada um com uma imagem e uma linha da página, guardados neste navegador.',
+  'History': 'Histórico',
+  'Everything read this session, as one scroll.': 'Tudo o que foi lido nesta sessão, em uma só rolagem.',
+  'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.':
+    'Uma opção, na página Jogar e nas Configurações: a imagem preenche uma tela larga, sem nada vazio nas laterais. Os cenários são ampliados para caber, então alguns ficam cortados em cima e embaixo; o título e todos os menus são organizados para o formato mais largo.',
+  'Mouse, keyboard and touch': 'Mouse, teclado e toque',
+  'Click, tap, Enter, Space': 'Clique, toque, Enter, Espaço',
+  'Go on to the next line, or take what is pointed at.': 'Ir para a próxima linha, ou escolher o que está apontado.',
+  'Right-click, two-finger tap, Esc': 'Clique direito, toque com dois dedos, Esc',
+  'The menu: save, load, history, flowchart, guide, settings, title.': 'O menu: salvar, carregar, histórico, fluxograma, guia, configurações, título.',
+  'Wheel up, ↑, PageUp': 'Roda para cima, ↑, PageUp',
+  'Text history. Scroll past its end to return.': 'Histórico de texto. Role além do fim para voltar.',
+  'Ctrl, or a finger, held down': 'Ctrl, ou um dedo, pressionado',
+  'Fast-forward for as long as it is held.': 'Avança rápido enquanto estiver pressionado.',
+  'Fast-forward on and off. It stops at a choice; a click stops it too.': 'Liga e desliga o avanço rápido. Ele para em uma escolha; um clique também o para.',
+  'Let the story advance by itself.': 'Deixa a história avançar sozinha.',
+  'Text speed: slow, normal, fast.': 'Velocidade do texto: lenta, normal, rápida.',
+  'Mute, fullscreen.': 'Sem som, tela cheia.',
+  'Top edge': 'Borda de cima',
+  'The quick bar appears while the story waits for you. On a touch screen, tap the small moon at the corner.': 'A barra rápida aparece enquanto a história espera por você. Em uma tela sensível ao toque, toque na pequena lua no canto.',
+  'Saves, progress and settings live in this browser, for this address. Clearing the site’s data removes them, and another browser starts empty, so a file is the way to carry them across or to keep a copy.':
+    'Jogos salvos, progresso e configurações ficam neste navegador, para este endereço. Limpar os dados do site os apaga, e outro navegador começa vazio, então um arquivo é a forma de levá-los para outro lugar ou de guardar uma cópia.',
+  'Export to a file': 'Exportar para um arquivo',
+  'Import from a file': 'Importar de um arquivo',
+  'Erase everything': 'Apagar tudo',
+  'Erase every save and all progress?': 'Apagar todos os jogos salvos e todo o progresso?',
+  'This cannot be undone.': 'Isso não pode ser desfeito.',
+  'The game as a program': 'O jogo como programa',
+  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
+    'A mesma versão em uma janela própria, com todos os arquivos dentro: cerca de 330 MB, e roda sem conexão.',
+  'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
+    'Os programas não são assinados, então cada sistema pergunta uma vez. Windows: “Mais informações” e depois “Executar assim mesmo”. macOS: abra uma vez e depois permita em Ajustes do Sistema, Privacidade e Segurança, “Abrir Mesmo Assim”.',
+  'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
+    'Linux: permita que o arquivo seja executado como programa (nas Propriedades, ou com chmod +x) e depois abra. No Ubuntu 22.04 e posteriores, instale antes o pacote libfuse2.',
+  'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
+    'Ele abre direto no jogo e guarda os jogos salvos separados dos deste navegador. As Configurações têm Dados salvos: exporte para um arquivo aqui e importe lá, ou o contrário.',
+  'Skip the credits?': 'Pular os créditos?',
+  'Import save data from a file?': 'Importar dados salvos de um arquivo?',
+  'What the file holds replaces what is kept here, and the game starts again.': 'O conteúdo do arquivo substitui o que está guardado aqui, e o jogo recomeça.',
+  'Every version is on GitHub:': 'Todas as versões estão no GitHub:',
+  'Play here, in the browser': 'Jogue aqui, no navegador',
+  'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.':
+    'Nada para instalar. Os arquivos do jogo chegam conforme você joga, e o dia em que você está é salvo sozinho cada vez que termina.',
+  'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.':
+    'Os dados do jogo não foram encontrados. Rode  python3 tools/extract.py "<caminho da pasta Game>"  e recarregue.',
+  'press any button': 'pressione qualquer botão',
+  'No game data': 'Sem dados do jogo',
+  'Loading…': 'Carregando…',
+};
+
+// The same in Spanish. The game's own words are the Spanish patch's (Saki): the ones painted on its
+// menu pictures and the ones its script gives the right-click menu. Unlike the Portuguese patch it
+// also translates the story's name, "a day" and "back".
+const ES = {
+  // ---- the game's own words
+  'Start game': 'Iniciar juego',
+  'Resume game': 'Reanudar juego',
+  'Options': 'Opciones',
+  'Graphics mode': 'Ilustraciones',
+  'Summer Festivals': 'Festival de Verano',
+  'Ten Nights of Dream': 'Diez Noches de Sueño',
+  // on two lines, as the patch's picture sets it (the menu pages keep a line break in a label)
+  'Twilight Grass Moon, Fairy Tale Princess': 'El Crepúsculo de la Luna Herbal,\nUn Cuento de Hadas de la Princesa',
+  'Good luck, Ciel-sensei': '¡Buena suerte, Ciel-sensei!',
+  'A Story for the Evening': 'Una Historia para el Atardecer',
+  'Crimson Moon': 'Luna Carmesí',
+  'Red Demon God': 'El Dios Demonio Rojo',
+  'Nanako-chan SOS!': '¡Nanako-chan SOS!',
+  'Flower of Thanatos': 'Flor de Thanatos',
+  'Hisui-chan, Inversion Impulse!': '¡Hisui-chan, Impulso de Inversión!',
+  'The Tohno Family Con Game': 'La Estafa de la Familia Tohno',
+  'Dawn': 'Amanecer',
+  'A day': 'Un día',
+  'Help': 'Ayuda',
+  'Back': 'Regresar',
+  'Save game': 'Guardar partida',
+  'Load game': 'Cargar partida',
+  'Text history': 'Historial de texto',
+  'Display effects instantly': 'Efectos instantáneos',
+  'Skip parts previously read': 'Saltar partes ya leídas',
+  'Display daily message at startup': 'Mostrar mensajes diarios al iniciar el juego',
+  'Morning': 'Mañana',
+  'School': 'Escuela',
+  'Mansion': 'Mansión',
+  'Street': 'Calles',
+  'Night': 'Noche',
+
+  // ---- the quick bar and the marks beside it
+  'Menu': 'Menú',
+  'Log': 'Historial',
+  'Skip': 'Saltar',
+  'Save': 'Guardar',
+  'Load': 'Cargar',
+  'Hide': 'Ocultar',
+  'Settings': 'Configuración',
+  'Full': 'Pantalla completa',
+  'skip': 'saltar',
+  'Fast-forwarding. Click to stop (S)': 'Avance rápido. Haz clic para detenerlo (S)',
+  'Advancing by itself. Click to stop (A)': 'Avanzando solo. Haz clic para detenerlo (A)',
+  'Right-click / Esc': 'Clic derecho / Esc',
+  'Mouse wheel up': 'Rueda del mouse hacia arriba',
+  'S, or hold Ctrl': 'S, o mantén Ctrl',
+  'Show the picture without text': 'Mostrar la imagen sin el texto',
+  'Quick bar': 'Barra rápida',
+
+  // ---- answers, pages
+  'Yes': 'Sí',
+  'No': 'No',
+  'On': 'Sí',
+  'Off': 'No',
+  'Gallery': 'Galería',
+  'Flowchart': 'Diagrama de flujo',
+  'Music player': 'Reproductor de música',
+  'Guide': 'Guía',
+  'Now playing': 'Sonando ahora',
+  'Right-click or Esc returns to the story': 'Clic derecho o Esc vuelve a la historia',
+  'Scroll past the end to return': 'Desplázate más allá del final para volver',
+  'Reading a scene again': 'Releyendo una escena',
+  'Return to the title screen?': '¿Volver a la pantalla de título?',
+  'The day so far is kept only if it has been saved.': 'El día hasta ahora solo se conserva si se ha guardado.',
+  'Leave the game?': '¿Salir del juego?',
+  'There is nothing to save yet.': 'Todavía no hay nada que guardar.',
+  'Choose where to keep this page': 'Elige dónde guardar esta página',
+  'Choose a page to return to': 'Elige la página a la que volver',
+  'The save could not be written.': 'No se pudo guardar la partida.',
+  "The browser's storage is full or turned off.": 'El almacenamiento del navegador está lleno o desactivado.',
+  'Anything not saved since is left behind.': 'Lo que no se haya guardado desde entonces se pierde.',
+  'Nothing has been read yet.': 'Todavía no se ha leído nada.',
+  'This story has no flowchart.': 'Esta historia no tiene diagrama de flujo.',
+  'Read this scene again?': '¿Leer esta escena de nuevo?',
+  'It plays by itself and then returns to the title. The day so far is kept only if it has been saved.':
+    'Se reproduce sola y luego vuelve al título. El día hasta ahora solo se conserva si se ha guardado.',
+  'The engine stopped on an error.': 'El motor se detuvo por un error.',
+  'That file is not a save export.': 'Ese archivo no es una exportación de partidas.',
+
+  // ---- gallery
+  'Events': 'Eventos',
+  'Submitted art': 'Ilustración donada',
+  'Guest art': 'Ilustración invitada',
+  'Not heard in the story yet': 'Aún no se ha oído en la historia',
+  'Previous track': 'Pista anterior',
+  'Play / pause': 'Reproducir / pausa',
+  'Next track': 'Pista siguiente',
+  'When a track ends: play it again, or go on to the next': 'Cuando termina una pista: repetirla o pasar a la siguiente',
+  'Choose a track': 'Elige una pista',
+  'No music heard in the story yet': 'Aún no se ha oído música en la historia',
+  'Repeat': 'Repetir',
+  'Play through': 'Seguidas',
+
+  // ---- flowchart
+  'The day': 'El día',
+  'A scene without a name': 'Una escena sin nombre',
+  'A turn in the road': 'Una bifurcación',
+  'The story goes on from here by what has happened so far.': 'Desde aquí la historia sigue según lo que ha pasado hasta ahora.',
+  'Scene': 'Escena',
+  'Not yet read.': 'Aún no leída.',
+  'Not yet opened.': 'Aún no abierta.',
+  'Read.': 'Leída.',
+  'Open on the game-start page, not yet read.': 'Abierta en la página Iniciar juego, aún no leída.',
+  'Still closed.': 'Aún cerrada.',
+  'From here': 'Desde aquí',
+  'How to get here': 'Cómo llegar aquí',
+  'Reading this counts towards something later.': 'Leer esta escena cuenta para algo más adelante.',
+  'The day can end here.': 'El día puede terminar aquí.',
+  'Read this scene again': 'Leer esta escena de nuevo',
+  'Where I am': 'Dónde estoy',
+  'Fit': 'Ajustar',
+  'Everything': 'Todo',
+  'Draw the whole chart, or only what has been reached': 'Dibujar el diagrama entero, o solo lo que ya se ha alcanzado',
+  'Hints': 'Pistas',
+  'Say in plain words what each branch needs, and how to reach scenes not yet read': 'Decir con palabras sencillas qué necesita cada rama y cómo llegar a las escenas aún no leídas',
+  'Each dream is opened by something that happens in the day.': 'Cada sueño se abre por algo que pasa durante el día.',
+  'These open once all ten dreams have been read.': 'Estas se abren cuando se han leído los diez sueños.',
+  'depending on what has happened': 'según lo que haya pasado',
+  'otherwise': 'si no',
+  'then': 'después',
+  'opens a dream': 'abre un sueño',
+  'opened in the day by': 'se abre durante el día con',
+  'something outside the day': 'algo fuera del día',
+  'Choose ': 'Elige ',
+  ' and ': ' y ',
+  ' or ': ' o ',
+  'after ': 'después de ',
+  'before ': 'antes de ',
+  'depending on ': 'según ',
+
+  // ---- guide
+  'Mark the choices to take': 'Marcar las decisiones a tomar',
+  'Ending to head for': 'Final al que ir',
+  'True': 'Verdadero',
+  'Finished': 'Terminado',
+  'Next up': 'El siguiente',
+  'Done': 'Hecho',
+  'Still to come': 'Por venir',
+  'Shown on the right': 'Mostrado a la derecha',
+  'How it works': 'Cómo funciona',
+  'Every day of the walkthrough has been played the guide’s way.': 'Todos los días de la guía de juego se han jugado como indica la guía.',
+  'Finish one having taken every marked choice, and the next Day becomes next up.': 'Termina uno tomando todas las decisiones marcadas, y el Día siguiente pasa a ser el siguiente.',
+  'Take any other choice and the marks stop for that play-through; the same Day stays next up.': 'Toma cualquier otra decisión y las marcas se detienen en esa partida; el mismo Día sigue siendo el siguiente.',
+  'Choices to take, in order': 'Decisiones a tomar, en orden',
+  'No choices are made in this one.': 'En este no se toma ninguna decisión.',
+  'There is a quiz in this one, and the walkthrough has you miss a question on purpose, so nothing is marked in it.':
+    'Este tiene un cuestionario, y la guía de juego hace fallar una pregunta a propósito, así que no se marca nada en él.',
+  'To play it again with its choices marked. The days after it count as not done.': 'Para jugarlo otra vez con sus decisiones marcadas. Los días posteriores cuentan como no hechos.',
+  'If your save is already further along than the guide thinks. The days before it count as done.': 'Si tu partida ya va más adelante de lo que cree la guía. Los días anteriores cuentan como hechos.',
+  'The guide begins the day here': 'La guía empieza el día aquí',
+  'Which ending shall the guide lead to?': '¿A qué final debe llevar la guía?',
+  'The walkthrough gives both. This can be changed on the Guide page.': 'La guía de juego trae los dos. Se puede cambiar en la página de la Guía.',
+  'Not the guide’s choice: no more marks this play-through, and the same Day stays next up.':
+    'No es la decisión de la guía: no habrá más marcas en esta partida, y el mismo Día sigue siendo el siguiente.',
+
+  // ---- settings
+  'Kept in this browser': 'Guardado en este navegador',
+  'Kept on this computer': 'Guardado en esta computadora',
+  'The story': 'La historia',
+  'Story font': 'Fuente de la historia',
+  'Serif': 'Con serifa',
+  'Sans': 'Sin serifa',
+  'Text speed': 'Velocidad del texto',
+  'Slow': 'Lenta',
+  'Fast': 'Rápida',
+  'Auto-advance pace': 'Ritmo del avance automático',
+  'Guide: mark the choices to take': 'Guía: marcar las decisiones a tomar',
+  'Skip explicit sexual content': 'Saltar el contenido sexual',
+  'Sound and picture': 'Sonido e imagen',
+  'Music': 'Música',
+  'Sound effects': 'Efectos de sonido',
+  'Sound': 'Sonido',
+  'Aspect ratio': 'Relación de aspecto',
+  'Glow around the picture': 'Brillo alrededor de la imagen',
+  'Fullscreen': 'Pantalla completa',
+  'Language and progress': 'Idioma y progreso',
+  'Progress': 'Progreso',
+  'Language': 'Idioma',
+  'Unlock everything': 'Desbloquear todo',
+  'Switch the picture to 16:9?': '¿Cambiar la imagen a 16:9?',
+  'Backgrounds and event pictures are enlarged to fill the screen, so some of them are cut off at the top and the bottom. The Gallery still shows every picture whole, and 4:3 can be chosen again at any time.':
+    'Los fondos y las imágenes de eventos se amplían para llenar la pantalla, así que algunos quedan cortados arriba y abajo. La Galería sigue mostrando cada imagen entera, y se puede volver a 4:3 en cualquier momento.',
+  'Unlock everything?': '¿Desbloquear todo?',
+  'Every scene on the flowchart, every picture and track in the Gallery, and every story on the Start game page opens. Your own progress is not changed and goes on being kept: turn this off again here to go back to it.':
+    'Se abren todas las escenas del diagrama, todas las imágenes y pistas de la Galería y todas las historias de la página Iniciar juego. Tu propio progreso no cambia y se sigue guardando: desactiva esto aquí para volver a él.',
+  'Everything is unlocked.': 'Todo desbloqueado.',
+  'Back to your own progress.': 'De vuelta a tu propio progreso.',
+  'Switch the story to Japanese?': '¿Cambiar la historia al japonés?',
+  'Switch the story to English?': '¿Cambiar la historia al inglés?',
+  'Switch the story to Portuguese?': '¿Cambiar la historia al portugués?',
+  'Switch the story to Spanish?': '¿Cambiar la historia al español?',
+  'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; saved games are kept separately for each language, so the day in progress is not carried across.':
+    'El juego vuelve a empezar desde la página inicial. Lo que has leído, la galería y el diagrama se conservan; las partidas guardadas van por separado para cada idioma, así que el día en curso no se traslada.',
+  'Advancing by itself.': 'Avanzando solo.',
+  'Auto off.': 'Auto desactivado.',
+  'Sound off.': 'Sonido desactivado.',
+  'Sound on.': 'Sonido activado.',
+
+  // ---- the opening page ("Tsukihime fan disc" stays, as on the patch's title picture)
+  'in the browser': 'en el navegador',
+  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.':
+    'Una versión no oficial para navegador que reproduce los propios archivos del juego. Elige una página arriba: Acerca de, Controles, Partidas, o Jugar para empezar.',
+  'Unofficial · not affiliated with TYPE-MOON': 'No oficial · sin relación con TYPE-MOON',
+  'For desktop or PC only': 'Solo para computadora',
+  'Please do not play this on a phone or another mobile device. The controls are built for a mouse and a keyboard, not for a touch screen, and the picture and the text come out too small to read.':
+    'Por favor, no juegues a esto en un celular u otro dispositivo móvil. Los controles están pensados para mouse y teclado, no para pantalla táctil, y la imagen y el texto quedan demasiado pequeños para leerlos.',
+  'Open it on a desktop or PC instead.': 'Ábrelo en una computadora.',
+  'Continue anyway': 'Continuar de todos modos',
+  'Loading the game’s script…': 'Cargando el guion del juego…',
+  'Game data not found — see the Play page.': 'No se encontraron los datos del juego — mira la página Jugar.',
+  'About': 'Acerca de',
+  'Controls': 'Controles',
+  'Save data': 'Partidas',
+  'Play': 'Jugar',
+  'What this is': 'Qué es esto',
+  'Kagetsu Tohya, playing in a web browser. A small engine written in JavaScript reads the game’s own script, pictures, sound and music as they are in your copy; nothing in them was rewritten or re-encoded.':
+    'Kagetsu Tohya en un navegador web. Un pequeño motor escrito en JavaScript lee el guion, las imágenes, los sonidos y la música del propio juego tal como están en tu copia; nada se ha reescrito ni recodificado.',
+  'An unofficial fan project, not affiliated with TYPE-MOON. Please support the official release.': 'Un proyecto de fans no oficial, sin relación con TYPE-MOON. Por favor, apoya el lanzamiento oficial.',
+  'The source is on GitHub:': 'El código fuente está en GitHub:',
+  'How it was taken apart': 'Cómo se desmontó',
+  'The program': 'El programa',
+  'ONScripter-EN, an open reimplementation of NScripter. Its behaviour was followed from its public source.': 'ONScripter-EN, una reimplementación abierta de NScripter. Su comportamiento se siguió a partir de su código fuente público.',
+  'The script': 'El guion',
+  'One file of about 72,000 lines, hidden by a single XOR. It is run as written.': 'Un archivo de unas 72.000 líneas, oculto con un solo XOR. Se ejecuta tal como está escrito.',
+  'The archives': 'Los paquetes',
+  'Two NSA archives holding 1,194 pictures and sound effects.': 'Dos paquetes NSA con 1.194 imágenes y efectos de sonido.',
+  'The music': 'La música',
+  'Seventeen tracks, which the script asks for by number.': 'Diecisiete pistas, que el guion pide por número.',
+  'What is new here': 'Qué hay de nuevo aquí',
+  'The menus': 'Los menús',
+  'The title, Start game and each story’s page are redrawn to match one another. The script still decides what every entry does and what is unlocked.':
+    'El título, Iniciar juego y la página de cada historia se han redibujado para que combinen entre sí. El guion sigue decidiendo qué hace cada opción y qué está desbloqueado.',
+  'On the title, in place of End game: the game’s four picture galleries in one place, the flowchart, the guide, and a music player for the tracks you have heard in the story.':
+    'En el título, en lugar de Salir del juego: las cuatro galerías de imágenes del juego en un solo sitio, el diagrama de flujo, la guía y un reproductor de música con las pistas que has oído en la historia.',
+  'Drawn from the script’s own flow and laid out by place and time. It shows what you have reached; choosing a scene lights the ways to it and on from it, and hints, if you turn them on, say how to reach the rest.':
+    'Dibujado a partir del propio flujo del guion y ordenado por lugar y momento. Muestra lo que has alcanzado; al elegir una escena se iluminan los caminos hacia ella y desde ella, y las pistas, si las activas, dicen cómo llegar al resto.',
+  'Optional, and off until you turn it on. It follows the walkthrough that came with the copy, one day at a time, and marks the choice to take.':
+    'Opcional, y desactivada hasta que la actives. Sigue la guía de juego que venía con la copia, un día cada vez, y marca la decisión a tomar.',
+  'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': 'Una página para todo: la fuente de la historia, la velocidad del texto, el sonido y las cuatro opciones del propio juego.',
+  'Saves': 'Partidas',
+  'Twenty slots with a picture and a line of the page, kept in this browser.': 'Veinte espacios, cada uno con una imagen y una línea de la página, guardados en este navegador.',
+  'History': 'Historial',
+  'Everything read this session, as one scroll.': 'Todo lo leído en esta sesión, en un solo desplazamiento.',
+  'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.':
+    'Una opción, en la página Jugar y en Configuración: la imagen llena una pantalla ancha, sin nada vacío a los lados. Los fondos se amplían para encajar, así que algunos quedan cortados arriba y abajo; el título y todos los menús se colocan para el formato más ancho.',
+  'Mouse, keyboard and touch': 'Mouse, teclado y pantalla táctil',
+  'Click, tap, Enter, Space': 'Clic, toque, Enter, Espacio',
+  'Go on to the next line, or take what is pointed at.': 'Pasar a la línea siguiente, o elegir lo señalado.',
+  'Right-click, two-finger tap, Esc': 'Clic derecho, toque con dos dedos, Esc',
+  'The menu: save, load, history, flowchart, guide, settings, title.': 'El menú: guardar, cargar, historial, diagrama, guía, configuración, título.',
+  'Wheel up, ↑, PageUp': 'Rueda hacia arriba, ↑, PageUp',
+  'Text history. Scroll past its end to return.': 'Historial de texto. Desplázate más allá del final para volver.',
+  'Ctrl, or a finger, held down': 'Ctrl, o un dedo, mantenido',
+  'Fast-forward for as long as it is held.': 'Avance rápido mientras se mantenga.',
+  'Fast-forward on and off. It stops at a choice; a click stops it too.': 'Activa y desactiva el avance rápido. Se detiene en una decisión; un clic también lo detiene.',
+  'Let the story advance by itself.': 'Deja que la historia avance sola.',
+  'Text speed: slow, normal, fast.': 'Velocidad del texto: lenta, normal, rápida.',
+  'Mute, fullscreen.': 'Silencio, pantalla completa.',
+  'Top edge': 'Borde superior',
+  'The quick bar appears while the story waits for you. On a touch screen, tap the small moon at the corner.': 'La barra rápida aparece mientras la historia te espera. En una pantalla táctil, toca la pequeña luna de la esquina.',
+  'Saves, progress and settings live in this browser, for this address. Clearing the site’s data removes them, and another browser starts empty, so a file is the way to carry them across or to keep a copy.':
+    'Las partidas, el progreso y la configuración se guardan en este navegador, para esta dirección. Borrar los datos del sitio los elimina, y otro navegador empieza vacío, así que un archivo es la forma de llevarlos a otro sitio o de guardar una copia.',
+  'Export to a file': 'Exportar a un archivo',
+  'Import from a file': 'Importar de un archivo',
+  'Erase everything': 'Borrar todo',
+  'Erase every save and all progress?': '¿Borrar todas las partidas y todo el progreso?',
+  'This cannot be undone.': 'No se puede deshacer.',
+  'Download': 'Descargar',
+  'The game as a program': 'El juego como programa',
+  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
+    'La misma versión en una ventana propia, con todos los archivos dentro: unos 330 MB, y funciona sin conexión.',
+  'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
+    'Los programas no están firmados, así que cada sistema pregunta una vez. Windows: “Más información” y luego “Ejecutar de todas formas”. macOS: ábrelo una vez y luego permítelo en Ajustes del Sistema, Privacidad y seguridad, “Abrir igualmente”.',
+  'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
+    'Linux: permite que el archivo se ejecute como programa (en sus Propiedades, o con chmod +x) y luego ábrelo. En Ubuntu 22.04 y posteriores, instala antes el paquete libfuse2.',
+  'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
+    'Se abre directamente en el juego y guarda sus partidas aparte de las de este navegador. Configuración tiene Partidas: exporta a un archivo aquí e impórtalo allí, o al revés.',
+  'Skip the credits?': '¿Saltar los créditos?',
+  'Import save data from a file?': '¿Importar partidas de un archivo?',
+  'What the file holds replaces what is kept here, and the game starts again.': 'El contenido del archivo sustituye lo que está guardado aquí, y el juego vuelve a empezar.',
+  'Every version is on GitHub:': 'Todas las versiones están en GitHub:',
+  'Play here, in the browser': 'Juega aquí, en el navegador',
+  'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.':
+    'No hay nada que instalar. Los archivos del juego llegan mientras juegas, y el día en que estás se guarda solo cada vez que termina.',
+  'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.':
+    'No se encontraron los datos del juego. Ejecuta  python3 tools/extract.py "<ruta de la carpeta Game>"  y recarga.',
+  'press any button': 'pulsa cualquier botón',
+  'No game data': 'Sin datos del juego',
+  'Loading…': 'Cargando…',
+};
+
 // strings put together from parts
 const DAY = (n) => n + '回目';
 const SLOT = (n) => '記憶' + n;
@@ -360,11 +952,110 @@ const RULES = [
   [/^From (.+)$/, (m) => (m[1] === 'a turn in the road' ? '分かれ道' : m[1]) + ' から'],
 ];
 
+// The Portuguese ones. A save slot is an "Arquivo", as the patch's script names it (savename).
+const DIA = (n) => 'Dia ' + n;
+const ARQ = (n) => 'Arquivo ' + n;
+const PT_RULES = [
+  [/^Track (\d+)$/, (m) => 'Faixa ' + m[1]],
+  [/^No\. ?(\d+)$/, (m) => ARQ(m[1])],
+  [/^Write over No\. (\d+)\?$/, (m) => 'Sobrescrever o ' + ARQ(m[1]) + '?'],
+  [/^Saved in No\. (\d+)\.$/, (m) => 'Salvo no ' + ARQ(m[1]) + '.'],
+  [/^Return to No\. (\d+)\?$/, (m) => 'Carregar o ' + ARQ(m[1]) + '?'],
+  [/^(\d+) of (\d+) seen$/, (m) => m[1] + ' de ' + m[2] + ' vistas'],
+  [/^All (\d+) unlocked$/, (m) => 'Todas as ' + m[1] + ' liberadas'],
+  [/^(\d+) of (\d+) heard in the story$/, (m) => m[1] + ' de ' + m[2] + ' ouvidas na história'],
+  [/^All (\d+) heard$/, (m) => 'Todas as ' + m[1] + ' ouvidas'],
+  [/^(\d+) of (\d+) scenes read$/, (m) => m[1] + ' de ' + m[2] + ' cenas lidas'],
+  [/^All (\d+) scenes unlocked$/, (m) => 'Todas as ' + m[1] + ' cenas liberadas'],
+  [/^Text speed: (slow|normal|fast)\.$/, (m) => 'Velocidade do texto: ' + { slow: 'lenta', normal: 'normal', fast: 'rápida' }[m[1]] + '.'],
+  // the guide
+  [/^(\d+) of (\d+) done$/, (m) => m[1] + ' de ' + m[2] + ' concluídos'],
+  [/^All (\d+) done$/, (m) => 'Todos os ' + m[1] + ' concluídos'],
+  [/^Day (\d+)$/, (m) => DIA(m[1])],
+  [/^Day (\d+): done$/, (m) => DIA(m[1]) + ': concluído'],
+  [/^Day (\d+): next up$/, (m) => DIA(m[1]) + ': o próximo'],
+  [/^Day (\d+): still to come$/, (m) => DIA(m[1]) + ': ainda por vir'],
+  [/^Make Day (\d+) next up$/, (m) => 'Tornar o ' + DIA(m[1]) + ' o próximo'],
+  [/^Start “(.+)” on the story’s page, and the choices listed for Day (\d+) are marked as you reach them\.$/,
+    (m) => 'Comece “' + m[1] + '” na página da história, e as escolhas listadas para o ' + DIA(m[2]) + ' são marcadas conforme você chega a elas.'],
+  [/^The guide is off, so nothing is marked\. Turn it on above to have Day (\d+)’s choices marked\.$/,
+    (m) => 'O guia está desligado, então nada é marcado. Ligue-o acima para que as escolhas do ' + DIA(m[1]) + ' sejam marcadas.'],
+  [/^The walkthrough is (\d+) play-throughs of the story’s day, meant to be played in order\. It calls each one a Day\.$/,
+    (m) => 'O detonado são ' + m[1] + ' jogadas do dia da história, para fazer em ordem. Cada uma é chamada de Dia.'],
+  [/^Begins with “(.+)” on the story’s page\.$/, (m) => 'Começa com “' + m[1] + '” na página da história.'],
+  [/^There is a quiz in this one\. Its questions come from one of (\d+) sets; the right answer is marked in each\.$/,
+    (m) => 'Este tem um quiz. As perguntas vêm de um de ' + m[1] + ' conjuntos; a resposta certa é marcada em cada um.'],
+  [/^Guide: this is Day (\d+) of the walkthrough\.( In its quiz, miss a question on purpose\.)?$/,
+    (m) => 'Guia: este é o ' + DIA(m[1]) + ' do detonado.' + (m[2] ? ' No quiz, erre uma pergunta de propósito.' : '')],
+  [/^Guide: Day (\d+) done\. That was the last one\.$/, (m) => 'Guia: ' + DIA(m[1]) + ' concluído. Esse era o último.'],
+  [/^Guide: Day (\d+) done\. Day (\d+) is next up\.$/, (m) => 'Guia: ' + DIA(m[1]) + ' concluído. O próximo é o ' + DIA(m[2]) + '.'],
+  [/^Guide: Day (\d+) is still next up\.$/, (m) => 'Guia: o próximo continua sendo o ' + DIA(m[1]) + '.'],
+  [/^In amber: the guide’s way through day (\d+)\.$/, (m) => 'Em âmbar: o caminho do guia pelo ' + DIA(m[1]) + '.'],
+  // the flowchart's hints
+  [/^after (\d+) of $/, (m) => 'depois de ler ' + m[1] + ' destas: '],
+  [/^with fewer than (\d+) of $/, (m) => 'tendo lido menos de ' + m[1] + ' destas: '],
+  [/^ and (\d+) more$/, (m) => ' e mais ' + m[1]],
+  [/^ \(now (-?\d+)\)$/, (m) => ' (agora ' + m[1] + ')'],
+  [/^From (.+)$/, (m) => 'De ' + (m[1] === 'a turn in the road' ? 'uma bifurcação' : m[1])],
+];
+
+// The Spanish ones. A save slot is a "Memoria", as the patch's script names it (savename); the
+// story page's entries are as its picture writes them.
+const DÍA = (n) => 'Día ' + n;
+const MEM = (n) => 'Memoria ' + n;
+const ENTRY_ES = { op: 'op', 'a day': 'un día', ep: 'ep' };
+const ES_RULES = [
+  [/^Track (\d+)$/, (m) => 'Pista ' + m[1]],
+  [/^No\. ?(\d+)$/, (m) => MEM(m[1])],
+  [/^Write over No\. (\d+)\?$/, (m) => '¿Sobrescribir la ' + MEM(m[1]) + '?'],
+  [/^Saved in No\. (\d+)\.$/, (m) => 'Guardado en la ' + MEM(m[1]) + '.'],
+  [/^Return to No\. (\d+)\?$/, (m) => '¿Cargar la ' + MEM(m[1]) + '?'],
+  [/^(\d+) of (\d+) seen$/, (m) => m[1] + ' de ' + m[2] + ' vistas'],
+  [/^All (\d+) unlocked$/, (m) => 'Las ' + m[1] + ' desbloqueadas'],
+  [/^(\d+) of (\d+) heard in the story$/, (m) => m[1] + ' de ' + m[2] + ' oídas en la historia'],
+  [/^All (\d+) heard$/, (m) => 'Las ' + m[1] + ' oídas'],
+  [/^(\d+) of (\d+) scenes read$/, (m) => m[1] + ' de ' + m[2] + ' escenas leídas'],
+  [/^All (\d+) scenes unlocked$/, (m) => 'Las ' + m[1] + ' escenas desbloqueadas'],
+  [/^Text speed: (slow|normal|fast)\.$/, (m) => 'Velocidad del texto: ' + { slow: 'lenta', normal: 'normal', fast: 'rápida' }[m[1]] + '.'],
+  // the guide
+  [/^(\d+) of (\d+) done$/, (m) => m[1] + ' de ' + m[2] + ' hechos'],
+  [/^All (\d+) done$/, (m) => 'Los ' + m[1] + ' hechos'],
+  [/^Day (\d+)$/, (m) => DÍA(m[1])],
+  [/^Day (\d+): done$/, (m) => DÍA(m[1]) + ': hecho'],
+  [/^Day (\d+): next up$/, (m) => DÍA(m[1]) + ': el siguiente'],
+  [/^Day (\d+): still to come$/, (m) => DÍA(m[1]) + ': por venir'],
+  [/^Make Day (\d+) next up$/, (m) => 'Hacer del ' + DÍA(m[1]) + ' el siguiente'],
+  [/^Start “(.+)” on the story’s page, and the choices listed for Day (\d+) are marked as you reach them\.$/,
+    (m) => 'Empieza “' + (ENTRY_ES[m[1]] || m[1]) + '” en la página de la historia, y las decisiones del ' + DÍA(m[2]) + ' se marcan a medida que llegas a ellas.'],
+  [/^The guide is off, so nothing is marked\. Turn it on above to have Day (\d+)’s choices marked\.$/,
+    (m) => 'La guía está desactivada, así que no se marca nada. Actívala arriba para que se marquen las decisiones del ' + DÍA(m[1]) + '.'],
+  [/^The walkthrough is (\d+) play-throughs of the story’s day, meant to be played in order\. It calls each one a Day\.$/,
+    (m) => 'La guía de juego son ' + m[1] + ' partidas del día de la historia, para jugar en orden. A cada una la llama Día.'],
+  [/^Begins with “(.+)” on the story’s page\.$/, (m) => 'Empieza con “' + (ENTRY_ES[m[1]] || m[1]) + '” en la página de la historia.'],
+  [/^There is a quiz in this one\. Its questions come from one of (\d+) sets; the right answer is marked in each\.$/,
+    (m) => 'Este tiene un cuestionario. Sus preguntas salen de uno de ' + m[1] + ' grupos; en cada una se marca la respuesta correcta.'],
+  [/^Guide: this is Day (\d+) of the walkthrough\.( In its quiz, miss a question on purpose\.)?$/,
+    (m) => 'Guía: este es el ' + DÍA(m[1]) + ' de la guía de juego.' + (m[2] ? ' En su cuestionario, falla una pregunta a propósito.' : '')],
+  [/^Guide: Day (\d+) done\. That was the last one\.$/, (m) => 'Guía: ' + DÍA(m[1]) + ' hecho. Era el último.'],
+  [/^Guide: Day (\d+) done\. Day (\d+) is next up\.$/, (m) => 'Guía: ' + DÍA(m[1]) + ' hecho. El siguiente es el ' + DÍA(m[2]) + '.'],
+  [/^Guide: Day (\d+) is still next up\.$/, (m) => 'Guía: el siguiente sigue siendo el ' + DÍA(m[1]) + '.'],
+  [/^In amber: the guide’s way through day (\d+)\.$/, (m) => 'En ámbar: el camino de la guía por el ' + DÍA(m[1]) + '.'],
+  // the flowchart's hints
+  [/^after (\d+) of $/, (m) => 'después de leer ' + m[1] + ' de estas: '],
+  [/^with fewer than (\d+) of $/, (m) => 'habiendo leído menos de ' + m[1] + ' de estas: '],
+  [/^ and (\d+) more$/, (m) => ' y ' + m[1] + ' más'],
+  [/^ \(now (-?\d+)\)$/, (m) => ' (ahora ' + m[1] + ')'],
+  [/^From (.+)$/, (m) => 'Desde ' + (m[1] === 'a turn in the road' ? 'una bifurcación' : m[1])],
+];
+
+const TABLES = { ja: [JA, RULES], pt: [PT, PT_RULES], es: [ES, ES_RULES] };
+
 export function t(s) {
-  if (lang !== 'ja' || typeof s !== 'string' || !s) return s;
-  const hit = JA[s];
+  const table = TABLES[lang];
+  if (!table || typeof s !== 'string' || !s) return s;
+  const hit = table[0][s];
   if (hit !== undefined) return hit;
-  for (const [re, fn] of RULES) {
+  for (const [re, fn] of table[1]) {
     const m = re.exec(s);
     if (m) return fn(m);
   }
@@ -376,5 +1067,6 @@ export function when(time) {
   const d = new Date(time);
   const pad = (n) => String(n).padStart(2, '0');
   if (lang === 'ja') return d.getMonth() + 1 + '月' + d.getDate() + '日  ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  if (lang === 'pt' || lang === 'es') return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '  ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   return null;
 }

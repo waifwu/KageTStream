@@ -20,14 +20,18 @@ const HUMAN_Z = 499; // sprites with a higher number are drawn behind standing p
 const QUAKE_AMP = 12;
 
 export class Loader {
-  constructor(base, manifest) {
+  // `own`: a folder of the data whose files stand in for the shared ones ("pt/" for the
+  // Portuguese patch's pictures and sounds, see tools/extract.py --pt), or nothing
+  constructor(base, manifest, own) {
     this.base = base;
     this.files = new Set(manifest.files);
+    this.own = own || '';
     this.images = new Map();
   }
   resolve(name) {
     const p = name.replace(/\\/g, '/').replace(/^\.?\//, '').toLowerCase();
     const enc = (s) => s.split('/').map(encodeURIComponent).join('/');
+    if (this.own && this.files.has(this.own + 'arc/' + p)) return this.base + enc(this.own) + 'arc/' + enc(p);
     if (this.files.has('arc/' + p)) return this.base + 'arc/' + enc(p);
     if (this.files.has(p)) return this.base + enc(p);
     return null;

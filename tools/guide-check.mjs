@@ -1,10 +1,11 @@
 // Plays the whole walkthrough through the real script, headlessly, and reports
 // every day on which a step of the guide did not match a choice the game offered.
 //
-//   node tools/guide-check.mjs [normal|true] [ja] [-v]
+//   node tools/guide-check.mjs [normal|true] [ja|pt|es] [-v]
 //
-// With "ja" it plays the Japanese script (data/script-ja.txt), reading each choice through its
-// English counterpart as the player does.
+// With "ja" it plays the Japanese script (data/script-ja.txt), with "pt" or "es" the Portuguese or
+// Spanish one (data/script-pt.txt, -es.txt), reading each choice through its English counterpart
+// as the player does.
 //
 // It starts from an empty save, as the walkthrough assumes, presses the menus
 // the way a reader would (Start game, the story, then "a day" / "op" / "ep" as
@@ -18,9 +19,9 @@ import { Guide, choiceTranslator } from '../js/guide.js';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const data = path.join(here, '..', 'data');
 const english = fs.readFileSync(path.join(data, 'script.txt'), 'utf8');
-const japanese = process.argv.includes('ja');
-const script = japanese ? fs.readFileSync(path.join(data, 'script-ja.txt'), 'utf8') : english;
-const told = japanese ? choiceTranslator(script, english) : null;
+const other = ['ja', 'pt', 'es'].find((l) => process.argv.includes(l));
+const script = other ? fs.readFileSync(path.join(data, 'script-' + other + '.txt'), 'utf8') : english;
+const told = other ? choiceTranslator(script, english) : null;
 const ending = process.argv.includes('true') ? 'true' : 'normal';
 const verbose = process.argv.includes('-v');
 

@@ -18,6 +18,39 @@ const isDigit = (c) => c >= '0' && c <= '9';
 const isIdent = (c) => c !== undefined && (isAlpha(c) || isDigit(c));
 const normFile = (f) => f.replace(/\\/g, '/').toLowerCase();
 
+// A string variable shown as a line of text (the daily messages: "$msgline0"). The Portuguese patch
+// writes its Latin text there with "^" for each blank, laid on the window's grid of half-width
+// cells (`cells` to a line) with no wrapping at words: to start a new line it fills the rest of the
+// one it is on with blanks. Here that text is typed as one-byte text, which wraps at its words, so
+// a run of blanks that ends where its line ends becomes a new line ("\n", typeText), a run at the
+// end is dropped, and any other blank or run of blanks is one space. Text without "^" is as it was,
+// typed as one-byte text when the script is in English mode (`oneByte`), where it keeps its spaces.
+export function variableText(s, cells = 44, oneByte = false) {
+  if (!s.includes('^')) return oneByte && s ? '`' + s.replace(/`/g, '') + '`' : s;
+  const width = (c) => { const k = c.codePointAt(0); return k >= 0x2e80 && !(k >= 0xff61 && k <= 0xff9f) ? 2 : 1; };
+  let out = '', col = 0;
+  for (let k = 0; k < s.length;) {
+    const c = s[k];
+    if (c === '@' || c === '\\') { out += c; k++; continue; }
+    if (c !== '^') {
+      out += c;
+      col += width(c);
+      if (col >= cells) col -= cells;
+      k++;
+      continue;
+    }
+    let e = k;
+    while (s[e] === '^') e++;
+    const rest = s.slice(e);
+    if (!/[^^@\\]/.test(rest)) { out += rest.replace(/\^/g, ''); break; }    // only blanks and waits left: the waits
+    const end = col + (e - k);
+    out += col > 0 && end % cells === 0 ? '\n' : ' ';
+    col = end % cells;
+    k = e;
+  }
+  return '`' + out + '`';
+}
+
 const GLOBAL_BORDER = 200;
 const NSC_VERSION = 296;
 
@@ -58,6 +91,7 @@ export class Engine {
     this.musicLog = new Set();      // music the story has played (for the music player)
     this.numOverride = null;        // see getNum
     this.clickstr = null;           // see the clickstr command
+    this.englishMode = false;       // see the english command
     this.clickstrLines = 0;
     this.globalsDirty = false;
     this.lastGlobalFlush = 0;
@@ -703,8 +737,9 @@ export class Engine {
 
   async typeText(tok, forceOneByte) {
     const { text, gfx, input } = this.host;
-    const n = tok.length;
+    let n = tok.length;
     let i = 0;
+    let plainUntil = 0;     // a variable's text, put into the line: its own "$" and "%" are not looked into
     let oneByte = !!forceOneByte;
     let noNewline = false;
     let instant = false;
@@ -772,17 +807,24 @@ export class Engine {
         continue;
       }
       if (ch === '/' && tok.slice(i + 1).trim() === '') { noNewline = true; break; }
+      if (ch === '\n') { i++; text.endLine(); wordStart = true; continue; }   // a new line asked for by variableText
       if (!oneByte) {
         if (ch === ' ' || ch === '\t') { i++; continue; }
         if (ch === '_') { i++; continue; }
-        if (ch === '$' || ch === '%') {
+        if ((ch === '$' || ch === '%') && i >= plainUntil) {
           const ex = this.expandVar(tok, i);
+          if (ex && ch === '$') {
+            // A string shown as text is text like the script's own, as in ONScripter: its "@" and
+            // "\" wait for a click, its "_" is not drawn. It is put into the line where it stands.
+            const own = variableText(ex.text, text.win && text.win.cols ? text.win.cols * 2 : 44, this.englishMode);
+            tok = tok.slice(0, i) + own + tok.slice(i + ex.len);
+            n = tok.length;
+            plainUntil = i + own.length;
+            continue;
+          }
           if (ex) {
             i += ex.len;
-            for (const c2 of ex.text) {
-              if (c2 === '`') continue;
-              await put(c2 === '^' ? ' ' : c2);
-            }
+            for (const c2 of ex.text) await put(c2);
             continue;
           }
         }
@@ -815,7 +857,7 @@ export class Engine {
         let j = i;
         while (j < n) {
           const c2 = tok[j];
-          if (c2 === ' ' || c2 === '@' || c2 === '\\' || c2 === '`') break;
+          if (c2 === ' ' || c2 === '@' || c2 === '\\' || c2 === '`' || c2 === '\n') break;
           j++;
         }
         text.word(tok.slice(i, j));
@@ -1001,9 +1043,13 @@ def('nsa arc ns2 ns3 nsadir filelog labellog kidokuskip mode_saya mode_ext mode8
     'transmode humanz underline windowback defaultfont defaultspeed mousecursor killmenu roff rmode ' +
     'clickvoice selectvoice linepage usewheel useescspc pretextgosub textgosub loadgosub ' +
     'maxkaisoupage lookbacksp soundpressplgin spi automode_time defvoicevol defsevol defmp3vol ' +
-    'shadedistance intlimit zenkakko english mode_wave_demo savedir humanorder insertmenu resetmenu deletemenu ' +
+    'shadedistance intlimit zenkakko mode_wave_demo savedir humanorder insertmenu resetmenu deletemenu ' +
     'menu_full menu_window menu_automode menu_click_def menu_click_page menu_dwavvolume lookbackflush lookbackvoice',
   function () { this.skipStatement(); });
+// english: ONScripter-EN's English mode, where text is one-byte unless it says otherwise. The
+// Spanish patch asks for it and writes its daily messages with plain spaces; here it only decides
+// how the text of a string variable is typed (variableText).
+def('english', function () { this.englishMode = true; this.skipStatement(); });
 // clickstr "chars",lines: in two-byte (Japanese) text, a wait for a click follows each of these
 // characters, and a new page instead when no more than `lines` lines are left in the window.
 def('clickstr', function () {
