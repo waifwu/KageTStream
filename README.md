@@ -320,7 +320,7 @@ the story.
 | Left click / tap / Enter / Space | Advance text, pick the highlighted item |
 | Right click / two-finger tap / Esc / Backspace | The menu |
 | Mouse wheel up / ↑ / PageUp | Text history |
-| Ctrl (hold) / a finger held on the picture | Fast-forward while held |
+| Ctrl (hold) / a finger held on the picture | Fast-forward through text already read, while held |
 | S | Toggle fast-forward (stops at the next choice, or on a click) |
 | A | Toggle auto-advance |
 | 1 / 2 / 3 | Text speed slow / normal / fast |

@@ -18,6 +18,35 @@ const isDigit = (c) => c >= '0' && c <= '9';
 const isIdent = (c) => c !== undefined && (isAlpha(c) || isDigit(c));
 const normFile = (f) => f.replace(/\\/g, '/').toLowerCase();
 
+// The lines read under each label, stored as runs: { s529: "0-120,130-200" }.
+function encodeRead(map) {
+  const out = {};
+  for (const [label, lines] of map) {
+    const ns = [...lines].sort((a, b) => a - b);
+    const runs = [];
+    for (let i = 0; i < ns.length; i++) {
+      const a = ns[i];
+      while (i + 1 < ns.length && ns[i + 1] === ns[i] + 1) i++;
+      runs.push(a === ns[i] ? String(a) : a + '-' + ns[i]);
+    }
+    if (runs.length) out[label] = runs.join(',');
+  }
+  return out;
+}
+function decodeRead(obj) {
+  const map = new Map();
+  for (const label in obj || {}) {
+    const lines = new Set();
+    for (const run of String(obj[label]).split(',')) {
+      const [a, b] = run.split('-').map(Number);
+      if (!Number.isInteger(a)) continue;
+      for (let n = a, end = Number.isInteger(b) ? Math.min(b, a + 100000) : a; n <= end; n++) lines.add(n);
+    }
+    map.set(label, lines);
+  }
+  return map;
+}
+
 // A string variable shown as a line of text (the daily messages: "$msgline0"). The Portuguese patch
 // writes its Latin text there with "^" for each blank, laid on the window's grid of half-width
 // cells (`cells` to a line) with no wrapping at words: to start a new line it fills the rest of the
@@ -81,6 +110,8 @@ export class Engine {
         if (name && !this.labels.has(name)) this.labels.set(name, { off: this.lineStarts[li], line: li });
       }
     }
+    // [line, name] of every label in order down the script: the label a line comes under (labelAt)
+    this.labelLines = [...this.labels].map(([name, l]) => [l.line, name]).sort((a, b) => a[0] - b[0]);
 
     // persistent (global) state
     this.nums = Object.create(null);
@@ -89,6 +120,14 @@ export class Engine {
     this.fileLog = new Set();
     this.labelLog = new Set();
     this.musicLog = new Set();      // music the story has played (for the music player)
+    // Text read, for Ctrl's fast-forward, which passes over only that (see textRead). Kept for each
+    // language, since each has its own script: label -> the lines under it (counted from the
+    // label's own line) that have been shown. The other languages' records are kept as stored.
+    this.lang = host.lang || 'en';
+    this.readLines = new Map();
+    this.readOther = {};
+    this.readBefore = new Set();    // labels reached before lines were recorded: read, in any language
+    this.unread = false;            // the text line being shown had not been read before
     this.numOverride = null;        // see getNum
     this.clickstr = null;           // see the clickstr command
     this.englishMode = false;       // see the english command
@@ -193,6 +232,19 @@ export class Engine {
     for (const f of g.fileLog || []) this.fileLog.add(f);
     for (const l of g.labelLog || []) this.labelLog.add(l);
     for (const m of g.musicLog || []) this.musicLog.add(m);
+    const r = g.readText;
+    if (r) {
+      for (const lang in r.lines || {}) {
+        if (lang === this.lang) this.readLines = decodeRead(r.lines[lang]);
+        else this.readOther[lang] = r.lines[lang];
+      }
+      for (const l of r.before || []) this.readBefore.add(l);
+    } else {
+      // Saved before lines were recorded: every scene reached until now counts as read, so that
+      // fast-forward still passes over the days already played.
+      for (const l of this.labelLog) this.readBefore.add(l);
+      this.globalsDirty = true;
+    }
   }
 
   flushGlobals(force) {
@@ -204,7 +256,8 @@ export class Engine {
     const nums = {}, strs = {};
     for (const k in this.nums) if (+k >= GLOBAL_BORDER && this.nums[k]) nums[k] = this.nums[k];
     for (const k in this.strs) if (+k >= GLOBAL_BORDER && this.strs[k]) strs[k] = this.strs[k];
-    this.host.storage.saveGlobals({ nums, strs, fileLog: [...this.fileLog], labelLog: [...this.labelLog], musicLog: [...this.musicLog] });
+    const readText = { lines: { ...this.readOther, [this.lang]: encodeRead(this.readLines) }, before: [...this.readBefore] };
+    this.host.storage.saveGlobals({ nums, strs, fileLog: [...this.fileLog], labelLog: [...this.labelLog], musicLog: [...this.musicLog], readText });
   }
 
   warn(msg) {
@@ -214,6 +267,36 @@ export class Engine {
     this.warned.add(key);
     if (this.host.onWarn) this.host.onWarn(msg, line);
     else console.warn('[script line ' + line + '] ' + msg);
+  }
+
+  // the label the given line of the script comes under, or null above the first one
+  labelAt(line) {
+    const a = this.labelLines;
+    let lo = 0, hi = a.length - 1;
+    if (hi < 0 || a[0][0] > line) return null;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (a[mid][0] <= line) lo = mid; else hi = mid - 1;
+    }
+    return a[lo];
+  }
+
+  // Whether the text line at this offset has been shown before (in this language); it is then
+  // recorded as shown. The label it comes under is found from the line itself, not from the last
+  // label passed: after a "gosub" returns, that is the subroutine's.
+  textRead(off) {
+    const line = this.lineOf(off);
+    const at = this.labelAt(line);
+    if (!at) return true;
+    const [from, label] = at;
+    if (this.readBefore.has(label)) return true;
+    let lines = this.readLines.get(label);
+    if (!lines) this.readLines.set(label, (lines = new Set()));
+    const n = line - from;
+    if (lines.has(n)) return true;
+    lines.add(n);
+    this.globalsDirty = true;
+    return false;
   }
 
   lineOf(off) {
@@ -541,7 +624,9 @@ export class Engine {
       if (n > this.creditsDepth || (n === this.creditsDepth && this.inCredits())) return true;
       this.creditsSkip = false;
     }
-    return this.skipMode || this.host.input.ctrl;
+    // Ctrl (or a finger held down) passes over only text read before; at a line not yet read it
+    // lets go until the next one. S and the menu's fast-forward go on to the next choice regardless.
+    return this.skipMode || (this.host.input.ctrl && !this.unread);
   }
 
   // The closing credits (the script's *pre_staffroll, cards shown in turn, and *true_staffroll, the
@@ -718,6 +803,7 @@ export class Engine {
     const tok = s.slice(start, eol);
     this.pc = eol;
     if (this.saveon) this.takeSnapshot(start);
+    this.unread = !this.textRead(start);
     await this.enterTextMode();
     await this.typeText(tok, fromBadCommand);
   }

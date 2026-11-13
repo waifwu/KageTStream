@@ -53,7 +53,7 @@ const CONTROLS = [
   ['Click, tap, Enter, Space', 'Go on to the next line, or take what is pointed at.'],
   ['Right-click, two-finger tap, Esc', 'The menu: save, load, history, flowchart, guide, settings, title.'],
   ['Wheel up, ↑, PageUp', 'Text history. Scroll past its end to return.'],
-  ['Ctrl, or a finger, held down', 'Fast-forward for as long as it is held.'],
+  ['Ctrl, or a finger, held down', 'Fast-forward through what you have read, for as long as it is held.'],
   ['S', 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
   ['A', 'Let the story advance by itself.'],
   ['1, 2, 3', 'Text speed: slow, normal, fast.'],
@@ -501,6 +501,7 @@ async function boot() {
     sleep, frame, openConfig,
     unlocked: () => !!settings.unlockAll,
     refScript,                                   // the English script: the flowchart and track names are read from it
+    lang,                                        // the script's language: what has been read is kept for each
     sceneNames: lang === 'ja' ? sceneNames(script) : SCENE_IS[lang] ? sceneNamesLatin(script, SCENE_IS[lang]) : null,
     // the options of a choice in the walkthrough's (English) wording, for the guide
     guideTexts: lang === 'en' ? null : choiceTranslator(script, refScript),
