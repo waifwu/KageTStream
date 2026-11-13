@@ -76,7 +76,15 @@ export class Input {
       this.ctrl = false;
       this.push({ type: 'wake' });
     };
-    c.addEventListener('contextmenu', (e) => e.preventDefault());
+    // The right button opens the menu on "contextmenu", which the browser sends once it is done with
+    // the press (as it goes down on macOS and Linux, as it comes up on Windows). Taken on the press
+    // itself, the menu's page would be up before that event, the event would land on the page, and
+    // there a right-click means "close": the menu would shut in the same click that opened it.
+    c.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (e.pointerType === 'touch' || touches.size) return;   // a finger held down fast-forwards instead
+      this.push({ type: 'rclick' });
+    });
     c.addEventListener('pointerdown', (e) => {
       const p = this.pos(e);
       if (e.pointerType === 'touch') {
@@ -95,7 +103,6 @@ export class Input {
         return;
       }
       if (e.button === 0) this.push({ type: 'click', x: p.x, y: p.y });
-      else if (e.button === 2) this.push({ type: 'rclick' });
       e.preventDefault();
     });
     c.addEventListener('pointerup', (e) => {
