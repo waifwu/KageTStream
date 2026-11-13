@@ -217,6 +217,7 @@ export class Shell {
     this.stage.classList.toggle('ctx-text', ctx === 'text');
     this.stage.classList.toggle('ctx-busy', ctx !== 'text');
     if (ctx !== 'text') this.stage.classList.remove('qb');
+    else if (this.onText) { const told = this.onText; this.onText = null; told(); }     // the first time the story waits
   }
   setModes(m) {
     document.getElementById('mode-skip').classList.toggle('on', !!m.skip);
@@ -245,20 +246,46 @@ export class Shell {
       pinned = !stage.classList.contains('qb') || !pinned;
       stage.classList.toggle('qb', pinned);
     });
+    // Brought up and put away by a finger (a swipe on the picture: main.js). It comes only while
+    // the story is waiting, which is the only time it is shown.
+    this.pinQuickBar = (on) => {
+      clearTimeout(hideTimer);
+      pinned = !!on && stage.classList.contains('ctx-text');
+      stage.classList.toggle('qb', pinned);
+      if (pinned) this.clearStoryToast(false);      // (the reader has done what it says)
+      return pinned;
+    };
+    this.quickBarUp = () => stage.classList.contains('qb') && stage.classList.contains('ctx-text');
   }
   onAction(fn) {
     for (const p of document.querySelectorAll('#quickbar .plate')) {
-      p.addEventListener('click', () => { fn(p.dataset.act); p.blur(); });
+      let finger = false;
+      p.addEventListener('pointerdown', (e) => { finger = e.pointerType === 'touch'; });
+      // (under a finger the bar has done its work once a plate is chosen, and is put away)
+      p.addEventListener('click', () => { fn(p.dataset.act); p.blur(); if (finger) this.pinQuickBar(false); finger = false; });
     }
     document.getElementById('mode-skip').addEventListener('click', () => fn('skip'));
     document.getElementById('mode-auto').addEventListener('click', () => fn('auto'));
   }
-  toast(msg) {
+  // `story`: it is about the picture (what a finger does there), and goes when a page opens over it
+  toast(msg, ms = 2200, story = false) {
     const t = this.toastEl;
     t.textContent = tr(msg);
     t.classList.add('on');
+    this.toastStory = story;
+    this.onToastCut = null;
     clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
+    this.toastTimer = setTimeout(() => t.classList.remove('on'), ms);
+  }
+  // What was being said about the picture goes when something comes up over it. `cut`: it was
+  // not the reader's doing (a page of the story's own), so whoever said it may want to say it again.
+  clearStoryToast(cut = true) {
+    if (!this.toastStory) return;
+    this.toastStory = false;
+    this.toastEl.classList.remove('on');
+    const again = this.onToastCut;
+    this.onToastCut = null;
+    if (cut && again) again();
   }
   curtain(on) { document.getElementById('curtain').classList.toggle('on', on); }
 
@@ -315,6 +342,28 @@ export class Shell {
         },
       };
       layer.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!ctl.sticky) ctl.done(null); });
+      // A touch screen has no right button: two fingers tapped together are "back" here, as they
+      // are the menu on the picture. (Two fingers that stay down, or that move, are something
+      // else: a pinch.)
+      const fingers = new Map();      // the fingers that are down, by id: where each came down
+      let both = 0;
+      layer.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch') return;
+        fingers.set(e.pointerId, [e.clientX, e.clientY]);
+        both = fingers.size === 2 ? performance.now() : 0;
+      });
+      layer.addEventListener('pointermove', (e) => {
+        const from = both && fingers.get(e.pointerId);
+        if (from && Math.hypot(e.clientX - from[0], e.clientY - from[1]) > 14) both = 0;
+      });
+      const lift = (e) => {
+        if (!fingers.delete(e.pointerId) || fingers.size) return;
+        const tapped = e.type === 'pointerup' && both && performance.now() - both < 320;
+        both = 0;
+        if (tapped && !ctl.sticky) ctl.done(null);
+      };
+      layer.addEventListener('pointerup', lift);
+      layer.addEventListener('pointercancel', lift);
       build(layer, ctl);
       // pages on their way out: under a page that covers the stage they wait until it is in;
       // under one that lets the picture through they fade as it arrives
@@ -339,6 +388,7 @@ export class Shell {
       }
       this.sheet.appendChild(layer);
       this.layers.push(ctl);
+      this.clearStoryToast();
       this.syncModal();
       if (ctl.ready) ctl.ready();
       void layer.offsetWidth;          // so the fade starts from 0 even when no frame is drawn in between
@@ -429,6 +479,15 @@ export class Shell {
       };
       ctl.ready = () => ctl.setCur(0);
       layer.addEventListener('click', (e) => { if (e.target === layer) ctl.done(null); });
+      // a finger brings the menu with a swipe to the right (main.js), and sends it back with one to the left
+      let from = null;
+      layer.addEventListener('pointerdown', (e) => { from = e.pointerType === 'touch' ? [e.clientX, e.clientY] : null; });
+      layer.addEventListener('pointerup', (e) => {
+        if (!from) return;
+        const dx = e.clientX - from[0], dy = e.clientY - from[1];
+        from = null;
+        if (dx < -44 && -dx > Math.abs(dy) * 1.3) ctl.done(null);
+      });
     });
   }
 
@@ -511,6 +570,14 @@ export class Shell {
       let overshoot = 0;
       scroll.addEventListener('wheel', (e) => {
         if (e.deltaY > 0 && atEnd()) { if (++overshoot >= 2) ctl.done(null); } else overshoot = 0;
+      }, { passive: true });
+      // (a finger does the same by drawing the page on up when it is already at its end)
+      let pull = null;
+      scroll.addEventListener('touchstart', (e) => { pull = e.touches.length === 1 && atEnd() ? e.touches[0].clientY : null; }, { passive: true });
+      scroll.addEventListener('touchmove', (e) => {
+        if (pull === null || e.touches.length !== 1) return;
+        if (!atEnd()) { pull = null; return; }
+        if (pull - e.touches[0].clientY > 70) { pull = null; ctl.done(null); }
       }, { passive: true });
       ctl.onKey = (e) => {
         const page = scroll.clientHeight * 0.85;
@@ -1125,6 +1192,30 @@ export class Shell {
     });
   }
 
+  // ---------------------------------------------------------------- settings: controls, on a phone
+  // What a finger does: there is no keyboard to set there, so this is the page Settings opens in
+  // place of the one above. It is only read. sections: [{ title, rows: [[what, how]] }], a column each.
+  touchControls(sections) {
+    return this.openLayer('paper config touch', (layer, ctl) => {
+      layer.appendChild(el('h1', 'page-title', 'Controls'));
+      layer.appendChild(el('div', 'page-note', 'What a finger does'));
+      const cols = el('div', 'cols');
+      for (const sec of sections) {
+        const box = el('div', 'cf-col');
+        box.appendChild(el('div', 'cf-sec', sec.title));
+        for (const [what, how] of sec.rows) {
+          const r = el('div', 'cf-row');
+          r.appendChild(el('div', 'cf-label', what));
+          r.appendChild(el('div', 'cf-how', how));
+          box.appendChild(r);
+        }
+        cols.appendChild(box);
+      }
+      layer.appendChild(cols);
+      this.back(layer, ctl);
+    });
+  }
+
   // ---------------------------------------------------------------- flowchart
   // tabs: [{ label, note, chart, seen: Set of block ids, open: Set of block ids whose name may be shown,
   //          current: block id, fog: bool }], the first being the day itself.
@@ -1301,7 +1392,8 @@ export class Shell {
         // pan and zoom
         const VW = this.SW, VH = 750;
         const fitZ = Math.min(VW / chart.width, VH / chart.height);
-        const minZ = Math.min(fitZ, 1), maxZ = Math.max(1.6, minZ);
+        // (a phone shows the whole stage a few centimetres high: there the chart may be brought much closer)
+        const minZ = Math.min(fitZ, 1), maxZ = Math.max(document.documentElement.classList.contains('phone') ? 3.6 : 1.6, minZ);
         let z = Math.min(0.85, Math.max(minZ, 0.85)), tx = 0, ty = 0;
         const apply = () => {
           const w = chart.width * z, hgt = chart.height * z;
@@ -1491,14 +1583,34 @@ export class Shell {
           }
         };
 
-        let drag = null;
+        // One pointer drags the chart about, or chooses what it lets go on. Two fingers move it
+        // with them and bring it closer or further as they part or meet.
+        let drag = null, pinch = null;
+        const down = new Map();     // the pointers that are down, by id: where each is
+        const two = () => {
+          const [a, b] = [...down.values()];
+          return { d: Math.hypot(a[0] - b[0], a[1] - b[1]), x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 };
+        };
         view.addEventListener('pointerdown', (e) => {
           if (e.button !== 0) return;
           const [x, y] = local(e);
-          drag = { x, y, tx, ty, moved: false, target: e.target };
+          down.set(e.pointerId, [x, y]);
           view.setPointerCapture(e.pointerId);
+          if (down.size === 2) { pinch = two(); drag = null; view.classList.add('drag'); return; }
+          if (down.size > 2) return;
+          drag = { x, y, tx, ty, moved: false, target: e.target };
         });
         view.addEventListener('pointermove', (e) => {
+          if (down.has(e.pointerId)) down.set(e.pointerId, local(e));
+          if (pinch) {
+            if (down.size < 2) return;
+            const now = two();
+            tx += now.x - pinch.x;
+            ty += now.y - pinch.y;
+            if (pinch.d > 8 && now.d > 8) zoomAt(now.d / pinch.d, now.x, now.y); else apply();
+            pinch = now;
+            return;
+          }
           if (!drag) return;
           const [x, y] = local(e);
           if (!drag.moved && Math.hypot(x - drag.x, y - drag.y) < 5) return;
@@ -1508,7 +1620,17 @@ export class Shell {
           ty = drag.ty + y - drag.y;
           apply();
         });
-        const up = () => {
+        const up = (e) => {
+          down.delete(e.pointerId);
+          if (pinch) {
+            if (down.size >= 2) { pinch = two(); return; }
+            pinch = null;
+            // the finger that stays goes on dragging; letting it go chooses nothing
+            const rest = [...down.values()][0];
+            drag = rest ? { x: rest[0], y: rest[1], tx, ty, moved: true, target: view } : null;
+            if (!rest) view.classList.remove('drag');
+            return;
+          }
           if (!drag) return;
           if (!drag.moved) {
             const g = drag.target.closest ? drag.target.closest('.fc-n') : null;

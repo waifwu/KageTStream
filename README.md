@@ -200,11 +200,23 @@ the story.
 * **Menu** (right-click / Esc / Backspace) — the script's own entries, with
   Flowchart, Guide (when the walkthrough is in `data/`) and Settings set in
   before its last one.
-* **On a phone** — the controls are a mouse's and a keyboard's, and the stage is
-  scaled to the window as a whole, so on a phone it is too small to read. A
-  notice says so as the page opens and asks the reader not to play on a mobile
-  device but on a desktop or PC; "Continue anyway" lets them in. It stands
-  outside the stage, at the screen's own size.
+* **On a phone** — it is played with the phone on its side. Held upright, a
+  notice asks for it to be turned; it stands outside the stage, at the screen's
+  own size, and is there for as long as the screen is upright. The first touch
+  takes the whole screen and asks for it to be kept on its side (Android; an
+  iPhone's browser has no fullscreen, and gives the page the whole screen only
+  when it is opened from the Home Screen). A finger drawn across the picture
+  does what there are no buttons for: **down** brings the quick bar, **to the
+  right** opens the menu, **up** opens the text history. The quick bar is three
+  rows of three there, large enough for a finger; a tap beside it, or a swipe
+  up or to the left, puts it away. In the pages, two fingers tapped together
+  are "back", a swipe to the left closes the menu, the text history returns
+  when it is drawn on past its end, and the flowchart is moved with one finger
+  and zoomed with two (further in than with a mouse). There are no keys to set
+  on a phone, so the Controls entry of Settings reads **Touch** there, and its
+  **See controls** opens a page of what a finger does, in place of the page of
+  keys. The pages themselves are the desktop's, scaled to the screen, so their
+  lettering is small.
 * **Save / Load** — twenty slots, each with a picture of the scene, the time and
   a line of the page.
 * **Text history** — the last 200 pages read this session, as one scroll.
@@ -318,8 +330,9 @@ the story.
 | Input | Action |
 | --- | --- |
 | Left click / tap / Enter / Space | Advance text, pick the highlighted item |
-| Right click / two-finger tap / Esc / Backspace | The menu |
-| Mouse wheel up / ↑ / PageUp | Text history |
+| Right click / two-finger tap / swipe right / Esc / Backspace | The menu |
+| Mouse wheel up / swipe up / ↑ / PageUp | Text history |
+| Pointer at the top edge / swipe down | The quick bar |
 | Ctrl (hold) / a finger held on the picture | Fast-forward through text already read, while held |
 | S | Toggle fast-forward (stops at the next choice, or on a click) |
 | A | Toggle auto-advance |

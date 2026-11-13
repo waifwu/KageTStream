@@ -55,14 +55,14 @@ const frame = () => new Promise((r) => (document.hidden ? setTimeout(r, 16) : re
 const keyList = (...parts) => parts.flat().filter(Boolean).join(t(', ')) || '\u2014';
 const controlsRows = () => [
   [keyList(t('Click, tap'), names('confirm')), 'Go on to the next line, or take what is pointed at.'],
-  [keyList(t('Right-click, two-finger tap'), names('menu')), 'The menu: save, load, history, flowchart, guide, settings, title.'],
-  [keyList(t('Wheel up'), names('up', 'pageup')), 'Text history. Scroll past its end to return.'],
+  [keyList(t('Right-click, two-finger tap'), t('swipe right'), names('menu')), 'The menu: save, load, history, flowchart, guide, settings, title.'],
+  [keyList(t('Wheel up'), t('swipe up'), names('up', 'pageup')), 'Text history. Scroll past its end to return.'],
   [names('hold').length ? keyList(names('hold'), t('or a finger, held down')) : t('A finger held down'), 'Fast-forward through what you have read, for as long as it is held.'],
   [keyList(names('skip')), 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
   [keyList(names('auto')), 'Let the story advance by itself.'],
   [keyList(names('speed0', 'speed1', 'speed2')), 'Text speed: slow, normal, fast.'],
   [keyList(names('mute', 'full')), 'Mute, fullscreen.'],
-  ['Top edge', 'The quick bar appears while the story waits for you. On a touch screen, tap the small moon at the corner.'],
+  [keyList(t('Top edge'), t('swipe down')), 'The quick bar appears while the story waits for you. On a touch screen a swipe brings it down, and a tap beside it puts it away.'],
 ];
 
 // The desktop program (desktop/main.js) serves these same pages over its own scheme. It is only the
@@ -70,17 +70,33 @@ const controlsRows = () => [
 const DESKTOP = location.protocol === 'app:';
 const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
 
-// A phone. The controls are a mouse's and a keyboard's, and the stage is scaled to the window as
-// a whole, so on a phone the picture is a few centimetres across and the pages' lettering too
-// small to read. The reader is asked, before anything else, to play on a desktop or PC instead. It is a request and not a lock: "Continue
-// anyway" lets them in. The notice stands outside the stage, which would make it as small as
-// the rest (css/shell.css, #phone-note).
+// A phone. The game is played with the phone on its side, filling the screen: held upright, a
+// notice asks for it to be turned (it stands outside the stage, at the screen's own size, and is
+// shown by the style sheet for as long as the screen is taller than it is wide: css/shell.css,
+// #phone-note). The page takes the whole screen at the first touch, where the browser lets a page
+// do that, and asks for the screen to be kept on its side with it.
 const onPhone = () => {
   if (DESKTOP) return false;
   const coarse = !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   return /Mobi|iPhone|iPod/i.test(navigator.userAgent) || (coarse && Math.min(window.screen.width, window.screen.height) < 600);
 };
-function phoneNotice() {
+const PHONE = onPhone();
+const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const sideways = () => {
+  try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* not to be had here */ }
+};
+// The whole screen (a browser grants it only in answer to a touch, a click or a key).
+let asking = false;
+const enterFull = () => {
+  const d = document.documentElement, ask = d.requestFullscreen || d.webkitRequestFullscreen;
+  if (isFull()) { sideways(); return; }
+  if (!ask || asking) return;       // an iPhone's browser has no such thing: there the game fills the screen from the Home Screen
+  asking = true;
+  const over = () => { asking = false; };
+  try { Promise.resolve(ask.call(d, { navigationUI: 'hide' })).then(() => { over(); sideways(); }, over); } catch (e) { over(); }
+};
+function phoneSetup() {
+  document.documentElement.classList.add('phone');
   const make = (tag, cls, text) => {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -89,16 +105,22 @@ function phoneNotice() {
   };
   const box = make('div');
   box.id = 'phone-note';
-  box.setAttribute('role', 'alertdialog');
-  const card = make('div', 'card paper');
-  card.appendChild(make('h1', null, 'For desktop or PC only'));
-  card.appendChild(make('p', null, 'Please do not play this on a phone or another mobile device. The controls are built for a mouse and a keyboard, not for a touch screen, and the picture and the text come out too small to read.'));
-  card.appendChild(make('p', null, 'Open it on a desktop or PC instead.'));
-  const go = make('button', null, 'Continue anyway');
-  go.addEventListener('click', () => box.remove());
-  card.appendChild(go);
-  box.appendChild(card);
+  box.setAttribute('role', 'alert');
+  const turn = make('div', 'turn');
+  turn.appendChild(make('span'));
+  box.appendChild(turn);
+  box.appendChild(make('h1', null, 'Turn your phone sideways to play'));
+  box.appendChild(make('p', null, 'If the screen does not turn with it, switch off the rotation lock.'));
   document.body.appendChild(box);
+  // The first touch takes the whole screen. After that it is the reader's: having left it, they
+  // are not put back by every touch (Settings has Fullscreen; so has a touch on the notice).
+  let went = false;
+  const onFull = () => { if (isFull()) { went = true; sideways(); } };
+  document.addEventListener('fullscreenchange', onFull);
+  document.addEventListener('webkitfullscreenchange', onFull);
+  const touched = (e) => { if (!went || box.contains(e.target)) enterFull(); };
+  window.addEventListener('pointerup', touched, true);
+  window.addEventListener('click', touched, true);
 }
 
 async function boot() {
@@ -180,7 +202,7 @@ async function boot() {
     hint('#quickbar [data-act="hide"]', stop('Show the picture without text', keys('hide')));
   };
   wording(settings.lang || 'en');
-  if (onPhone()) phoneNotice();
+  if (PHONE) phoneSetup();
   const applyFont = () => {
     if (!FONTS[settings.font]) settings.font = 'original';
     setStoryFont(settings.font);
@@ -329,7 +351,9 @@ async function boot() {
   }
 
   // -------------------------------------------------------------- engine
-  const fitScale = Math.min(window.innerWidth / W, window.innerHeight / H);
+  const across = PHONE ? Math.max(window.innerWidth, window.innerHeight) : window.innerWidth;
+  const down = PHONE ? Math.min(window.innerWidth, window.innerHeight) : window.innerHeight;
+  const fitScale = Math.min(across / W, down / H);
   const scale = Math.max(1, Math.min(3, Math.ceil(fitScale * (window.devicePixelRatio || 1) - 0.25)));
   storage.slotPrefix = lang === 'en' ? '' : lang + ':';
   wording(lang);
@@ -358,7 +382,8 @@ async function boot() {
   const fullscreen = (on) => {
     const is = !!document.fullscreenElement;
     if (on === undefined) on = !is;
-    if (on && !is && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    if (on && !is && PHONE) enterFull();
+    else if (on && !is && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     else if (!on && is) document.exitFullscreen();
   };
   const actions = {
@@ -387,6 +412,27 @@ async function boot() {
   };
   const input = new Input(canvas, onShortcut);
   shell.input = input;
+  // A finger drawn across the picture. Down brings the quick bar from the top, where it is; to
+  // the right opens the menu, whose list stands at the left; up opens the text history (or, with
+  // the bar down, sends the bar back up). With the bar there, a tap beside it or a swipe to the
+  // left puts it away too, and the tap is not also taken as "go on".
+  input.onSwipe = (dir) => {
+    const bar = shell.quickBarUp();
+    if (dir === 'down') shell.pinQuickBar(true);
+    else if (dir === 'right') { shell.pinQuickBar(false); actions.menu(); }
+    else if (dir === 'up' && !bar) actions.log();
+    else shell.pinQuickBar(false);
+  };
+  input.onTap = () => { if (!shell.quickBarUp()) return false; shell.pinQuickBar(false); return true; };
+  // a phone has no moon to tap for the bar, and nothing on the picture says what a finger can do:
+  // it is said once, the first time the story waits
+  // (if a page opens over it before it can have been read, it is said again the next time the story waits)
+  const swipeHint = () => {
+    const at = Date.now();
+    shell.toast('Swipe down for the controls, right for the menu, up for the text history.', 6000, true);
+    shell.onToastCut = () => { if (Date.now() - at < 3500) shell.onText = swipeHint; };
+  };
+  if (PHONE) shell.onText = swipeHint;
   // Settings > Aspect ratio, changed while the game runs: the stage, the game's picture and
   // where the pointer is taken to be all follow.
   applyWide = () => {
@@ -447,6 +493,24 @@ async function boot() {
     saveSettings();
     keyHints();
   });
+  // On a phone there are no keys to set: Settings shows what a finger does instead.
+  const openTouch = () => shell.touchControls([
+    { title: 'On the picture', rows: [
+      ['Go on / choose', 'Tap'],
+      ['Quick bar', 'Swipe down'],
+      ['Menu', 'Swipe right, or two-finger tap'],
+      ['Text history', 'Swipe up'],
+      ['Fast-forward', 'Hold a finger down'],
+      ['Put the quick bar away', 'Tap beside it'],
+    ] },
+    { title: 'In the menus', rows: [
+      ['Go back', 'Two-finger tap'],
+      ['Close the menu', 'Swipe left'],
+      ['Leave the text history', 'Scroll past its end'],
+      ['Move the flowchart', 'One finger'],
+      ['Zoom the flowchart', 'Two fingers'],
+    ] },
+  ]);
   const openConfig = () => {
     const story = [
       { key: 'font', label: 'Story font', options: [['Original', 'original'], ['Serif', 'serif'], ['Sans', 'sans']] },
@@ -463,7 +527,9 @@ async function boot() {
     if (languages().length > 1) more.unshift({ key: 'lang', label: 'Language', options: languages().map(([, l]) => [SHORT[l], l]) });
     return shell.config([
       { title: 'The story', rows: story },
-      { title: 'Controls', under: true, rows: [{ key: 'controls', label: 'Keyboard', options: [['Change the keys', 'open']] }] },
+      { title: 'Controls', under: true, rows: [PHONE
+        ? { key: 'controls', label: 'Touch', options: [['See controls', 'open']] }
+        : { key: 'controls', label: 'Keyboard', options: [['Change the keys', 'open']] }] },
       { title: 'Sound and picture', rows: [
         { key: 'bgmVol', label: 'Music', range: true },
         { key: 'seVol', label: 'Sound effects', range: true },
@@ -475,7 +541,7 @@ async function boot() {
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
       : key === 'unlockAll' ? !!settings.unlockAll : key === 'controls' ? null : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
-      if (key === 'controls') { await openControls(); return; }
+      if (key === 'controls') { await (PHONE ? openTouch() : openControls()); return; }
       if (key === 'lang') {
         if (value === lang) return;
         if (!(await shell.confirm(SWITCH[value] || SWITCH.en,
