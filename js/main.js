@@ -241,7 +241,7 @@ async function boot() {
     // The game as a program (desktop/), for those who would rather keep it than visit it.
     { plate: 'Download', build(p) {
       h.head(p, 'The game as a program');
-      h.p(p, 'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.');
+      h.p(p, 'The same port in a window of its own, with every file inside it: about 380 MB, and it plays with no connection.');
       h.downloads(p, [
         ['Windows', 'Kagetsu-Tohya-Setup.exe', RELEASES + '/latest/download/Kagetsu-Tohya-Setup.exe'],
         ['macOS · Apple silicon', 'Kagetsu-Tohya-mac-arm64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-arm64.dmg'],

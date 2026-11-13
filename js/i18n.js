@@ -295,8 +295,8 @@ const JA = {
   'This cannot be undone.': '元には戻せません。',
   'Download': 'ダウンロード',
   'The game as a program': 'アプリ版',
-  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
-    '同じ移植を、専用のウィンドウで動くアプリにしたものです。ファイルはすべて中に入っていて（約330MB）、接続がなくても遊べます。',
+  'The same port in a window of its own, with every file inside it: about 380 MB, and it plays with no connection.':
+    '同じ移植を、専用のウィンドウで動くアプリにしたものです。ファイルはすべて中に入っていて（約380MB）、接続がなくても遊べます。',
   'macOS · Apple silicon': 'macOS · Appleシリコン',
   'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
     'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
@@ -584,8 +584,8 @@ const PT = {
   'Erase every save and all progress?': 'Apagar todos os jogos salvos e todo o progresso?',
   'This cannot be undone.': 'Isso não pode ser desfeito.',
   'The game as a program': 'O jogo como programa',
-  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
-    'A mesma versão em uma janela própria, com todos os arquivos dentro: cerca de 330 MB, e roda sem conexão.',
+  'The same port in a window of its own, with every file inside it: about 380 MB, and it plays with no connection.':
+    'A mesma versão em uma janela própria, com todos os arquivos dentro: cerca de 380 MB, e roda sem conexão.',
   'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
     'Os programas não são assinados, então cada sistema pergunta uma vez. Windows: “Mais informações” e depois “Executar assim mesmo”. macOS: abra uma vez e depois permita em Ajustes do Sistema, Privacidade e Segurança, “Abrir Mesmo Assim”.',
   'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
@@ -881,8 +881,8 @@ const ES = {
   'This cannot be undone.': 'No se puede deshacer.',
   'Download': 'Descargar',
   'The game as a program': 'El juego como programa',
-  'The same port in a window of its own, with every file inside it: about 330 MB, and it plays with no connection.':
-    'La misma versión en una ventana propia, con todos los archivos dentro: unos 330 MB, y funciona sin conexión.',
+  'The same port in a window of its own, with every file inside it: about 380 MB, and it plays with no connection.':
+    'La misma versión en una ventana propia, con todos los archivos dentro: unos 380 MB, y funciona sin conexión.',
   'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
     'Los programas no están firmados, así que cada sistema pregunta una vez. Windows: “Más información” y luego “Ejecutar de todas formas”. macOS: ábrelo una vez y luego permítelo en Ajustes del Sistema, Privacidad y seguridad, “Abrir igualmente”.',
   'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
