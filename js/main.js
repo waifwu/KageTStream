@@ -13,8 +13,10 @@ import { setLang, t } from './i18n.js';
 
 const DATA = 'data/';
 // The story's languages. English is data/script.txt; each other one is data/script-<code>.txt and is
-// offered only where the data holds it (tools/extract.py --ja / --pt / --es).
+// offered only where the data holds it (tools/extract.py --ja / --pt / --es). The opening page names
+// them in full; Settings by their short codes, which keep four of them on one line of its column.
 const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja'], ['Portugu\u00eas', 'pt'], ['Espa\u00f1ol', 'es']];
+const SHORT = { en: 'EN', ja: 'JA', pt: 'PT-BR', es: 'ES' };
 const scriptOf = (l) => 'script-' + l + '.txt';
 const SWITCH = { en: 'Switch the story to English?', ja: 'Switch the story to Japanese?', pt: 'Switch the story to Portuguese?', es: 'Switch the story to Spanish?' };
 
@@ -430,7 +432,7 @@ async function boot() {
     }
     const more = [{ key: 'unlockAll', label: 'Unlock everything', options: onOff },
       { key: 'savefile', label: 'Save data', options: [['Export to a file', 'export'], ['Import from a file', 'import']] }];
-    if (languages().length > 1) more.unshift({ key: 'lang', label: 'Language', options: languages() });
+    if (languages().length > 1) more.unshift({ key: 'lang', label: 'Language', options: languages().map(([, l]) => [SHORT[l], l]) });
     return shell.config([
       { title: 'The story', rows: story },
       { title: 'Sound and picture', rows: [

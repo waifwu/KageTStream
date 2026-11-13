@@ -204,8 +204,9 @@ the story.
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
   the resolution the picture is drawn at, so they stay as sharp as the text.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
-  holds another language's script) — English, 日本語, Português or Español, each offered
-  when its script is in `data/`. On the opening page nothing is
+  holds another language's script) — English, 日本語, Português or Español on
+  the opening page, EN, JA, PT-BR or ES in Settings (four full names do not fit
+  its column), each offered when its script is in `data/`. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
   From Settings it asks first, then starts again from the opening page with the
   other script. What has been read, the gallery, the flowchart and the
