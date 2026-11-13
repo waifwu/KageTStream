@@ -326,6 +326,15 @@ the story.
 | 1 / 2 / 3 | Text speed slow / normal / fast |
 | M / F | Mute / fullscreen |
 
+These are the keys it comes with. **Settings > Controls** lists every key and
+what it does, and each can be changed there: choose one and press the key to
+use instead (Del or a right-click empties a place; **Restore** brings them all
+back). An action takes up to two keys and a key does one thing, so giving it to
+another action takes it from the first. Save, Load, Hide the text and Settings
+have no key until one is given. Inside the menus Enter, Esc and the arrows go on
+working whatever is set, so no choice of keys can leave a page that cannot be
+closed. The keys are kept with the settings (`js/keys.js`).
+
 Saves live in the browser's `localStorage` for this address; the opening page's
 **Save data** tab exports them to a file, imports them, or erases them, and
 Settings has the export and import too.
@@ -361,6 +370,7 @@ js/guide.js             the optional guide: reads the walkthrough, keeps its pla
 js/skins.js             the game's own menu screens, redrawn: their entries and button numbers
 js/audio.js             music and sound effects
 js/input.js             mouse / touch / keyboard
+js/keys.js              which key does what: the keys it comes with, and the reader's own (Settings > Controls)
 js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
 js/i18n.js              the interface's words in Japanese, Portuguese and Spanish

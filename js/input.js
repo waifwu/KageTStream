@@ -1,23 +1,27 @@
 // Mouse / touch / keyboard -> a small queue of logical events the engine awaits.
-//   click   left button, tap, Enter, Space
-//   rclick  right button, two-finger tap, Escape
+//   click   left button, tap, the "go on" keys (Enter, Space)
+//   rclick  right button, two-finger tap, the "menu" keys (Escape)
 //   move    pointer moved (only delivered to someone waiting)
 //   wheel   dy < 0 up, dy > 0 down
 //   key     arrows / page keys
 //   wake    something changed (Ctrl, a finger held down, skip toggle) - re-check state
 // A finger held on the picture fast-forwards for as long as it stays there, as Ctrl held does.
+// Which key is which is the reader's to set (keys.js, Settings > Controls); the keys named here
+// are the ones the game comes with.
 import { W, H } from './gfx.js';
+import { keyOf, actionOf, pageKeyOf } from './keys.js';
 
 export class Input {
-  constructor(canvas, onGlobalKey) {
+  // onShortcut(action) -> true if it was taken: the actions that are neither a click nor a movement
+  constructor(canvas, onShortcut) {
     this.canvas = canvas;
     this.q = [];
     this.waiter = null;
     this.x = -1;
     this.y = -1;
-    this.ctrl = false;
+    this.ctrl = false;        // fast-forwarding for as long as something is held: the key for it, or a finger
     this.modal = false;       // true while the interface has a page open: its own handlers take the keys
-    this.onGlobalKey = onGlobalKey;
+    this.onShortcut = onShortcut;
     this.vw = W;              // the view's width in the game's pixels, and where the game's 640
     this.ox = 0;              // begins in it (main.js sets both when the picture is 16:9)
     this.attach();
@@ -125,29 +129,31 @@ export class Input {
     }, { passive: false });
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Control') {
-        if (!this.ctrl && !this.modal) { this.ctrl = true; this.push({ type: 'wake' }); }
+      const action = actionOf(keyOf(e));
+      if (action === 'hold') {
+        if (this.modal) return;
+        e.preventDefault();
+        if (!this.ctrl) { this.ctrl = true; this.push({ type: 'wake' }); }
         return;
       }
-      if (e.metaKey || e.altKey || this.modal) return;
-      switch (e.key) {
-        case 'Enter': case ' ':
+      if (e.metaKey || e.altKey || this.modal || !action) return;
+      switch (action) {
+        case 'confirm':
           e.preventDefault();
           if (!e.repeat) this.push({ type: 'click', key: true });
           return;
-        case 'Escape': case 'Backspace':
+        case 'menu':
           e.preventDefault();
           if (!e.repeat) this.push({ type: 'rclick' });
           return;
-        case 'ArrowUp': case 'ArrowDown': case 'ArrowLeft': case 'ArrowRight': case 'PageUp': case 'PageDown':
-        case 'k': case 'j': case 'h': case 'l':
+        case 'up': case 'down': case 'left': case 'right': case 'pageup': case 'pagedown':
           e.preventDefault();
-          this.push({ type: 'key', key: ({ k: 'ArrowUp', j: 'ArrowDown', h: 'ArrowLeft', l: 'ArrowRight' })[e.key] || e.key });
+          this.push({ type: 'key', key: pageKeyOf(action) });
           return;
       }
-      if (!e.repeat && this.onGlobalKey && this.onGlobalKey(e.key.toLowerCase())) e.preventDefault();
+      if (!e.repeat && this.onShortcut && this.onShortcut(action)) e.preventDefault();
     });
-    window.addEventListener('keyup', (e) => { if (e.key === 'Control') this.ctrl = false; });
+    window.addEventListener('keyup', (e) => { if (actionOf(keyOf(e)) === 'hold') this.ctrl = false; });
     window.addEventListener('blur', () => { holding = false; this.ctrl = false; });
   }
 }

@@ -8,6 +8,7 @@
 import { parseCond } from './flowchart-model.js';
 import { t, when as whenJa } from './i18n.js';
 import { titleX } from './skins.js';
+import { SLOTS, keyOf, keyName, slotsOf, assign, clear, resetBindings, isDefault, bindable, actionLabel, pageKey } from './keys.js';
 
 // (several functions below have a `t` of their own: there the wording is asked of `tr`)
 const tr = t;
@@ -70,6 +71,8 @@ export class Shell {
     this.fit();
     window.addEventListener('resize', () => this.fit());
     window.addEventListener('keydown', (e) => this.onKey(e), true);
+    // (a page waiting to be told a key hears of keys let go as well: see controls())
+    window.addEventListener('keyup', (e) => { const top = this.layers[this.layers.length - 1]; if (top && top.grab) top.grab(e); }, true);
     this.wireQuickBar();
   }
 
@@ -373,15 +376,22 @@ export class Shell {
     return b;
   }
 
+  // A key pressed while a page is open. The pages read the keys they were written for; a key the
+  // reader has set to do the same (Settings > Controls) is handed to them as that one (keys.js).
   onKey(e) {
+    const top = this.layers[this.layers.length - 1];
+    // a page that is waiting to be told a key takes whatever is pressed, Ctrl and Esc among them
+    if (top && top.grab && !e.metaKey) { e.preventDefault(); e.stopPropagation(); top.grab(e); return; }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (this.homeOpen && !this.layers.length) { if (this.homeKey(e)) { e.preventDefault(); e.stopPropagation(); } return; }
-    const ctl = this.layers[this.layers.length - 1];
+    const key = pageKey(e);
+    const ev = key === e.key ? e : { key, target: e.target, repeat: e.repeat };
+    if (this.homeOpen && !this.layers.length) { if (this.homeKey(ev)) { e.preventDefault(); e.stopPropagation(); } return; }
+    const ctl = top;
     if (!ctl) return;
     e.stopPropagation();
-    if (ctl.onKey && ctl.onKey(e)) { e.preventDefault(); return; }
-    if (e.target && e.target.tagName === 'INPUT' && e.key.startsWith('Arrow')) return;
-    switch (e.key) {
+    if (ctl.onKey && ctl.onKey(ev)) { e.preventDefault(); return; }
+    if (e.target && e.target.tagName === 'INPUT' && key.startsWith('Arrow')) return;
+    switch (key) {
       case 'Escape': case 'Backspace': if (!ctl.sticky) ctl.done(null); break;
       case 'ArrowUp': case 'ArrowLeft': ctl.move(-1); break;
       case 'ArrowDown': case 'ArrowRight': case 'Tab': ctl.move(1); break;
@@ -1001,6 +1011,117 @@ export class Shell {
       document.addEventListener('fullscreenchange', onFs);
       const done = ctl.done;
       ctl.done = (v) => { document.removeEventListener('fullscreenchange', onFs); done(v); };
+    });
+  }
+
+  // ---------------------------------------------------------------- settings: controls
+  // Every key and what it does (keys.js), two to an action. Choosing one and pressing a key gives
+  // that key to the action; Del, or a right-click, leaves the place empty.
+  // sections: [{ title, rows: [[action, label]] }], a column each; changed() after every change.
+  controls(sections, changed) {
+    return this.openLayer('paper config controls', (layer, ctl) => {
+      layer.appendChild(el('h1', 'page-title', 'Controls'));
+      layer.appendChild(el('div', 'page-note', 'Choose a key, then press the one to use instead'));
+      const cols = el('div', 'cols');
+      const slots = [];           // { b, action, slot }, in the order they are walked
+      let waiting = null;         // the place that is waiting to be told its key
+      const HINT = 'Del, or a right-click, empties a place. A key does one thing: given to another, it leaves the first.';
+      const hint = el('div', 'ct-hint', HINT);
+      const say = (text) => { hint.textContent = text; hint.classList.toggle('said', text !== tr(HINT)); };
+      const paint = () => {
+        for (const s of slots) {
+          const key = slotsOf(s.action)[s.slot];
+          s.b.textContent = s === waiting ? tr('Press a key') : key ? keyName(key) : '\u2014';
+          s.b.classList.toggle('listening', s === waiting);
+          s.b.classList.toggle('empty', !key && s !== waiting);
+        }
+      };
+      const stop = () => {
+        waiting = null;
+        ctl.grab = null;
+        layer.removeEventListener('click', cancel, true);
+        layer.removeEventListener('contextmenu', cancel, true);
+        paint();
+      };
+      // while a place is waiting, a click or a right-click anywhere only calls it off
+      const cancel = (e) => { e.preventDefault(); e.stopPropagation(); stop(); say(tr(HINT)); };
+      const listen = (s) => {
+        waiting = s;
+        say(tr('Press the key for \u201c{a}\u201d. A click leaves it as it was.').replace('{a}', tr(actionLabel(s.action))));
+        // Shift, Ctrl and Alt may be keys of their own, or held for another (Shift and / for "?"):
+        // one of them is taken when it is let go, if nothing else was pressed meanwhile.
+        let held = '';
+        ctl.grab = (e) => {
+          if (e.repeat) return;
+          const key = keyOf(e);
+          if (e.type === 'keyup') { if (!held || key !== held) return; }
+          else if (key === 'Shift' || key === 'Control' || key === 'Alt') { held = key; return; }
+          if (!bindable(key)) { say(tr('That key cannot be used. Press another, or click to leave it as it was.')); return; }
+          const from = assign(s.action, s.slot, key);
+          stop();
+          say(from ? tr('{k} is now \u201c{a}\u201d, and no longer \u201c{b}\u201d.').replace('{k}', keyName(key)).replace('{a}', tr(actionLabel(s.action))).replace('{b}', tr(actionLabel(from))) : tr(HINT));
+          changed();
+        };
+        layer.addEventListener('click', cancel, true);
+        layer.addEventListener('contextmenu', cancel, true);
+        paint();
+      };
+      const empty = (s) => {
+        if (!clear(s.action, s.slot)) return;
+        paint();
+        say(tr(HINT));
+        changed();
+      };
+      for (const sec of sections) {
+        const box = el('div', 'cf-col');
+        box.appendChild(el('div', 'cf-sec', sec.title));
+        for (const [action, label] of sec.rows) {
+          const r = el('div', 'cf-row');
+          r.appendChild(el('div', 'cf-label', label));
+          const keys = el('div', 'cf-keys');
+          for (let slot = 0; slot < SLOTS; slot++) {
+            const s = { b: el('button', 'cf-key'), action, slot };
+            ctl.nav(s.b, () => listen(s));
+            s.b.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); empty(s); });
+            slots.push(s);
+            keys.appendChild(s.b);
+          }
+          r.appendChild(keys);
+          box.appendChild(r);
+        }
+        cols.appendChild(box);
+      }
+      // under the last column: everything back as it came, and how the page is worked
+      const last = cols.lastElementChild;
+      last.appendChild(el('div', 'cf-sec below', 'All keys'));
+      const r = el('div', 'cf-row');
+      r.appendChild(el('div', 'cf-label', 'The keys the game comes with'));
+      const opts = el('div', 'cf-opts');
+      const restore = ctl.nav(el('button', 'cf-opt', 'Restore'), async () => {
+        if (isDefault()) { say(tr('These are the keys the game comes with.')); return; }
+        if (!(await this.confirm('Restore every key?', 'Each action gets back the keys the game comes with.'))) return;
+        resetBindings();
+        paint();
+        say(tr(HINT));
+        changed();
+      });
+      opts.appendChild(restore);
+      r.appendChild(opts);
+      last.appendChild(r);
+      last.appendChild(hint);
+      layer.appendChild(cols);
+      this.back(layer, ctl);
+      // up and down go from row to row, left and right between a row's two places
+      ctl.onKey = (e) => {
+        const s = slots[ctl.cur];
+        if (!s) return false;
+        if (e.key === 'Delete') { empty(s); return true; }
+        const step = { ArrowUp: -SLOTS, ArrowDown: SLOTS }[e.key];
+        if (!step) return false;
+        ctl.setCur(Math.max(0, Math.min(slots.length, ctl.cur + step)));
+        return true;
+      };
+      paint();
     });
   }
 

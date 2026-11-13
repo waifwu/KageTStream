@@ -10,6 +10,7 @@ import { Shell, h } from './shell.js';
 import { bgOverride, hideSprite } from './skins.js';
 import { Guide, choiceTranslator, choiceBack } from './guide.js';
 import { setLang, t } from './i18n.js';
+import { ACTIONS, setBindings, bindings, isDefault, names } from './keys.js';
 
 const DATA = 'data/';
 // The story's languages. English is data/script.txt; each other one is data/script-<code>.txt and is
@@ -49,15 +50,18 @@ function sceneNamesLatin(src, lead) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const frame = () => new Promise((r) => (document.hidden ? setTimeout(r, 16) : requestAnimationFrame(() => r())));
 
-const CONTROLS = [
-  ['Click, tap, Enter, Space', 'Go on to the next line, or take what is pointed at.'],
-  ['Right-click, two-finger tap, Esc', 'The menu: save, load, history, flowchart, guide, settings, title.'],
-  ['Wheel up, ↑, PageUp', 'Text history. Scroll past its end to return.'],
-  ['Ctrl, or a finger, held down', 'Fast-forward through what you have read, for as long as it is held.'],
-  ['S', 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
-  ['A', 'Let the story advance by itself.'],
-  ['1, 2, 3', 'Text speed: slow, normal, fast.'],
-  ['M, F', 'Mute, fullscreen.'],
+// The opening page's Controls: the mouse and the touch screen as they are, the keys as they are set
+// (Settings > Controls changes them).
+const keyList = (...parts) => parts.flat().filter(Boolean).join(t(', ')) || '\u2014';
+const controlsRows = () => [
+  [keyList(t('Click, tap'), names('confirm')), 'Go on to the next line, or take what is pointed at.'],
+  [keyList(t('Right-click, two-finger tap'), names('menu')), 'The menu: save, load, history, flowchart, guide, settings, title.'],
+  [keyList(t('Wheel up'), names('up', 'pageup')), 'Text history. Scroll past its end to return.'],
+  [names('hold').length ? keyList(names('hold'), t('or a finger, held down')) : t('A finger held down'), 'Fast-forward through what you have read, for as long as it is held.'],
+  [keyList(names('skip')), 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
+  [keyList(names('auto')), 'Let the story advance by itself.'],
+  [keyList(names('speed0', 'speed1', 'speed2')), 'Text speed: slow, normal, fast.'],
+  [keyList(names('mute', 'full')), 'Mute, fullscreen.'],
   ['Top edge', 'The quick bar appears while the story waits for you. On a touch screen, tap the small moon at the corner.'],
 ];
 
@@ -133,6 +137,7 @@ async function boot() {
 
   const storage = new Storage('nsweb:game:');
   const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
   // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
   // its shape at once, the opening page with it; the game's picture when it is made (below).
   // The glow around the picture is kept for each shape by itself: on at 4:3, where it softens the
@@ -160,6 +165,19 @@ async function boot() {
         n.setAttribute(a, t(n.dataset[key]));
       }
     }
+    keyHints();
+  };
+  // ... and the parts of it that name a key, which say the key as it is set
+  const keyHints = () => {
+    const keys = (...a) => names(...a).join(t(', '));
+    const hint = (sel, text) => { const n = document.querySelector(sel); if (n) { if (text) n.title = text; else n.removeAttribute('title'); } };
+    const stop = (text, k) => t(text) + (k ? ' (' + k + ')' : '');
+    hint('#mode-skip', stop('Fast-forwarding. Click to stop', keys('skip')));
+    hint('#mode-auto', stop('Advancing by itself. Click to stop', keys('auto')));
+    hint('#quickbar [data-act="menu"]', [t('Right-click'), keys('menu')].filter(Boolean).join(' / '));
+    hint('#quickbar [data-act="skip"]', [keys('skip'), keys('hold') && t('hold {k}').replace('{k}', keys('hold'))].filter(Boolean).join(t(', or ')));
+    for (const act of ['auto', 'full', 'save', 'load', 'config']) hint('#quickbar [data-act="' + act + '"]', keys(act));
+    hint('#quickbar [data-act="hide"]', stop('Show the picture without text', keys('hide')));
   };
   wording(settings.lang || 'en');
   if (onPhone()) phoneNotice();
@@ -221,7 +239,8 @@ async function boot() {
     } },
     { plate: 'Controls', build(p) {
       h.head(p, 'Mouse, keyboard and touch');
-      h.rows(p, CONTROLS);
+      h.rows(p, controlsRows());
+      h.p(p, 'The keys can be changed once the game is running: Settings, then Controls.', 'fine');
     } },
     { plate: 'Save data', build(p) {
       h.head(p, 'Kept in this browser');
@@ -355,20 +374,18 @@ async function boot() {
     hide() { input.push({ type: 'sys', action: 'windowerase' }); },
     config() { input.push({ type: 'sys', action: 'config' }); },
   };
-  const onKey = (k) => {
-    switch (k) {
-      case 's': actions.skip(); break;
-      case 'a': actions.auto(); break;
-      case 'm': actions.mute(); break;
-      case 'f': actions.full(); break;
-      case '1': actions.speed(0); break;
-      case '2': actions.speed(1); break;
-      case '3': actions.speed(2); break;
+  // the keys that are neither a click nor a movement (input.js), by what they are set to do
+  const onShortcut = (action) => {
+    switch (action) {
+      case 'skip': case 'auto': case 'mute': case 'full': case 'save': case 'load': case 'hide': case 'config': actions[action](); break;
+      case 'speed0': actions.speed(0); break;
+      case 'speed1': actions.speed(1); break;
+      case 'speed2': actions.speed(2); break;
       default: return false;
     }
     return true;
   };
-  const input = new Input(canvas, onKey);
+  const input = new Input(canvas, onShortcut);
   shell.input = input;
   // Settings > Aspect ratio, changed while the game runs: the stage, the game's picture and
   // where the pointer is taken to be all follow.
@@ -419,6 +436,17 @@ async function boot() {
       }
       : null;
   };
+  // Settings > Controls: every key and what it does, each one the reader's to change. The keys are
+  // kept with the settings once they differ from the ones the game comes with.
+  const READING = ['confirm', 'menu', 'hold', 'skip', 'auto', 'up', 'down', 'left', 'right', 'pageup', 'pagedown'];
+  const openControls = () => shell.controls([
+    { title: 'Reading', rows: ACTIONS.filter(([a]) => READING.includes(a)) },
+    { title: 'Shortcuts', rows: ACTIONS.filter(([a]) => !READING.includes(a)) },
+  ], () => {
+    if (isDefault()) delete settings.keys; else settings.keys = bindings();
+    saveSettings();
+    keyHints();
+  });
   const openConfig = () => {
     const story = [
       { key: 'font', label: 'Story font', options: [['Original', 'original'], ['Serif', 'serif'], ['Sans', 'sans']] },
@@ -435,6 +463,7 @@ async function boot() {
     if (languages().length > 1) more.unshift({ key: 'lang', label: 'Language', options: languages().map(([, l]) => [SHORT[l], l]) });
     return shell.config([
       { title: 'The story', rows: story },
+      { title: 'Controls', under: true, rows: [{ key: 'controls', label: 'Keyboard', options: [['Change the keys', 'open']] }] },
       { title: 'Sound and picture', rows: [
         { key: 'bgmVol', label: 'Music', range: true },
         { key: 'seVol', label: 'Sound effects', range: true },
@@ -445,7 +474,8 @@ async function boot() {
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
-      : key === 'unlockAll' ? !!settings.unlockAll : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
+      : key === 'unlockAll' ? !!settings.unlockAll : key === 'controls' ? null : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
+      if (key === 'controls') { await openControls(); return; }
       if (key === 'lang') {
         if (value === lang) return;
         if (!(await shell.confirm(SWITCH[value] || SWITCH.en,

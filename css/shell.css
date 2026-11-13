@@ -321,6 +321,18 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .config .cols input[type="range"] { width: 210px; }
 .config .cols .cf-range output { width: 52px; }
 
+/* settings > controls: an action to a row, its two keys at the end of it */
+.controls .cols .cf-row { height: 54px; font-size: 23px; }
+.controls .cf-label { line-height: 1.1; padding-right: 16px; }
+.cf-keys { display: flex; gap: 10px; flex: none; }
+.cf-key { min-width: 122px; height: 36px; padding: 0 8px; font-size: 20px; line-height: 33px; white-space: nowrap; color: var(--ink);
+  border: 1.5px solid rgba(92, 102, 140, .34); border-radius: 5px; background: rgba(255, 255, 255, .28); transition: border-color .12s, background-color .12s; }
+.cf-key.empty { color: rgba(116, 120, 148, .6); border-style: dashed; background: none; }
+.cf-key:hover, .cf-key.cur { border-color: var(--rule); background: rgba(255, 255, 255, .6); }
+.cf-key.listening { font-size: 17px; font-style: italic; color: #8a5a12; border-color: var(--amber); background: rgba(244, 207, 124, .3); }
+.ct-hint { margin-top: 14px; font-size: 18px; line-height: 25px; font-style: italic; color: var(--ink-soft); }
+.ct-hint.said { color: var(--ink); }
+
 /* the title's entries stand on the picture itself now: light, with a soft shade for the ground behind */
 .gtitle .gt-item { color: rgba(255, 246, 232, .9); text-shadow: 0 1px 2px rgba(40, 20, 6, .75), 0 0 16px rgba(40, 20, 6, .55); }
 .gtitle .gt-item.cur { color: #fff; }
