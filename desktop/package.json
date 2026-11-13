@@ -1,7 +1,7 @@
 {
   "name": "kagetsu-tohya-desktop",
   "productName": "Kagetsu Tohya",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kagetsu Tohya, the browser port, as a desktop program",
   "author": "Kagetsu Tohya browser port",
   "private": true,
@@ -9,10 +9,10 @@
   "scripts": {
     "start": "electron .",
     "icon": "electron tools/make-icon.js",
-    "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux",
-    "dist": "electron-builder --win --mac --linux"
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
+    "dist": "electron-builder --win --mac --linux --publish never"
   },
   "devDependencies": {
     "electron": "^45.3.1",
@@ -26,8 +26,17 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "waifwu",
+        "repo": "KageTStream",
+        "releaseType": "release"
+      }
+    ],
     "files": [
       "main.js",
+      "updater.js",
       "package.json"
     ],
     "extraResources": [
@@ -104,6 +113,13 @@
             "arm64",
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ]
     },
@@ -119,5 +135,8 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }

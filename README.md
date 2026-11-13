@@ -96,7 +96,8 @@ game at once; nothing else in `js/` is different.
 cd desktop
 npm install
 npm start            # run it from this folder
-npm run dist         # build dist/: the Windows installer and zip, both macOS disk images, the Linux AppImage
+npm run dist         # build dist/: the Windows installer and zip, the macOS disk images and zips, the Linux AppImage,
+                     # and latest.yml, latest-mac.yml, latest-linux.yml (what the updater reads)
 ```
 
 All three can be built from a Mac. The builds are not code-signed (the macOS
@@ -109,6 +110,61 @@ that restrict user namespaces (Ubuntu 24.04 and others); the window only ever
 shows the program's own files. Saves are kept in the
 program's own profile, apart from any browser's; Settings has **Save data**
 (export to a file, import from a file) to carry them across. `npm run icon` redraws `build/icon.png`, `build/icon-win.png` and the website's `../favicon.ico` from `tools/make-icon.js`.
+
+### Updates
+
+From 1.0.3 the program updates itself (`desktop/updater.js`). Five seconds
+after it opens it asks the releases page for the latest version; if that is
+newer it downloads it in the background, then says it is ready. **Later** (the
+default, so a stray Enter or Space does nothing) puts it in when the game is
+closed; **Restart now** puts it in at once and reopens the game. Saves are not
+touched.
+
+* **Windows, installed with the Setup program:** electron-updater runs the new
+  Setup silently. After the first update it fetches only the changed parts.
+* **Linux AppImage:** electron-updater replaces the AppImage file.
+* **macOS:** electron-updater cannot be used here. It installs through Apple's
+  Squirrel, which accepts only an update signed with the same Developer ID,
+  and these builds are signed ad hoc. The program fetches the release's mac
+  `.zip` instead and checks it against the sha512 in `latest-mac.yml`. Once the
+  game has closed, a short shell script moves the new `.app` into the old
+  one's place. If that move fails, the old one is put back.
+* **The Windows zip, or a Mac copy opened from the disk image or not moved out
+  of Downloads:** these cannot replace themselves. They say once per version
+  that a new one is out and offer the download page.
+
+What the updater did is in `updater.log` in the program's profile
+(`%APPDATA%\Kagetsu Tohya`, `~/Library/Application Support/Kagetsu Tohya`,
+`~/.config/Kagetsu Tohya`). Copies from 1.0.2 and before have no updater, so
+their players have to download 1.0.3 by hand once.
+
+### Releasing an update
+
+1. Raise `version` in `desktop/package.json`, then `npm run dist`.
+2. Make a GitHub release tagged `desktop-v` plus the version (for example
+   `desktop-v1.0.4`), published, not a draft or pre-release, so that it is
+   **Latest**. The updater looks only at the Latest release. Upload every
+   file below, under these exact names:
+
+   ```bash
+   cd desktop/dist
+   gh release create desktop-v1.0.4 --repo waifwu/KageTStream --title "Kagetsu Tohya 1.0.4 (desktop)" --notes "…" \
+     latest.yml latest-mac.yml latest-linux.yml \
+     Kagetsu-Tohya-Setup.exe Kagetsu-Tohya-Setup.exe.blockmap \
+     Kagetsu-Tohya-mac-arm64.dmg Kagetsu-Tohya-mac-arm64.zip Kagetsu-Tohya-mac-arm64.zip.blockmap \
+     Kagetsu-Tohya-mac-x64.dmg Kagetsu-Tohya-mac-x64.zip Kagetsu-Tohya-mac-x64.zip.blockmap \
+     Kagetsu-Tohya-linux-x86_64.AppImage
+   ```
+
+   The mac `.zip` files are what the Mac updater downloads; people download the
+   `.dmg`. The Windows zip is not published. A release missing a `latest*.yml`
+   leaves that platform where it is (the
+   updater logs that it found nothing). Each `.yml` names its files by size and
+   sha512, so they must come from the same build as the files beside them.
+3. To try a build before publishing it, put those files in a folder, serve it
+   (`python3 -m http.server 8000`), and start an older packaged copy with
+   `KAGETSU_UPDATE_URL=http://127.0.0.1:8000/`. That points the updater at the
+   folder instead of GitHub.
 
 ## The interface
 

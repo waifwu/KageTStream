@@ -9,6 +9,7 @@ const { app, BrowserWindow, Menu, protocol, screen, shell } = require('electron'
 const fs = require('node:fs');
 const path = require('node:path');
 const { Readable } = require('node:stream');
+const updater = require('./updater');
 
 // Linux, run as an AppImage: Chromium's sandbox needs either a setuid helper (an AppImage cannot
 // carry one) or unprivileged user namespaces, which Ubuntu 24.04 and others turn off by default.
@@ -156,6 +157,7 @@ function openWindow() {
   win.webContents.session.setPermissionRequestHandler((wc, permission, done) => done(permission === 'fullscreen'));
 
   win.loadURL(ORIGIN + '/index.html');
+  win.once('ready-to-show', () => updater.start(win));
 }
 
 // The game uses its own keys (Ctrl to skip, F for fullscreen, Esc for the menu), so there is no
