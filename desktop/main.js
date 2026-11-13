@@ -10,6 +10,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Readable } = require('node:stream');
 
+// Linux, run as an AppImage: Chromium's sandbox needs either a setuid helper (an AppImage cannot
+// carry one) or unprivileged user namespaces, which Ubuntu 24.04 and others turn off by default.
+// Without either the program would not open at all. The window only ever shows the game's own
+// files from this program (other addresses are refused or handed to the real browser), so it does
+// without the sandbox there.
+if (process.platform === 'linux' && process.env.APPIMAGE) app.commandLine.appendSwitch('no-sandbox');
+
 const SCHEME = 'app';
 const HOST = 'kagetsu';
 const ORIGIN = SCHEME + '://' + HOST;

@@ -36,7 +36,7 @@ This writes `data/script-ja.txt` and lists it in the manifest; nothing else in
 
 ## Desktop program
 
-The game as a program of its own, for Windows and macOS, with every file
+The game as a program of its own, for Windows, macOS and Linux, with every file
 inside it. It opens straight into the game: the site's opening page is not
 shown there. Finished builds are on the
 [releases page](https://github.com/waifwu/KageTStream/releases); the opening
@@ -51,12 +51,17 @@ game at once; nothing else in `js/` is different.
 cd desktop
 npm install
 npm start            # run it from this folder
-npm run dist         # build dist/: the Windows installer and zip, both macOS disk images
+npm run dist         # build dist/: the Windows installer and zip, both macOS disk images, the Linux AppImage
 ```
 
-Both systems can be built from a Mac. The builds are not code-signed (the macOS
+All three can be built from a Mac. The builds are not code-signed (the macOS
 one is signed ad hoc, which Apple silicon needs before it will run anything),
-so Windows SmartScreen and macOS Gatekeeper each ask once. Saves are kept in the
+so Windows SmartScreen and macOS Gatekeeper each ask once. Linux gets one
+x86-64 AppImage, which runs on most distributions once it is allowed to run as
+a program (Ubuntu 22.04 and later also need `libfuse2`). Run as an AppImage it
+starts without Chromium's sandbox, which an AppImage cannot set up on systems
+that restrict user namespaces (Ubuntu 24.04 and others); the window only ever
+shows the program's own files. Saves are kept in the
 program's own profile, apart from any browser's; Settings has **Save data**
 (export to a file, import from a file) to carry them across. `npm run icon` redraws `build/icon.png`, `build/icon-win.png` and the website's `../favicon.ico` from `tools/make-icon.js`.
 

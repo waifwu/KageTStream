@@ -225,8 +225,10 @@ async function boot() {
         ['Windows', 'Kagetsu-Tohya-Setup.exe', RELEASES + '/latest/download/Kagetsu-Tohya-Setup.exe'],
         ['macOS · Apple silicon', 'Kagetsu-Tohya-mac-arm64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-arm64.dmg'],
         ['macOS · Intel', 'Kagetsu-Tohya-mac-x64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-x64.dmg'],
+        ['Linux · x86-64', 'Kagetsu-Tohya-linux-x86_64.AppImage', RELEASES + '/latest/download/Kagetsu-Tohya-linux-x86_64.AppImage'],
       ]);
       h.p(p, 'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.', 'fine');
+      h.p(p, 'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.', 'fine');
       h.p(p, 'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.', 'fine');
       h.link(p, 'Every version is on GitHub:', 'github.com/waifwu/KageTStream/releases', RELEASES);
     } },

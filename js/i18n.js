@@ -295,6 +295,8 @@ const JA = {
   'macOS · Apple silicon': 'macOS · Appleシリコン',
   'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.':
     'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
+  'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
+    'Linux：ファイルをプログラムとして実行できるようにしてから（「プロパティ」で、または chmod +x）開いてください。Ubuntu 22.04以降では、先に libfuse2 パッケージを入れてください。',
   'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
     '開くとすぐにゲームが始まります。セーブはこのブラウザのものとは別に保存されます。「設定」の「セーブデータ」で、こちらでファイルに書き出して向こうで読み込めば移せます。逆も同じです。',
   'Skip the credits?': 'スタッフロールをスキップしますか？',
