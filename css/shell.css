@@ -246,7 +246,12 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .fc-view { position: absolute; left: 0; right: 0; top: 118px; height: 750px; overflow: hidden; cursor: grab; touch-action: none;
   border-top: 1px solid rgba(92, 102, 140, .25); border-bottom: 1px solid rgba(92, 102, 140, .25); background: rgba(255, 255, 255, .18); }
 .fc-view.drag { cursor: grabbing; }
-.fc-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+/* The chart is a layer of its own only while a finger or the mouse is moving it. Kept as one all
+   the time, a phone's browser drew it at the closest zoom it had been brought to and, brought back
+   out, the picture was too large for its memory: parts of the chart were simply left out. Let go,
+   it is drawn again at the zoom it is at. */
+.fc-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.fc-view.drag .fc-world { will-change: transform; }
 .fc-e { fill: none; stroke: rgba(92, 102, 140, .3); stroke-width: 1.3; }
 .fc-e.on { stroke: rgba(46, 53, 83, .72); stroke-width: 1.7; }
 .fc-e.if { stroke-dasharray: 6 4; }
