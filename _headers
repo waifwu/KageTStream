@@ -8,11 +8,14 @@
 /data/arc/*
   Cache-Control: public, max-age=31536000, immutable
 
-# the translation patches' own pictures and sounds (tools/extract.py --pt / --es): theirs, unchanged
+# the translation patches' own pictures and sounds (tools/extract.py --pt / --es / --chs): theirs, unchanged
 /data/pt/arc/*
   Cache-Control: public, max-age=31536000, immutable
 
 /data/es/arc/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/chs/arc/*
   Cache-Control: public, max-age=31536000, immutable
 
 /data/cd/*

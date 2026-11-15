@@ -461,7 +461,7 @@ repository. Every push to `main` builds and publishes to
   `data/` are published. `README.md` and `tools/` stay in the repository.
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
   (`data/arc/`, `data/cd/`, `data/default.ttf`, and the translation patches'
-  `data/pt/arc/` and `data/es/arc/`) for a year without asking again; they
+  `data/pt/arc/`, `data/es/arc/` and `data/chs/arc/`) for a year without asking again; they
   never change. The page, `css/`, `js/` and the scripts, manifest and guide
   keep Pages' default (`max-age=0, must-revalidate`), since a deploy changes
   them.
