@@ -247,8 +247,8 @@ the story.
   guide is on and which ending it leads to. On the flowchart the day's route is
   drawn in amber. `node tools/guide-check.mjs [normal|true]` plays the whole
   walkthrough through the real script and reports any step that does not match
-  a choice the game offers (none, for either ending). Add `ja`, `pt` or `es`
-  to play the Japanese, Portuguese or Spanish script the same way.
+  a choice the game offers (none, for either ending). Add `ja`, `pt`, `es` or
+  `chs` to play the Japanese, Portuguese, Spanish or Chinese script the same way.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the guide's marks, the game's own four
   switches (instant effects, skip parts already read, daily message, skip
@@ -277,9 +277,9 @@ the story.
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
   the resolution the picture is drawn at, so they stay as sharp as the text.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
-  holds another language's script) — English, 日本語, Português or Español on
-  the opening page, EN, JA, PT-BR or ES in Settings (four full names do not fit
-  its column), each offered when its script is in `data/`. On the opening page nothing is
+  holds another language's script) — English, 日本語, Português, Español or
+  简体中文 on the opening page, EN, JA, PT-BR, ES or 简中 in Settings (five full
+  names do not fit its column), each offered when its script is in `data/`. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
   From Settings it asks first, then starts again from the opening page with the
   other script. What has been read, the gallery, the flowchart and the
@@ -313,6 +313,11 @@ the story.
   Crepúsculo de la Luna Herbal, Un Cuento de Hadas de la Princesa, set on two
   lines as on its picture), "un día", "Regresar" and "Ayuda"; only "op" and "ep"
   stay. Its scenes carry their own names too (Esta escena es "Mansión - …").
+  Simplified Chinese is the patch by KID制作组 (无限梦之吻, Kiss the Infinite
+  Dream), 歌月十夜汉化版 beta Ver.0.8.4 (`tools/extract.py --chs`). Its credits
+  name: planning and script, Dhty, Natdon and 骤风; translation, 9栋424, 骡子,
+  仙堂麻寻 and Coko; editing, B-rabbit, 天降の⑨ and 某7; proofreading, Haxis,
+  Xiayu and 诅咒之子.
   The opening page's plates and the quick bar are set a little closer in
   Portuguese and Spanish, so their longer words fit.
 * **Unlock everything** (Settings; off by default) — asks
