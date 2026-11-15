@@ -1,7 +1,7 @@
 {
   "name": "kagetsu-tohya-desktop",
   "productName": "Kagetsu Tohya",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Kagetsu Tohya, the browser port, as a desktop program",
   "author": "Kagetsu Tohya browser port",
   "private": true,
@@ -75,7 +75,8 @@
       "ja",
       "pt-BR",
       "es",
-      "es-419"
+      "es-419",
+      "zh-CN"
     ],
     "win": {
       "icon": "build/icon-win.png",
