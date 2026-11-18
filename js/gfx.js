@@ -21,20 +21,38 @@ const QUAKE_AMP = 12;
 
 export class Loader {
   // `own`: a folder of the data whose files stand in for the shared ones ("pt/" for the
-  // Portuguese patch's pictures and sounds, see tools/extract.py --pt), or nothing
-  constructor(base, manifest, own) {
+  // Portuguese patch's pictures and sounds, see tools/extract.py --pt), or nothing.
+  // `hd`: data/hd/index.json (tools/hd.py), or nothing: the standing pictures and event CGs
+  // enlarged `scale` times, shown in place of the game's own while `hdOn`.
+  constructor(base, manifest, own, hd) {
     this.base = base;
     this.files = new Set(manifest.files);
     this.own = own || '';
     this.images = new Map();
+    this.hd = hd && hd.scale > 1 ? { scale: hd.scale, alpha: new Set(hd.alpha || []), plain: new Set(hd.plain || []) } : null;
+    this.hdOn = !!this.hd;
   }
-  resolve(name) {
+  // the file of data/ a name stands for, or null
+  path(name) {
     const p = name.replace(/\\/g, '/').replace(/^\.?\//, '').toLowerCase();
-    const enc = (s) => s.split('/').map(encodeURIComponent).join('/');
-    if (this.own && this.files.has(this.own + 'arc/' + p)) return this.base + enc(this.own) + 'arc/' + enc(p);
-    if (this.files.has('arc/' + p)) return this.base + 'arc/' + enc(p);
-    if (this.files.has(p)) return this.base + enc(p);
+    if (this.own && this.files.has(this.own + 'arc/' + p)) return this.own + 'arc/' + p;
+    if (this.files.has('arc/' + p)) return 'arc/' + p;
+    if (this.files.has(p)) return p;
     return null;
+  }
+  url(path) { return this.base + path.split('/').map(encodeURIComponent).join('/'); }
+  resolve(name) {
+    const p = this.path(name);
+    return p ? this.url(p) : null;
+  }
+  // The HD file for a name while HD is on, or null. `kind` is how the picture is to be shown:
+  // 'alpha', a standing picture with its mask (":a;"), whose HD file has the mask already made its
+  // transparency; 'plain', a background. It goes by the file the name resolves to, so a
+  // language's own copy of a picture has its own HD file or none.
+  hdUrl(name, kind) {
+    if (!this.hdOn || !kind) return null;
+    const p = this.path(name);
+    return p && this.hd[kind].has(p) ? this.url('hd/' + p.replace(/\.[^./]+$/, '.webp')) : null;
   }
   findAudio(name) {
     const p = name.replace(/\\/g, '/').toLowerCase();
@@ -47,15 +65,18 @@ export class Loader {
   }
   // A picture, decoded. A load that fails (a dropped connection) is tried twice more before the
   // picture is given up for now; given up, it is not remembered, so the next request tries again.
-  image(name) {
-    const url = this.resolve(name);
+  // With a `kind` (see hdUrl) it is the HD file when there is one, marked with its `hdScale`;
+  // an HD file that cannot be had is replaced by the game's own picture.
+  image(name, kind) {
+    const hd = this.hdUrl(name, kind);
+    const url = hd || this.resolve(name);
     if (!url) return Promise.resolve(null);
     let p = this.images.get(url);
     if (!p) {
       p = new Promise((res) => {
         const tryLoad = (left) => {
           const img = new Image();
-          img.onload = () => res(img);
+          img.onload = () => { if (hd) img.hdScale = this.hd.scale; res(img); };
           img.onerror = () => {
             if (left > 0) { setTimeout(() => tryLoad(left - 1), left > 1 ? 600 : 2000); return; }
             console.warn('failed to load', url);
@@ -66,6 +87,7 @@ export class Loader {
         };
         tryLoad(2);
       });
+      if (hd) p = p.then((img) => img || this.image(name));
       this.images.set(url, p);
       if (this.images.size > 80) this.images.delete(this.images.keys().next().value);
     }
@@ -73,10 +95,13 @@ export class Loader {
   }
   // Start loading pictures the script will soon ask for, so they are ready when it does.
   // Only names not already held or on their way; the cache keeps 80, so a few at a time.
+  // Each comes as [name, transparency]: ":a;" asks for a standing picture, no tag for a background
+  // (what the script shows with "bg"), so the file fetched is the one the script will ask for.
   prefetch(names) {
-    for (const n of names) {
-      const url = this.resolve(n);
-      if (url && !this.images.has(url)) this.image(n);
+    for (const [n, trans] of names) {
+      const kind = trans === 'a' ? 'alpha' : trans === null ? 'plain' : null;
+      const url = this.hdUrl(n, kind) || this.resolve(n);
+      if (url && !this.images.has(url)) this.image(n, kind);
     }
   }
   // The exact pixels of a .bmp, decoded from the file's own bytes. Reading them back off a canvas
@@ -114,6 +139,12 @@ function decodeBmp(buf) {
     }
   }
   return { w, h, data };
+}
+
+// a picture's size in the game's pixels: an HD file (Loader.image) stands for one `hdScale` times smaller
+function shownSize(img) {
+  const s = img.hdScale || 1;
+  return { w: img.naturalWidth / s, h: img.naturalHeight / s };
 }
 
 function makeCanvas(w, h) {
@@ -245,6 +276,27 @@ export class Gfx {
     this.touch();
     this.present(this.shownText);
   }
+  // Settings > HD pictures, changed while the game runs: what is showing is fetched again in the
+  // other size and put in place where it stands (ui.js holds on to the sprites themselves; the
+  // room a picture takes is the same either way). A background changed meanwhile is left alone.
+  async setHd(on) {
+    const l = this.loader;
+    if (!l.hd || l.hdOn === !!on) return;
+    l.hdOn = !!on;
+    this.spriteCache.clear();
+    const bg = this.bg, jobs = [];
+    if (bg.raw) {
+      jobs.push(l.image(parseTag(bg.file).file, 'plain').then((raw) => {
+        if (raw && this.bg === bg) { bg.raw = raw; this.fitBg(); }
+      }));
+    }
+    for (const sp of [...this.tachi, ...this.sprites.values()]) {
+      if (sp) jobs.push(this.loadSprite(sp.tag).then((n) => { if (n) sp.data = n.data; }));
+    }
+    await Promise.all(jobs);
+    this.touch();
+    this.present(this.shownText);
+  }
 
   reset() {
     this.bg = { color: '#000000', file: null, img: null };
@@ -263,18 +315,21 @@ export class Gfx {
   async loadSprite(tag) {
     let data = this.spriteCache.get(tag);
     if (!data) {
+      const hdOn = this.loader.hdOn;
       const t = parseTag(tag);
       const mark = markFor(t.file);
       if (mark) data = this.buildMark(mark, t);
       else {
         const keyed = t.trans !== 'c' && t.trans !== 'a';
         const raw = keyed ? await this.loader.pixels(t.file) : null;
-        const img = raw ? null : await this.loader.image(t.file);
+        const img = raw ? null : await this.loader.image(t.file, t.trans === 'a' ? 'alpha' : null);
         if (!img && !raw) return null;
-        data = this.buildSprite(img, t, raw);
+        data = img && img.hdScale ? this.hdSprite(img, t) : this.buildSprite(img, t, raw);
       }
-      this.spriteCache.set(tag, data);
-      if (this.spriteCache.size > 48) this.spriteCache.delete(this.spriteCache.keys().next().value);
+      if (this.loader.hdOn === hdOn) {        // (not kept if HD was switched while it loaded)
+        this.spriteCache.set(tag, data);
+        if (this.spriteCache.size > 48) this.spriteCache.delete(this.spriteCache.keys().next().value);
+      }
     } else {
       this.spriteCache.delete(tag);
       this.spriteCache.set(tag, data);
@@ -298,6 +353,14 @@ export class Gfx {
       ctx.restore();
     }
     return { canvas: out, w: size, h: size, cells: t.cells, delays: t.delays, loop: t.loop, res };
+  }
+
+  // A standing picture's HD file (tools/hd.py): the colour with the mask already made its
+  // transparency, `hdScale` times the game's size. It is drawn as it is, `res` times as fine as
+  // the game's pixels, and takes the same room as the game's own picture would.
+  hdSprite(img, t) {
+    const r = img.hdScale;
+    return { canvas: img, w: Math.floor(img.naturalWidth / r / t.cells), h: img.naturalHeight / r, cells: t.cells, delays: t.delays, loop: t.loop, res: r };
   }
 
   // `raw` is the file's exact pixels when the loader could decode them (colour-keyed bitmaps)
@@ -358,7 +421,7 @@ export class Gfx {
     if (a <= 0) return;
     ctx.globalAlpha = a;
     const r = d.res || 1;
-    if (r > 1) { x = Math.round(x * this.S) / this.S; y = Math.round(y * this.S) / this.S; }   // a drawn mark sits on whole pixels
+    if (r > 1) { x = Math.round(x * this.S) / this.S; y = Math.round(y * this.S) / this.S; }   // a drawn mark or HD picture sits on whole pixels
     ctx.drawImage(d.canvas, (cell || 0) * d.w * r, 0, d.w * r, d.h * r, x, y, d.w, d.h);
     ctx.globalAlpha = 1;
   }
@@ -372,7 +435,7 @@ export class Gfx {
   async setBgImage(file) {
     const t = parseTag(file);
     const before = this.bg.img;
-    const raw = await this.loader.image(t.file);
+    const raw = await this.loader.image(t.file, 'plain');
     this.bg = { color: '#000000', file, name: t.file, raw, img: null };
     this.fitBg();
     this.touch();
@@ -395,8 +458,9 @@ export class Gfx {
     const over = this.bgOverride ? this.bgOverride(b.name, b.raw, this.wide) : null;
     b.img = over || b.raw;
     if (over) { b.fit = 'fill'; return; }
-    if (!this.wide || b.raw.naturalWidth < W || b.raw.naturalHeight < H) return;
-    b.edge = this.flatSides(b.name, b.raw);
+    const { w, h } = shownSize(b.raw);
+    if (!this.wide || w < W || h < H) return;
+    b.edge = this.flatSides(b.name + (b.raw.hdScale ? ':hd' : ''), b.raw);
     if (!b.edge) b.fit = 'cover';
   }
   // The colour of a picture's two sides, if both are one flat colour and the same one (else null).
@@ -539,7 +603,8 @@ export class Gfx {
       if (im.naturalWidth === undefined) ctx.drawImage(im, 0, 0, VW, H);     // a stand-in drawn for the whole view
       else {
         this.space(ctx, 'back');
-        ctx.drawImage(im, Math.floor((W - im.naturalWidth) / 2), Math.floor((H - im.naturalHeight) / 2));
+        const { w, h } = shownSize(im);
+        ctx.drawImage(im, Math.floor((W - w) / 2), Math.floor((H - h) / 2), w, h);
       }
     }
     this.space(ctx, 'game');

@@ -176,11 +176,13 @@ export class Engine {
     const from = this.pc, to = Math.min(this.len, from + span);
     if (from === this.lastLookAhead) return [];
     this.lastLookAhead = from;
-    const re = /"(?::[^;"\n]*;)?([^"\n]+?\.(?:jpg|jpeg|png))"/gi;
+    // each as [file, the transparency letter of its tag ("a" for ":a;"), or null with no tag]
+    const re = /"(?::([^;"\n]*);)?([^"\n]+?\.(?:jpg|jpeg|png))"/gi;
     re.lastIndex = from;
     const out = [];
     for (let m; out.length < max && (m = re.exec(this.src)) && m.index < to;) {
-      if (!out.includes(m[1])) out.push(m[1]);
+      const trans = m[1] === undefined ? null : (/^(#[0-9a-fA-F]{6}|[a-zA-Z])?/.exec(m[1])[1] || 'l').toLowerCase();
+      if (!out.some(([f, t]) => f === m[2] && t === trans)) out.push([m[2], trans]);
     }
     return out;
   }

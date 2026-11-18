@@ -917,10 +917,11 @@ export class Shell {
         img.classList.remove('on');
         const arrived = () => { if (items[i] !== it) return; img.classList.add('on'); soften(img); };
         img.onload = arrived;
-        img.src = it.url;
+        img.onerror = () => { if (items[i] === it && it.hd) { it.hd = null; img.src = it.url; } };   // an HD file that is not there: the game's own
+        img.src = it.hd || it.url;
         if (img.complete && img.naturalWidth) arrived();
         // the one that follows is fetched meanwhile, so going on to it does not wait
-        if (items.length > 1) { const next = new Image(); next.decoding = 'async'; next.src = items[(i + 1) % items.length].url; }
+        if (items.length > 1) { const next = new Image(); next.decoding = 'async'; const n = items[(i + 1) % items.length]; next.src = n.hd || n.url; }
         cap.innerHTML = '';
         if (it.title) cap.appendChild(el('div', 'vw-title', it.title));
         if (it.artist) cap.appendChild(el('div', 'vw-artist', it.artist));

@@ -175,7 +175,7 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
   // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
   // its shape at once, the opening page with it; the game's picture when it is made (below).
@@ -383,7 +383,11 @@ async function boot() {
   }
   // a language's own pictures and sounds (data/pt/..., data/es/...) stand in for the shared ones
   const own = lang + '/';
-  const loader = new Loader(DATA, manifest, manifest.files.some((f) => f.startsWith(own)) ? own : '');
+  // the enlarged standing pictures and CGs (tools/hd.py), if data/ has them: without the list, or
+  // with one that cannot be read, the game shows its own pictures
+  const hdIndex = await fetch(DATA + 'hd/index.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const loader = new Loader(DATA, manifest, manifest.files.some((f) => f.startsWith(own)) ? own : '', hdIndex);
+  loader.hdOn = !!loader.hd && settings.hd !== false;
   const gfx = new Gfx(canvas, loader, scale, settings.wide);
   const text = new TextLayer(gfx);
   gfx.text = text;
@@ -391,6 +395,8 @@ async function boot() {
   gfx.hideSprite = hideSprite;
   gfx.onBgChange = (same) => { if (!same) shell.releaseLeaving(); };   // a real change of picture: no menu page stays over it
   const audio = new AudioSys(loader);
+  // Sound is turned off and on only with its key (M, see keys.js); a phone has none, so there it is never left off
+  if (PHONE) settings.muted = false;
   audio.setMuted(settings.muted);
   audio.setVolumes(settings.bgmVol, settings.seVol);
 
@@ -570,8 +576,8 @@ async function boot() {
       { title: 'Sound and picture', rows: [
         { key: 'bgmVol', label: 'Music', range: true },
         { key: 'seVol', label: 'Sound effects', range: true },
-        { key: 'muted', label: 'Sound', options: [['On', false], ['Off', true]] },
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
+        ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
         { key: 'full', label: 'Fullscreen', options: onOff },
       ] },
@@ -617,6 +623,7 @@ async function boot() {
       if (GAME[key]) { GAME[key].set(value); engine.flushGlobals(true); return; }
       if (key === 'guide') { guide.setOn(value); return; }
       if (key === 'full') { fullscreen(value); return; }
+      if (key === 'hd') { settings.hd = value; saveSettings(); await gfx.setHd(value); return; }
       if (key === 'wide' && value && !settings.wide && !(await confirmWide())) return;
       const fontChanged = key === 'font' && settings.font !== value;
       const shapeChanged = key === 'wide' && !!settings.wide !== value;

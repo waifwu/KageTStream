@@ -2,7 +2,9 @@
 
 A small NScripter-compatible engine written in plain JavaScript. It runs the
 game's **original script and assets** (unpacked from your own copy) in a
-`<canvas>`; nothing was rewritten or re-encoded.
+`<canvas>`; nothing was rewritten or re-encoded. The one addition is optional:
+enlarged copies of the sprites and event CGs (see *HD pictures* below), made
+from those files and shown in their place; the game's own files are untouched.
 
 ## Run it
 
@@ -78,6 +80,29 @@ is also put right in a few places that are wrong in the Windows build too:
 
 No line of the script moves. Three of the English patch's translator cards
 that the Spanish credits still name are in neither archive, and are skipped.
+
+### HD pictures
+
+The sprites and event CGs can be shown enlarged (Settings, *HD pictures*). The
+enlarged files are made outside this repository, then converted for the player:
+
+```bash
+python3 tools/hd.py "/path/to/upscaled"
+```
+
+The folder holds 4× PNGs under the paths the pictures have in `data/`, with
+`.png` for `.jpg` (`arc/image/tachi/aki_t01a.png`,
+`chs/arc/image/event/ren_h02.png`, …). The ones here are Real-ESRGAN's
+`realesr-animevideov3` run over every standing picture (`image/tachi`), every
+event CG (`image/event`) and the other sprites the scripts draw with a mask
+(the daily message's `image/msg/ran_t*`, the extras of `image/add`), the
+language patches' own copies included: 504 files. Backgrounds, menus and the
+rest are left as they are. The tool writes `data/hd/`, WebP at quality 90
+(about 103 MB), and `data/hd/index.json`, the list the player reads. A
+sprite's mask is made its transparency as it is converted, so the player draws
+it as it is. The list is kept apart from the manifest, so extracting the game
+again keeps it; without it, or with HD off, the player shows the game's own
+pictures exactly as before.
 
 ## Desktop program
 
@@ -252,8 +277,8 @@ the story.
 * **Settings** — one page for everything: story font (the game's own, a serif or
   a sans), text speed, auto pace, the guide's marks, the game's own four
   switches (instant effects, skip parts already read, daily message, skip
-  explicit content), music and effect volume, sound on or off, the aspect
-  ratio (4:3 or 16:9), the glow around the picture, fullscreen, the language,
+  explicit content), music and effect volume, the aspect
+  ratio (4:3 or 16:9), HD pictures, the glow around the picture, fullscreen, the language,
   Unlock everything, and save data to and from a file. The game's "Game
   settings" entry opens this page.
 * **16:9** (Settings, *Aspect ratio*; off by default) — the game without the
@@ -272,6 +297,19 @@ the story.
   (the opening page's Play tab has the same switch), and saves are the same in
   either shape. The glow around the picture is kept for each shape by itself:
   on at 4:3, off at 16:9 until it is turned on there.
+* **HD pictures** (Settings; on by default, shown when `data/hd/` is there) —
+  the sprites and event CGs drawn from their 4× files (`tools/hd.py`, above)
+  in place of the game's own. Each takes exactly the room and the place the
+  game's picture would (`js/gfx.js`: the loader marks an HD file with its
+  scale, a sprite is drawn that many times as fine, a background at its own
+  size in the game's pixels), so nothing else changes; backgrounds stay the
+  game's. The picture is drawn at up to 3× (`js/main.js`), so on most screens
+  the 4× files are scaled down as they are drawn. The file is chosen by the
+  path the name resolves to, so a language's own copy of a picture has its
+  own; an HD file that cannot be had falls back to the game's. The gallery's
+  full-size viewer shows a CG's HD file; its thumbnails keep the game's.
+  Switched during the story, what is on screen is fetched again in the other
+  size where it stands.
 * **The waiting marks** — the triangle after a line and the sheet of paper at
   the end of a page are 24×24 bitmaps in the game's files. They are drawn
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
@@ -405,7 +443,9 @@ tools/extract.py        unpacks a game folder into data/; --ja / --pt / --es add
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script
 tools/serve.py          the local server for playing: http.server, telling the browser not to keep stale copies
-data/                   extracted game data (generated); data/pt/, data/es/ the patches' own pictures and sounds
+tools/hd.py             converts enlarged PNGs of the sprites and CGs into data/hd/ (Settings > HD pictures)
+data/                   extracted game data (generated); data/pt/, data/es/ the patches' own pictures and sounds;
+                        data/hd/ the HD pictures and their list
 ```
 
 `node tools/dryrun.mjs 150` plays the script 150 times with random choices and
@@ -464,7 +504,9 @@ repository. Every push to `main` builds and publishes to
   `data/pt/arc/`, `data/es/arc/` and `data/chs/arc/`) for a year without asking again; they
   never change. The page, `css/`, `js/` and the scripts, manifest and guide
   keep Pages' default (`max-age=0, must-revalidate`), since a deploy changes
-  them.
+  them. So do the HD pictures, `data/hd/`: unlike the game's files they can be
+  made again (`tools/hd.py`), and a browser asks after them each time (an
+  unchanged one is not sent again).
 * `404.html` answers any unknown path with a 404 status and a link back to the
   game, so a missing asset is an error rather than the opening page.
 * To check a deploy: a game file should carry the year-long cache and an
@@ -478,7 +520,8 @@ repository. Every push to `main` builds and publishes to
   track cannot be seeked and its length is a guess. The music player therefore
   fetches each track whole and plays it from memory (`js/audio.js`).
 * Pages allows 25 MiB per file and 20,000 files per deployment. The largest
-  file here is about 5 MiB.
+  file here is about 5 MiB. `data/hd/` adds 505 files and about 103 MB to the
+  site and to every desktop build.
 
 ## Note
 

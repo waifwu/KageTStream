@@ -40,6 +40,7 @@ const TYPES = {
   '.png': 'image/png',
   '.bmp': 'image/bmp',
   '.gif': 'image/gif',
+  '.webp': 'image/webp',   // the HD pictures (data/hd/)
   '.ogg': 'audio/ogg',
   '.wav': 'audio/wav',
   '.mp3': 'audio/mpeg',

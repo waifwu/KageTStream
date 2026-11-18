@@ -501,7 +501,8 @@ export class UI {
           if (!url) continue;
           const unlocked = all ? true : rule === 'shown' ? e.fileLog.has(file.replace(/\\/g, '/').toLowerCase())
             : rule === 'flag' ? e.getNum(4040 + k) !== 0 : started >= e.getNum(4060 + k);
-          items.push({ url, unlocked, title: rule === 'shown' ? '' : clean(e.getStr(4040 + k)), artist: rule === 'shown' ? '' : clean(e.getStr(4050 + k)) });
+          // `hd`: the CG's HD file, for the full-size viewer (the thumbnails keep the game's own)
+          items.push({ url, hd: loader.hdUrl(file, 'plain'), unlocked, title: rule === 'shown' ? '' : clean(e.getStr(4040 + k)), artist: rule === 'shown' ? '' : clean(e.getStr(4050 + k)) });
         }
       }
       if (items.length) cats.push({ label: name, items });
