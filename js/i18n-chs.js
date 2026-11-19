@@ -129,7 +129,7 @@ export const CHS = {
   'The game starts again from the opening page. What you have read, the gallery and the flowchart carry over; saved games are kept separately for each language, so the day in progress is not carried across.': '游戏将从起始页面重新开始。已读记录、鉴赏和流程图进度会保留；各语言的存档独立保存，因此不会接续当前这一轮。',
   'Advancing by itself.': '已开启自动播放。', 'Auto off.': '已关闭自动播放。', 'Sound off.': '已关闭声音。', 'Sound on.': '已开启声音。',
   'Tsukihime fan disc': '月姬 Fan Disc', 'in the browser': '浏览器版',
-  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.': '使用游戏原始文件的非官方浏览器移植。请在上方选择“关于”“操作”“存档数据”，或选择“游玩”开始游戏。',
+  'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.': '使用游戏原始文件的非官方浏览器移植。请选择“关于”“操作”“存档数据”，或选择“游玩”开始游戏。',
   'Unofficial · not affiliated with TYPE-MOON': '非官方作品 · 与 TYPE-MOON 无关联',
   'Loading the game’s script…': '正在加载游戏剧本……', 'Game data not found — see the Play page.': '未找到游戏数据，请查看“游玩”页面。',
   'About': '关于', 'Controls': '操作', 'Save data': '存档数据', 'Play': '游玩', 'What this is': '项目介绍',

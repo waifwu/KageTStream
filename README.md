@@ -287,12 +287,19 @@ the story.
 * **Menu** (right-click / Esc / Backspace) — the script's own entries, with
   Flowchart, Guide (when the walkthrough is in `data/`) and Settings set in
   before its last one.
-* **On a phone** — it is played with the phone on its side. Held upright, a
-  notice asks for it to be turned; it stands outside the stage, at the screen's
-  own size, and is there for as long as the screen is upright. The first touch
-  takes the whole screen and asks for it to be kept on its side (Android; an
-  iPhone's browser has no fullscreen, and gives the page the whole screen only
-  when it is opened from the Home Screen). A finger drawn across the picture
+* **On a phone** — it is played with the phone on its side. The opening page
+  is the one thing read upright: held so, the stage stands upright too
+  (`shell.js` `fit`, 750 across and as tall as the screen's shape; the
+  "upright" rules in `css/shell.css`). The title stands low on the picture with
+  the five plates in a column under it, a plate's page fills the screen with
+  **Back** at its foot, and the Play page names the languages by their short
+  names (EN, JA, PT-BR, ES, 简中). **Play** starts the game, takes the whole
+  screen and asks for it to be kept on its side (Android; an iPhone's browser
+  has no fullscreen, and gives the page the whole screen only when it is opened
+  from the Home Screen). From then on, held upright, a notice asks for the
+  phone to be turned; it stands outside the stage, at the screen's own size.
+  With the opening page on its side, the first touch takes the whole screen as
+  before. A finger drawn across the picture
   does what there are no buttons for: **down** brings the quick bar, **to the
   right** opens the menu, **up** opens the text history. The quick bar is three
   rows of three there, large enough for a finger; a tap beside it, or a swipe

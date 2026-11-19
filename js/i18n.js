@@ -307,8 +307,8 @@ const JA = {
   // ---- the opening page
   'Tsukihime fan disc': '月姫ファンディスク',
   'in the browser': 'ブラウザ版',
-  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.':
-    'ゲーム本来のファイルをそのまま再生する、非公式のブラウザ移植です。上のページを選んでください。「プレイ」で始まります。',
+  'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.':
+    'ゲーム本来のファイルをそのまま再生する、非公式のブラウザ移植です。ページを選んでください。「プレイ」で始まります。',
   'Unofficial · not affiliated with TYPE-MOON': '非公式 · TYPE-MOONとは無関係です',
   'Loading the game’s script…': 'スクリプトを読み込んでいます…',
   'Game data not found — see the Play page.': 'ゲームデータが見つかりません。「プレイ」のページをご覧ください。',
@@ -683,8 +683,8 @@ const PT = {
 
   // ---- the opening page ("Tsukihime fan disc" stays, as on the patch's title picture)
   'in the browser': 'no navegador',
-  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.':
-    'Uma versão não oficial para navegador que roda os próprios arquivos do jogo. Escolha uma página acima: Sobre, Controles, Dados salvos, ou Jogar para começar.',
+  'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.':
+    'Uma versão não oficial para navegador que roda os próprios arquivos do jogo. Escolha uma página: Sobre, Controles, Dados salvos, ou Jogar para começar.',
   'Unofficial · not affiliated with TYPE-MOON': 'Não oficial · sem vínculo com a TYPE-MOON',
   'Loading the game’s script…': 'Carregando o script do jogo…',
   'Game data not found — see the Play page.': 'Dados do jogo não encontrados — veja a página Jogar.',
@@ -1065,8 +1065,8 @@ const ES = {
 
   // ---- the opening page ("Tsukihime fan disc" stays, as on the patch's title picture)
   'in the browser': 'en el navegador',
-  'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.':
-    'Una versión no oficial para navegador que reproduce los propios archivos del juego. Elige una página arriba: Acerca de, Controles, Partidas, o Jugar para empezar.',
+  'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.':
+    'Una versión no oficial para navegador que reproduce los propios archivos del juego. Elige una página: Acerca de, Controles, Partidas, o Jugar para empezar.',
   'Unofficial · not affiliated with TYPE-MOON': 'No oficial · sin relación con TYPE-MOON',
   'Loading the game’s script…': 'Cargando el guion del juego…',
   'Game data not found — see the Play page.': 'No se encontraron los datos del juego — mira la página Jugar.',

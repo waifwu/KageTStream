@@ -16,6 +16,8 @@ const tr = t;
 // The stage: 1280 x 960, or 16:9 at the same height (Settings > Picture). Its pages are laid out
 // for either by css/shell.css ("#stage.wide").
 const SW = 1280, SH = 960, SW_WIDE = (SH * 16) / 9;
+// The opening page on a phone held upright (fit): the stage is this wide, and as tall as the screen's own shape.
+const UPW = 750;
 
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
@@ -64,6 +66,10 @@ export class Shell {
     this.homeOpen = false;
     this.wide = false;
     this.SW = SW;
+    this.uprightHome = false;     // a phone (main.js): held upright, the opening page stands upright too
+    this.upright = false;         // ... and it does now
+    this.stageW = SW;             // the stage as it is now
+    this.stageH = SH;
     this.scale = 1;
     this.toastTimer = null;
     this.lastAmbient = 0;
@@ -95,10 +101,28 @@ export class Shell {
     } catch (e) { /* no grain */ }
   }
 
+  // The stage as large as the window allows. On a phone held upright, while the opening page is
+  // open, the stage stands upright as well: UPW across and as tall as the screen's shape, with the
+  // page laid out for that (css/shell.css, "upright"). The game itself is only played on its side:
+  // once it starts, the stage is the picture's shape again, and the phone is asked to be turned.
   fit() {
-    const s = Math.min(window.innerWidth / this.SW, window.innerHeight / SH);
+    const iw = window.innerWidth, ih = window.innerHeight;
+    const up = this.uprightHome && this.homeOpen && ih > iw;
+    if (up !== this.upright) {
+      this.upright = up;
+      document.documentElement.classList.toggle('upright', up);
+      if (this.homeOpen && this.homeRefresh) this.homeRefresh();      // a page that words itself for the shape (Play's languages)
+    }
+    const w = up ? UPW : this.SW, hh = up ? Math.round((UPW * ih) / iw) : SH;
+    this.stage.style.width = up ? w + 'px' : '';
+    this.stage.style.height = up ? hh + 'px' : '';
+    this.stageW = w;
+    this.stageH = hh;
+    const s = Math.min(iw / w, ih / hh);
     this.scale = s;
-    const x = Math.round((window.innerWidth - this.SW * s) / 2), y = Math.round((window.innerHeight - SH * s) / 2);
+    // (the screen's safe-area insets are in its own pixels: --px turns one into the stage's)
+    this.stage.style.setProperty('--px', String(1 / s));
+    const x = Math.round((iw - w * s) / 2), y = Math.round((ih - hh * s) / 2);
     this.stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
   }
   // the stage at 16:9, or back at the game's own 4:3
@@ -126,7 +150,7 @@ export class Shell {
     let primed = false, seen = '', still = 0;
     this.ambientTimer = setInterval(() => {
       // nothing of the glow shows while the stage covers the window: it is left as it was
-      if (this.SW * this.scale >= window.innerWidth - 1 && SH * this.scale >= window.innerHeight - 1) return;
+      if (this.stageW * this.scale >= window.innerWidth - 1 && this.stageH * this.scale >= window.innerHeight - 1) return;
       if (document.hidden || !this.paintAmbient(t)) return;
       // Once the glow has caught up with a picture that is not changing it is left alone: every
       // touch of the canvas has the whole window's blur worked out again, ten times a second.
@@ -1740,6 +1764,9 @@ export class Shell {
     this.homeStatus = el('div', 'hm-status');
     home.appendChild(this.homeStatus);
     home.appendChild(el('div', 'hm-foot', foot));
+    // Upright, a page fills the screen and the plates are not beside it: this takes the reader back to them.
+    const back = el('button', 'back hm-back', 'Back');
+    home.appendChild(back);
 
     const plates = [];
     let tab = -1;
@@ -1761,8 +1788,10 @@ export class Shell {
       plates.push(p);
       strip.appendChild(p);
     });
+    back.addEventListener('click', () => choose(-1));
     home.addEventListener('click', (e) => { if (e.target === home || e.target === intro) choose(-1); });
     if (open >= 0 && open < tabs.length) choose(open);
+    this.fit();
     this.homeKey = (e) => {
       if (e.target && e.target.tagName === 'INPUT') return false;
       const n = tabs.length;
@@ -1782,6 +1811,7 @@ export class Shell {
     this.home.classList.add('leaving');
     this.homeOpen = false;
     this.syncModal();
+    this.fit();          // the stage is the picture's shape again
     setTimeout(() => { this.home.remove(); }, 750);
   }
 }

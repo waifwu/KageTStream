@@ -95,7 +95,8 @@ const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
 // notice asks for it to be turned (it stands outside the stage, at the screen's own size, and is
 // shown by the style sheet for as long as the screen is taller than it is wide: css/shell.css,
 // #phone-note). The page takes the whole screen at the first touch, where the browser lets a page
-// do that, and asks for the screen to be kept on its side with it.
+// do that, and asks for the screen to be kept on its side with it. The opening page is the one
+// thing read upright (shell.js fit): there the notice waits until Play, and Play takes the screen.
 const onPhone = () => {
   if (DESKTOP) return false;
   if (ANDROID) return true;       // a tablet too: it is played by touch
@@ -117,7 +118,7 @@ const enterFull = () => {
   const over = () => { asking = false; };
   try { Promise.resolve(ask.call(d, { navigationUI: 'hide' })).then(() => { over(); sideways(); }, over); } catch (e) { over(); }
 };
-function phoneSetup() {
+function phoneSetup(upright) {
   document.documentElement.classList.add('phone');
   const make = (tag, cls, text) => {
     const e = document.createElement(tag);
@@ -141,7 +142,7 @@ function phoneSetup() {
   const onFull = () => { if (isFull()) { went = true; sideways(); } };
   document.addEventListener('fullscreenchange', onFull);
   document.addEventListener('webkitfullscreenchange', onFull);
-  const touched = (e) => { if (!went || box.contains(e.target)) enterFull(); };
+  const touched = (e) => { if (upright()) return; if (!went || box.contains(e.target)) enterFull(); };
   window.addEventListener('pointerup', touched, true);
   window.addEventListener('click', touched, true);
 }
@@ -225,7 +226,8 @@ async function boot() {
     hint('#quickbar [data-act="hide"]', stop('Show the picture without text', keys('hide')));
   };
   wording(settings.lang || 'en');
-  if (PHONE) phoneSetup();
+  shell.uprightHome = PHONE;
+  if (PHONE) phoneSetup(() => shell.upright);
   const applyFont = () => {
     if (!FONTS[settings.font]) settings.font = 'serif';
     setStoryFont(settings.font, lang === 'chs' ? 'chs' : 'en');
@@ -334,7 +336,9 @@ async function boot() {
       h.p(p, 'Nothing to install. The game’s files arrive as you play, and the day you are on is saved by itself each time it ends.');
       if (failed) h.p(p, 'The game data was not found. Run  python3 tools/extract.py "<path to the Game folder>"  and reload.', 'fine');
       if (languages().length > 1) {
-        h.choice(p, 'Language', languages(), lang, (value) => {
+        // upright on a phone, the languages by their short names (as in Settings), so they stand on one line
+        const names = shell.upright ? languages().map(([, l]) => [SHORT[l], l]) : languages();
+        h.choice(p, 'Language', names, lang, (value) => {
           settings.lang = value;
           storage.saveSettings(settings);
           location.replace(location.pathname + '#play');
@@ -358,7 +362,7 @@ async function boot() {
       brand: 'Tsukihime fan disc',
       title: 'Kagetsu Tohya',
       sub: 'in the browser',
-      line: 'An unofficial browser port that plays the game’s own files. Choose a page above: About, Controls, Save data, or Play to begin.',
+      line: 'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.',
       foot: 'Unofficial · not affiliated with TYPE-MOON',
       tabs,
       onStart: () => { if (ready) start(); },
@@ -725,6 +729,7 @@ async function boot() {
   start = () => {
     if (started) return;
     started = true;
+    if (PHONE && !ANDROID) enterFull();    // the whole screen, on its side (while Play is still a touch: a browser asks for one)
     shell.ambientSource = () => gfx.screen;    // the picture as it is displayed
     audio.unlock();
     shell.closeHome();

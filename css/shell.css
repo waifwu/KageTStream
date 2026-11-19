@@ -534,7 +534,7 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 #phone-note { display: none; position: fixed; inset: 0; z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 14px; box-sizing: border-box;
   padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   background: #120b1c; color: var(--cream); font-family: var(--serif); text-align: center; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-@media (orientation: portrait) { .phone #phone-note { display: flex; } }
+@media (orientation: portrait) { .phone:not(.upright) #phone-note { display: flex; } }     /* (not over the opening page: see "upright" below) */
 #phone-note .turn { box-sizing: border-box; width: 58px; height: 104px; margin-bottom: 26px; padding-bottom: 7px; display: flex; align-items: flex-end; justify-content: center;
   border: 2.5px solid var(--gold); border-radius: 12px; animation: turnphone 2.8s cubic-bezier(.5, 0, .3, 1) infinite; }
 #phone-note .turn span { width: 18px; height: 2.5px; border-radius: 2px; background: var(--gold); opacity: .8; }
@@ -566,6 +566,66 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .phone .back::before { content: ""; position: absolute; inset: -22px -110px -26px; }
 .phone .cf-opt { position: relative; }
 .phone .cf-opt::before { content: ""; position: absolute; inset: -20px -11px; }
+
+/* ------------------------------------------------------------------ the opening page, upright
+   On a phone held upright the opening page stands upright too (shell.js fit): the stage is 750
+   across and as tall as the screen's shape, so these lengths are about two to a screen pixel. The
+   title stands low on the picture with the plates in a column under it; a plate's page fills the
+   screen, with "back" at its foot to return to them. Play starts the game, takes the whole screen
+   and asks for the phone to be turned (#phone-note, shown from then on while it is upright). */
+.upright #home { display: flex; flex-direction: column; box-sizing: border-box;
+  padding: calc(44px + env(safe-area-inset-top, 0px) * var(--px, 1)) 56px calc(36px + env(safe-area-inset-bottom, 0px) * var(--px, 1)); }
+.upright #home::before { background: linear-gradient(to bottom, rgba(28, 18, 44, .72), rgba(28, 18, 44, 0) 26%, rgba(14, 8, 4, .2) 42%, rgba(14, 8, 4, .9) 74%, rgba(14, 8, 4, .96)); }
+.upright #home > :is(.hm-brand, .hm-strip, .hm-rule, .hm-intro, .hm-status, .hm-foot) { position: relative; left: auto; right: auto; top: auto; bottom: auto; }
+/* (top to bottom; in the page's own order the plates come second) */
+.upright .hm-rule { order: 1; }
+.upright .hm-intro { order: 2; }
+.upright .hm-strip { order: 3; }
+.upright .hm-status { order: 4; }
+.upright .hm-foot { order: 5; }
+.upright .hm-brand { height: auto; font-size: 24px; line-height: 34px; }
+.upright .hm-rule { flex: none; margin: 24px -56px 0; }
+.upright .hm-intro { margin-top: auto; }
+.upright .hm-intro h1 { font-size: 104px; line-height: 118px; white-space: nowrap; }
+.upright .hm-intro .sub { margin-left: 4px; font-size: 26px; }
+.upright .hm-intro .bleed { width: auto; margin: 28px -56px 24px; }
+.upright .hm-intro p { max-width: none; font-size: 30px; line-height: 46px; }
+.upright .hm-strip { height: auto; flex-direction: column; align-items: flex-start; margin: 30px 0 0; transition: opacity .25s; }
+.upright .hm-strip .hm-plate { width: auto; height: 88px; padding: 0 10px 0 0; font-size: 31px; text-align: left; color: rgba(248, 238, 219, .88); }
+.upright .hm-strip .hm-plate::after { display: none; }
+.upright .hm-strip .hm-plate::before { content: ""; display: inline-block; width: 34px; height: 1.5px; margin-right: 22px; vertical-align: middle; background: var(--gold); opacity: .7; }
+.upright .hm-strip .hm-plate:last-child { color: var(--gold); }
+.upright .hm-status { min-height: 34px; margin-top: 18px; font-size: 24px; line-height: 34px; }
+.upright .hm-foot { margin-top: 6px; font-size: 20px; line-height: 30px; }
+/* a page, open */
+.upright #home.tabbed :is(.hm-strip, .hm-status, .hm-foot) { opacity: 0; pointer-events: none; }
+.upright #home > .hm-panel { left: 24px; right: 24px; top: calc(122px + env(safe-area-inset-top, 0px) * var(--px, 1)); bottom: calc(128px + env(safe-area-inset-bottom, 0px) * var(--px, 1));
+  padding: 44px 44px 36px; font-size: 29px; line-height: 45px; }
+.upright .hm-panel h2 { font-size: 40px; line-height: 54px; }
+.upright .hm-panel h2::after { left: -44px; }
+.upright .hm-panel .fine { font-size: 25px; line-height: 38px; }
+.upright .hm-rows { grid-template-columns: 1fr; row-gap: 0; }
+.upright .hm-rows .k { margin-top: 18px; font-size: 22px; line-height: 34px; }
+.upright .hm-rows .k:first-child { margin-top: 0; }
+.upright .hm-files .v { margin-bottom: 4px; }
+.upright .hm-link { font-size: 29px; }
+.upright .hm-facts { gap: 56px; }
+.upright .hm-facts div { font-size: 22px; }
+.upright .hm-facts b { font-size: 56px; line-height: 64px; }
+.upright .hm-actions { flex-direction: column; align-items: flex-start; gap: 26px; }
+.upright .hm-choice { flex-wrap: wrap; gap: 8px 36px; margin-top: 30px; }
+.upright .hm-choice .k { flex-basis: 100%; min-width: 0; font-size: 22px; }
+.upright .hm-choice .hm-link { font-size: 31px; }
+.upright .hm-press { padding: 14px 10px; font-size: 32px; letter-spacing: .3em; text-indent: .3em; white-space: nowrap; }
+.upright .hm-play .hm-start { margin: 0 -44px -36px; padding: 30px 44px 36px; }
+.hm-back { display: none; }
+.upright #home.tabbed > .hm-back { display: block; bottom: calc(40px + env(safe-area-inset-bottom, 0px) * var(--px, 1)); font-size: 36px; color: var(--cream); }
+/* a question asked from there */
+.upright .dialog { min-width: 0; max-width: 620px; margin: 0 40px; padding: 44px 44px 34px; }
+.upright .dialog .q { font-size: 36px; line-height: 50px; }
+.upright .dialog .q small { margin-top: 10px; font-size: 26px; line-height: 39px; }
+.upright .dialog .opts { gap: 90px; }
+.upright .dialog .opt { font-size: 36px; }
 
 /* ------------------------------------------------------------------ 16:9
    Settings > Aspect ratio. The stage is as high as before and a third wider (1706.67 x 960).
