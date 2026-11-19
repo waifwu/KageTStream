@@ -124,6 +124,21 @@ export class Shell {
     this.stage.style.setProperty('--px', String(1 / s));
     const x = Math.round((iw - w * s) / 2), y = Math.round((ih - hh * s) / 2);
     this.stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    this.fitTitle();
+  }
+  // The opening page's title on one line, upright. Its face is whichever serif the phone has (few
+  // have Palatino), and some are a good deal wider: the title is set smaller until it fits.
+  fitTitle() {
+    const h1 = this.homeOpen && this.home.querySelector('.hm-intro h1');
+    if (!h1) return;
+    h1.style.fontSize = '';
+    h1.style.lineHeight = '';
+    if (!this.upright) return;
+    const room = h1.clientWidth, need = h1.scrollWidth;
+    if (need <= room) return;
+    const size = parseFloat(getComputedStyle(h1).fontSize) * (room / need) * 0.98;
+    h1.style.fontSize = size.toFixed(1) + 'px';
+    h1.style.lineHeight = (size * 1.13).toFixed(1) + 'px';
   }
   // the stage at 16:9, or back at the game's own 4:3
   setWide(on) {
