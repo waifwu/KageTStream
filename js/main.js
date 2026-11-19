@@ -175,7 +175,7 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'original', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
   // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
   // its shape at once, the opening page with it; the game's picture when it is made (below).
@@ -221,7 +221,7 @@ async function boot() {
   wording(settings.lang || 'en');
   if (PHONE) phoneSetup();
   const applyFont = () => {
-    if (!FONTS[settings.font]) settings.font = 'original';
+    if (!FONTS[settings.font]) settings.font = 'serif';
     setStoryFont(settings.font, lang === 'chs' ? 'chs' : 'en');
     document.documentElement.style.setProperty('--story-font', FONTS[settings.font].stack);
   };
@@ -274,6 +274,13 @@ async function boot() {
         ['Saves', 'Twenty slots with a picture and a line of the page, kept in this browser.'],
         ['History', 'Everything read this session, as one scroll.'],
         ['16:9', 'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.'],
+        ['Languages', 'The story in English, Japanese, Portuguese, Spanish or Simplified Chinese, each from its own script and with its own pictures, and the interface in the same language. Chosen on the Play page or in Settings.'],
+        ['HD pictures', 'The standing pictures and event CGs, enlarged four times so they stay sharp on a large screen. On by default and switched in Settings; backgrounds and menus are the game\u2019s own.'],
+        ['Keys', 'Every key can be changed, in Settings under Controls. Holding Ctrl fast-forwards only through text already read.'],
+        ['Phones', 'Played with the phone on its side, across the whole screen. Swipes bring up the quick bar, the menu and the text history, and the flowchart moves and zooms under your fingers.'],
+        ['Unlock everything', 'A switch in Settings that opens every scene, picture, track and story, and the staff room with its Jukebox, without changing your own progress.'],
+        ['Drinking, Dreaming Moon', 'The special story can be read: from the flowchart, below the Summer Festivals, or from the last card of Gallery, Submitted art.'],
+        ['Desktop program', 'The same port for Windows, macOS and Linux, on the Download page. It plays with no connection and updates itself.'],
       ]);
     } },
     { plate: 'Controls', build(p) {

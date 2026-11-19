@@ -274,8 +274,8 @@ the story.
   walkthrough through the real script and reports any step that does not match
   a choice the game offers (none, for either ending). Add `ja`, `pt`, `es` or
   `chs` to play the Japanese, Portuguese, Spanish or Chinese script the same way.
-* **Settings** — one page for everything: story font (the game's own, a serif or
-  a sans), text speed, auto pace, the guide's marks, the game's own four
+* **Settings** — one page for everything: story font (a serif, the default; the
+  game's own; or a sans), text speed, auto pace, the guide's marks, the game's own four
   switches (instant effects, skip parts already read, daily message, skip
   explicit content), music and effect volume, the aspect
   ratio (4:3 or 16:9), HD pictures, the glow around the picture, fullscreen, the language,

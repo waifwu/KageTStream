@@ -16,7 +16,7 @@ export const FONTS = {
   serif: { stack: '"Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", "TeX Gyre Pagella", Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif', scale: 1.08, lead: 1.2, map: SUBST },
   sans: { stack: '"Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif', scale: 1, lead: 1.16, map: SUBST },
 };
-let storyFont = 'original';
+let storyFont = 'serif';
 const CHINESE_FONTS = {
   original: '"Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "WenQuanYi Micro Hei", sans-serif',
   serif: '"Songti SC", SimSun, "Noto Serif CJK SC", "Noto Serif SC", serif',
