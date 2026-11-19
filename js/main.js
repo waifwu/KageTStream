@@ -85,6 +85,10 @@ const controlsRows = () => [
 // The desktop program (desktop/main.js) serves these same pages over its own scheme. It is only the
 // game: there the opening page is passed over, and the story begins as the window opens.
 const DESKTOP = location.protocol === 'app:';
+// The Android app (android/) serves them from inside its APK, and gives the page an object to ask it for what a
+// browser would do (AndroidHost). It too opens straight into the game, always on its side and on the whole screen.
+const ANDROID = !!window.AndroidHost;
+if (ANDROID) document.documentElement.classList.add('android');
 const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
 
 // A phone. The game is played with the phone on its side, filling the screen: held upright, a
@@ -94,6 +98,7 @@ const RELEASES = 'https://github.com/waifwu/KageTStream/releases';
 // do that, and asks for the screen to be kept on its side with it.
 const onPhone = () => {
   if (DESKTOP) return false;
+  if (ANDROID) return true;       // a tablet too: it is played by touch
   const coarse = !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   return /Mobi|iPhone|iPod/i.test(navigator.userAgent) || (coarse && Math.min(window.screen.width, window.screen.height) < 600);
 };
@@ -129,6 +134,7 @@ function phoneSetup() {
   box.appendChild(make('h1', null, 'Turn your phone sideways to play'));
   box.appendChild(make('p', null, 'If the screen does not turn with it, switch off the rotation lock.'));
   document.body.appendChild(box);
+  if (ANDROID) return;            // the app has the whole screen, on its side, from the start
   // The first touch takes the whole screen. After that it is the reader's: having left it, they
   // are not put back by every touch (Settings has Fullscreen; so has a touch on the notice).
   let went = false;
@@ -143,7 +149,7 @@ function phoneSetup() {
 async function boot() {
   const shell = new Shell();
   const canvas = document.getElementById('screen');
-  const autostart = DESKTOP || new URLSearchParams(location.search).has('autostart');
+  const autostart = DESKTOP || ANDROID || new URLSearchParams(location.search).has('autostart');
 
   // -------------------------------------------------------------- data
   // The story runs from one script. Where the data also holds another language's (script-ja.txt,
@@ -238,6 +244,8 @@ async function boot() {
   // Everything kept here (saves, progress, settings) as one file, and back again. Both are offered
   // on the opening page and in Settings, so they are at hand where there is no opening page.
   const exportSaves = () => {
+    // the app asks where to keep the file (a WebView does not download)
+    if (ANDROID) { window.AndroidHost.saveFile('kagetsu-tohya-saves.json', JSON.stringify(storage.exportAll())); return; }
     const blob = new Blob([JSON.stringify(storage.exportAll())], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -312,9 +320,11 @@ async function boot() {
         ['macOS · Apple silicon', 'Kagetsu-Tohya-mac-arm64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-arm64.dmg'],
         ['macOS · Intel', 'Kagetsu-Tohya-mac-x64.dmg', RELEASES + '/latest/download/Kagetsu-Tohya-mac-x64.dmg'],
         ['Linux · x86-64', 'Kagetsu-Tohya-linux-x86_64.AppImage', RELEASES + '/latest/download/Kagetsu-Tohya-linux-x86_64.AppImage'],
+        ['Android', 'Kagetsu-Tohya-android.apk', RELEASES + '/latest/download/Kagetsu-Tohya-android.apk'],
       ]);
       h.p(p, 'The programs are not signed, so each system asks once. Windows: “More info”, then “Run anyway”. macOS: open it once, then allow it under System Settings, Privacy & Security, “Open Anyway”.', 'fine');
       h.p(p, 'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.', 'fine');
+      h.p(p, 'Android: open the file once it has downloaded, and let the browser install apps when the phone asks. A newer version installs over this one and keeps the saves.', 'fine');
       h.p(p, 'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.', 'fine');
       h.link(p, 'Every version is on GitHub:', 'github.com/waifwu/KageTStream/releases', RELEASES);
     } },
@@ -411,6 +421,7 @@ async function boot() {
   const saveSettings = () => storage.saveSettings(settings);
   const refresh = () => { if (engine) shell.setModes({ skip: engine.skipMode, auto: engine.autoMode }); };
   const fullscreen = (on) => {
+    if (ANDROID) return;          // the app is always on the whole screen
     const is = !!document.fullscreenElement;
     if (on === undefined) on = !is;
     if (on && !is && PHONE) enterFull();
@@ -586,7 +597,7 @@ async function boot() {
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
-        { key: 'full', label: 'Fullscreen', options: onOff },
+        ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
@@ -701,6 +712,12 @@ async function boot() {
   engine.autoPace = settings.autoPace;
   window.__engine = engine; // handy for debugging from the console
   window.addEventListener('pagehide', () => { if (!replaced) engine.flushGlobals(true); });
+  // The Android app going to the background, where it may be ended without a pagehide, and coming back from there:
+  // what has been read is written at once, and the sound stops where it is and goes on from there.
+  if (ANDROID) {
+    window.appSuspend = () => { if (!replaced) engine.flushGlobals(true); audio.sleep(); };
+    window.appResume = () => audio.wake();
+  }
   document.addEventListener('visibilitychange', () => { if (document.hidden && !replaced) engine.flushGlobals(true); });
   refresh();
 

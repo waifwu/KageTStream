@@ -186,6 +186,7 @@ const JA = {
   // ---- settings
   'Kept in this browser': 'このブラウザに保存されます',
   'Kept on this computer': 'このコンピュータに保存されます',
+  'Kept on this device': 'この端末に保存されます',
   'The story': '物語',
   'Story font': '物語のフォント',
   'Original': 'オリジナル',
@@ -383,6 +384,8 @@ const JA = {
     'アプリには署名がないので、最初に一度だけ確認が出ます。Windows：「詳細情報」から「実行」。macOS：一度開いてから、「システム設定」→「プライバシーとセキュリティ」の「このまま開く」で許可してください。',
   'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
     'Linux：ファイルをプログラムとして実行できるようにしてから（「プロパティ」で、または chmod +x）開いてください。Ubuntu 22.04以降では、先に libfuse2 パッケージを入れてください。',
+  'Android: open the file once it has downloaded, and let the browser install apps when the phone asks. A newer version installs over this one and keeps the saves.':
+    'Android：ダウンロードが終わったらファイルを開き、端末に聞かれたらブラウザによるアプリのインストールを許可してください。新しい版はこの版の上にインストールでき、セーブはそのまま残ります。',
   'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
     '開くとすぐにゲームが始まります。セーブはこのブラウザのものとは別に保存されます。「設定」の「セーブデータ」で、こちらでファイルに書き出して向こうで読み込めば移せます。逆も同じです。',
   'Skip the credits?': 'スタッフロールをスキップしますか？',
@@ -558,6 +561,7 @@ const PT = {
   // ---- settings
   'Kept in this browser': 'Guardado neste navegador',
   'Kept on this computer': 'Guardado neste computador',
+  'Kept on this device': 'Guardado neste aparelho',
   'The story': 'A história',
   'Story font': 'Fonte da história',
   'Serif': 'Serifada',
@@ -754,6 +758,8 @@ const PT = {
     'Os programas não são assinados, então cada sistema pergunta uma vez. Windows: “Mais informações” e depois “Executar assim mesmo”. macOS: abra uma vez e depois permita em Ajustes do Sistema, Privacidade e Segurança, “Abrir Mesmo Assim”.',
   'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
     'Linux: permita que o arquivo seja executado como programa (nas Propriedades, ou com chmod +x) e depois abra. No Ubuntu 22.04 e posteriores, instale antes o pacote libfuse2.',
+  'Android: open the file once it has downloaded, and let the browser install apps when the phone asks. A newer version installs over this one and keeps the saves.':
+    'Android: abra o arquivo quando o download terminar e, quando o aparelho pedir, permita que o navegador instale apps. Uma versão mais nova se instala por cima desta e mantém os jogos salvos.',
   'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
     'Ele abre direto no jogo e guarda os jogos salvos separados dos deste navegador. As Configurações têm Dados salvos: exporte para um arquivo aqui e importe lá, ou o contrário.',
   'Skip the credits?': 'Pular os créditos?',
@@ -938,6 +944,7 @@ const ES = {
   // ---- settings
   'Kept in this browser': 'Guardado en este navegador',
   'Kept on this computer': 'Guardado en esta computadora',
+  'Kept on this device': 'Guardado en este dispositivo',
   'The story': 'La historia',
   'Story font': 'Fuente de la historia',
   'Serif': 'Con serifa',
@@ -1134,6 +1141,8 @@ const ES = {
     'Los programas no están firmados, así que cada sistema pregunta una vez. Windows: “Más información” y luego “Ejecutar de todas formas”. macOS: ábrelo una vez y luego permítelo en Ajustes del Sistema, Privacidad y seguridad, “Abrir igualmente”.',
   'Linux: allow the file to run as a program (in its Properties, or chmod +x), then open it. On Ubuntu 22.04 and later, install the libfuse2 package first.':
     'Linux: permite que el archivo se ejecute como programa (en sus Propiedades, o con chmod +x) y luego ábrelo. En Ubuntu 22.04 y posteriores, instala antes el paquete libfuse2.',
+  'Android: open the file once it has downloaded, and let the browser install apps when the phone asks. A newer version installs over this one and keeps the saves.':
+    'Android: abre el archivo cuando termine de descargarse y, cuando el teléfono lo pida, permite que el navegador instale apps. Una versión más nueva se instala encima de esta y conserva las partidas.',
   'It opens straight into the game, and keeps its saves apart from this browser’s. Settings has Save data: export to a file here, import it there, or the other way.':
     'Se abre directamente en el juego y guarda sus partidas aparte de las de este navegador. Configuración tiene Partidas: exporta a un archivo aquí e impórtalo allí, o al revés.',
   'Skip the credits?': '¿Saltar los créditos?',

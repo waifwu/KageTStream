@@ -1037,8 +1037,8 @@ export class Shell {
   config(sections, get, set) {
     return this.openLayer('paper config', (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', 'Settings'));
-      // the desktop program (desktop/) is no browser
-      layer.appendChild(el('div', 'page-note', location.protocol === 'app:' ? 'Kept on this computer' : 'Kept in this browser'));
+      // the desktop program (desktop/) and the Android app (android/) are no browser
+      layer.appendChild(el('div', 'page-note', location.protocol === 'app:' ? 'Kept on this computer' : window.AndroidHost ? 'Kept on this device' : 'Kept in this browser'));
       const cols = el('div', 'cols');
       const rows = [];
       let box = null;

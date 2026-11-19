@@ -191,6 +191,65 @@ their players have to download 1.0.3 by hand once.
    `KAGETSU_UPDATE_URL=http://127.0.0.1:8000/`. That points the updater at the
    folder instead of GitHub.
 
+## Android app
+
+The same game as one Android APK (`android/`), with every file inside it, so it
+plays with no connection. It is published with the desktop builds, and the
+opening page's **Download** tab links to it. Like the desktop program it opens straight into the
+game, on its side and on the whole screen.
+
+```bash
+android/build_apk.sh             # android/out/Kagetsu-Tohya-android.apk (about 400 MB)
+android/build_apk.sh --debug     # the page can be inspected from chrome://inspect
+android/build_apk.sh --install   # also installs it on the connected phone (adb install -r: saves are kept)
+```
+
+It needs the Android SDK (`ANDROID_HOME`, default `~/Library/Android/sdk`) with
+platform android-36 and build-tools 35 or newer, and a JDK. It does not use
+Gradle: the script calls `aapt2`, `javac`, `d8`, `zipalign` and `apksigner`
+itself. With more than one device connected, set `ANDROID_SERIAL`. The version
+is the desktop program's (`desktop/package.json`; 1.0.8 is version code 10008).
+
+* `android/src/.../MainActivity.java` opens a WebView at
+  `https://appassets.androidplatform.net/`, a name that never reaches the
+  network. Every request to it is answered from `assets/www` inside the APK
+  (`index.html`, `css/`, `js/`, `data/`, the files the desktop program carries),
+  and the WebView is kept off the network. The address never changes, so the
+  saves in `localStorage` are there at the next launch.
+* The files are stored in the APK uncompressed, so any one can be read from any
+  byte: the music player seeks with byte ranges. The WebView applies a `Range`
+  itself (it skips into the stream it is given), so the app hands over the file
+  from byte 0 up to the range's last byte.
+* The page knows the app by the object it is given, `AndroidHost`
+  (`js/main.js` `ANDROID`). There it starts at once, plays by touch on a tablet
+  too, and has no Fullscreen (in Settings or on the quick bar, whose other eight
+  stand in two rows). Settings' **Export to a file** goes to `AndroidHost.saveFile`,
+  and the system asks where to put the file; **Import from a file** opens the
+  system's document picker. Settings says "Kept on this device".
+* The launcher icon is Len (the HD sprite `ren_t15`) over the desktop icon's
+  twilight: `android/tools/make_icon.py` draws `res/mipmap-*/ic_launcher_fg.png`
+  (it needs Pillow).
+* Landscape only, full screen, screen kept on. The phone's font size setting is
+  ignored. The system Back does what Esc does: the menu in the story, and back
+  out of a page anywhere else. It never leaves the game.
+* Going to the background calls `appSuspend()` (`js/main.js`): what has been read
+  is written at once (Android can end the app without a `pagehide`), and the
+  music and sound effects stop where they are (`audio.sleep()`). `appResume()`
+  starts them again on return.
+* Four seconds after it opens, the app asks GitHub for the Latest release
+  (`desktop-v1.0.9` is read as 1.0.9). If that is newer and carries `Kagetsu-Tohya-android.apk`, it says so once for
+  that version and offers the download, which the phone's browser fetches.
+  Installed over the old one, it keeps the saves.
+
+The signing key is made on the first build, in `android/keystore/kagetsu.jks`,
+which is not in the repository. **Keep a copy of it.** An APK signed with any
+other key cannot update the installed app: Android would have to remove it
+first, and the saves would go with it. The package name,
+`dev.pages.kagetsu.android`, must not change either, for the same reason.
+
+To publish a build, add `android/out/Kagetsu-Tohya-android.apk` to the desktop
+release (step 2 of Releasing an update), under that exact name.
+
 ## The interface
 
 Everything is drawn inside the picture and scales with it; there is no
@@ -200,7 +259,7 @@ screen, a lower-case "back", and the twilight field behind anything shown over
 the story.
 
 * **Opening page** — five plates over the twilight field: About (with a link to
-  the source on GitHub), Controls, Save data, Download (the desktop program),
+  the source on GitHub), Controls, Save data, Download (the desktop program and the Android app),
   Play. It opens with none chosen, so a stray click starts nothing. The Play
   page has the language and aspect-ratio switches, and "press any button"
   in the middle of the space below them. A click anywhere in that space, down
@@ -439,6 +498,8 @@ js/main.js              boot, and the opening page's words
 js/i18n.js              the interface's words in Japanese, Portuguese and Spanish
 desktop/main.js         the desktop program: the window, and the files served to it
 desktop/tools/make-icon.js  draws the program's icons and the site's favicon.ico
+android/build_apk.sh    builds the Android app: the site's files inside one APK
+android/src/            the Android app: the WebView, and the files served to it
 tools/extract.py        unpacks a game folder into data/; --ja / --pt / --es add another language
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script

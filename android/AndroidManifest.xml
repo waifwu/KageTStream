@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kagetsu Tohya as an Android app: the site's own files inside the APK, shown in a WebView (MainActivity).
+     Its one permission, the internet, is for asking GitHub whether a newer APK is out (ReleaseCheck); the page
+     itself is kept off the network. The package name and the signing key (build_apk.sh) are never to change:
+     an APK with another of either cannot update the installed app, and the saves would go with it. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dev.pages.kagetsu.android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:label="Kagetsu Tohya"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:largeHeap="true"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="false"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <!-- (the WebView shows only the app's own page: nothing of it is reported or looked up) -->
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+        <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|density|fontScale"
+            android:windowSoftInputMode="adjustNothing">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

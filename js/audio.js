@@ -57,6 +57,22 @@ export class AudioSys {
     if (this.pending) { const p = this.pending; this.pending = null; this.playBgm(p.file, p.loop, p.whole); }
   }
 
+  // The Android app in the background (main.js appSuspend): the music and the sound effects stop where they are,
+  // and go on from there when it comes back.
+  sleep() {
+    if (this.asleep) return;
+    this.asleep = { el: !this.bgmEl.paused };
+    this.bgmEl.pause();
+    if (this.ctx && this.ctx.state === 'running') this.ctx.suspend();
+  }
+  wake() {
+    const was = this.asleep;
+    this.asleep = null;
+    if (!was) return;
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    if (was.el) { const p = this.bgmEl.play(); if (p && p.catch) p.catch(() => {}); }
+  }
+
   setMuted(m) {
     this.muted = m;
     this.bgmEl.muted = m;
