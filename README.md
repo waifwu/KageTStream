@@ -165,20 +165,24 @@ their players have to download 1.0.3 by hand once.
 
 ### Releasing an update
 
-1. Raise `version` in `desktop/package.json`, then `npm run dist`.
+1. Raise `version` in `desktop/package.json`, then `npm run dist`, and
+   `android/build_apk.sh` (the APK takes its version from the same file).
 2. Make a GitHub release tagged `desktop-v` plus the version (for example
-   `desktop-v1.0.4`), published, not a draft or pre-release, so that it is
-   **Latest**. The updater looks only at the Latest release. Upload every
-   file below, under these exact names:
+   `desktop-v1.0.4`) that ends up published, not a draft or pre-release, so that it is
+   **Latest**. The updaters (and the Android app) look only at the Latest release. Upload every
+   file below, under these exact names, to a draft first, and publish it once all
+   of them are there: a published release is Latest at once, and an updater that
+   finds its `.yml` before the file it names fails until the next start.
 
    ```bash
    cd desktop/dist
-   gh release create desktop-v1.0.4 --repo waifwu/KageTStream --title "Kagetsu Tohya 1.0.4 (desktop)" --notes "…" \
+   gh release create desktop-v1.0.4 --repo waifwu/KageTStream --target main --draft --title "Kagetsu Tohya 1.0.4 (desktop)" --notes "…" \
      latest.yml latest-mac.yml latest-linux.yml \
      Kagetsu-Tohya-Setup.exe Kagetsu-Tohya-Setup.exe.blockmap \
      Kagetsu-Tohya-mac-arm64.dmg Kagetsu-Tohya-mac-arm64.zip Kagetsu-Tohya-mac-arm64.zip.blockmap \
      Kagetsu-Tohya-mac-x64.dmg Kagetsu-Tohya-mac-x64.zip Kagetsu-Tohya-mac-x64.zip.blockmap \
-     Kagetsu-Tohya-linux-x86_64.AppImage
+     Kagetsu-Tohya-linux-x86_64.AppImage ../../android/out/Kagetsu-Tohya-android.apk
+   gh release edit desktop-v1.0.4 --repo waifwu/KageTStream --draft=false --latest
    ```
 
    The mac `.zip` files are what the Mac updater downloads; people download the
@@ -248,7 +252,9 @@ first, and the saves would go with it. The package name,
 `dev.pages.kagetsu.android`, must not change either, for the same reason.
 
 To publish a build, add `android/out/Kagetsu-Tohya-android.apk` to the desktop
-release (step 2 of Releasing an update), under that exact name.
+release (step 2 of Releasing an update), under that exact name. Installed apps
+hear of it only from a release with a higher version: an APK swapped into the
+release they already have reaches only those who download it again.
 
 ## The interface
 
