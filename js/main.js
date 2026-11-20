@@ -731,6 +731,7 @@ async function boot() {
     started = true;
     if (PHONE && !ANDROID) enterFull();    // the whole screen, on its side (while Play is still a touch: a browser asks for one)
     shell.ambientSource = () => gfx.screen;    // the picture as it is displayed
+    shell.ambientVersion = () => gfx.drawn;    // and how often it has been drawn on
     audio.unlock();
     shell.closeHome();
     engine.run().catch((e) => {

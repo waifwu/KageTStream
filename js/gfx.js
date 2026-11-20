@@ -239,7 +239,8 @@ export class Gfx {
     this.S = scale;
     this.loader = loader;
     this.screen = canvas;
-    this.sctx = canvas.getContext('2d');
+    this.drawn = 0;
+    this.screenCtx = canvas.getContext('2d');
     this.base = makeCanvas(1, 1);                   // everything below the text window
     this.bctx = this.base.getContext('2d');
     this.frame = makeCanvas(1, 1);                  // last composed frame
@@ -253,6 +254,11 @@ export class Gfx {
     this.size(wide);
     this.reset();
   }
+
+  // The screen's context. Everything drawn on the screen goes through here, so `drawn` counts it:
+  // the glow around the stage (shell.setAmbient) goes by the count to know when the picture may
+  // have changed, as reading the picture back to see is slow (it waits for the GPU).
+  get sctx() { this.drawn++; return this.screenCtx; }
 
   // the view: the game's own 640 across, or 854 with the game in the middle of it
   size(wide) {

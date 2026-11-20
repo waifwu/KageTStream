@@ -152,6 +152,13 @@ export class Shell {
   // The glow shows what is on screen: the picture as displayed, or, while a page of the
   // interface is open, that page's paper or veil. It eases towards it rather than jumping, so
   // a text window opening or the black between two pictures does not make it blink.
+  //
+  // Nothing of it is ever read back from the GPU, where the screen is drawn: reading back waits
+  // for the GPU to catch up, and done ten times a second it held the page up (on a slow phone,
+  // tens of milliseconds at a time; in the Android app most of all). So the glow and its sketch
+  // are drawn on the GPU as well, and for that they are 256 x 192 (index.html): a browser keeps a
+  // smaller canvas in memory, and drawing the screen into one is that same reading back. The
+  // sketch is drawn as 64 x 48 all the same, scaled up.
   setAmbient(on) {
     this.ambientOn = !!on;
     this.ambient.classList.toggle('on', this.ambientOn);
@@ -159,28 +166,45 @@ export class Shell {
     if (!this.ambientOn) return;
     const ctx = this.ambient.getContext('2d');
     const tmp = document.createElement('canvas');
-    tmp.width = 64;
-    tmp.height = 48;
-    const t = tmp.getContext('2d', { willReadFrequently: true });
+    tmp.width = this.ambient.width;
+    tmp.height = this.ambient.height;
+    const t = tmp.getContext('2d');
+    t.setTransform(tmp.width / 64, 0, 0, tmp.height / 48, 0, 0);
     let primed = false, seen = '', still = 0;
     this.ambientTimer = setInterval(() => {
       // nothing of the glow shows while the stage covers the window: it is left as it was
       if (this.stageW * this.scale >= window.innerWidth - 1 && this.stageH * this.scale >= window.innerHeight - 1) return;
-      if (document.hidden || !this.paintAmbient(t)) return;
+      if (document.hidden) return;
       // Once the glow has caught up with a picture that is not changing it is left alone: every
       // touch of the canvas has the whole window's blur worked out again, ten times a second.
-      let sig = '';
-      try {
-        const d = t.getImageData(0, 0, 64, 48).data;
-        let a = 0, b = 0;
-        for (let i = 0; i < d.length; i += 4) { a = (a * 31 + d[i] + d[i + 1] * 3) % 1000003; b = (b * 17 + d[i + 2]) % 1000003; }
-        sig = a + ':' + b;
-      } catch (e) { /* the sketch cannot be read: the glow is simply kept up as before */ }
-      if (sig && sig === seen) { if (++still > 45) return; } else { still = 0; seen = sig; }
+      const key = this.ambientKey();
+      if (!key) return;
+      if (key === seen) { if (++still > 45) return; } else { still = 0; seen = key; }
+      if (!this.paintAmbient(t)) return;
       ctx.globalAlpha = primed ? 0.13 : 1;
       ctx.drawImage(tmp, 0, 0);
       primed = true;
     }, 100);
+  }
+  // What the sketch shows, in a few words, without drawing it: the same words, the same sketch.
+  // The picture on the stage is told apart by how often it has been drawn on (ambientVersion).
+  // Empty when there is nothing to go by yet. (It follows paintAmbient case by case.)
+  ambientKey() {
+    const src = this.ambientSource && this.ambientSource();
+    const scene = src ? 'scene ' + (this.ambientVersion ? this.ambientVersion() : '') : '';
+    const top = this.layers[this.layers.length - 1];
+    if (top) {
+      const c = top.layer.classList;
+      if (c.contains('paper')) return 'paper';
+      if (c.contains('clear')) return scene;
+      if (c.contains('viewer')) {
+        const im = top.layer.querySelector('img');
+        return 'viewer ' + (im && im.complete && im.naturalWidth ? im.src : '');
+      }
+      return scene + (c.contains('veil') ? ' veil' : ' shade');
+    }
+    if (this.homeOpen) return scene && scene + ' home' + (this.home.classList.contains('tabbed') ? ' tabbed' : '');
+    return scene;
   }
   // a 64 x 48 sketch of what the stage is showing; false when there is nothing to go by yet
   paintAmbient(t) {
