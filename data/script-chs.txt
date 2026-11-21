@@ -16948,7 +16948,7 @@ ld c,":a;image\tachi\ari_t10.jpg",%type_crossfade_fst
 ; 有彦 : 01_通常<クロスフェード(速)>
 ld c,":a;image\tachi\ari_t03.jpg",%type_crossfade_fst
 
-「ld c,":a;image\tachi\ari_t03.jpg",%type_crossfade_fst
+;ld c,":a;image\tachi\ari_t03.jpg",%type_crossfade_fst
 
 「……啊、是你啊。该死、我还期待是咪咪酱或者其他人呢」
 「那真是失敬了。但是，刚刚的态度不是有点过于粗鲁了么？」
@@ -54259,7 +54259,7 @@ bg "image\bg\ima_10.jpg",%type_crossfade_slw
 
 他的声音也越来越远了。\
 
-「啊啊。刚才不是和你说到佛教的话题吗？　那些话的正式题目是『只有Ｓｈｉｋｉ存在』，它的意义就是『唯识』这种说法哟。知道吗？」br
+「啊啊。刚才不是和你说到佛教的话题吗？　那些话的正式题目是『只有Ｓｈｉｋｉ存在』，它的意义就是『唯识』这种说法哟。知道吗？」  
 「………………」\
 
 「……已经不能回答了啊。算了，好吧。特别服务。给你带了句话来。『Ｂｙｅｂｙｅ远野同学。谢谢―――希望能再次见面，呢』？」

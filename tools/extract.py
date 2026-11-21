@@ -372,6 +372,13 @@ def add_chinese(src, out):
     # Some birthday branches have a full-width space between the condition and
     # mov. It is prose to NScripter, so normalize only this command separator.
     text = re.sub(r'(?m)^(if %month==\d+ && %day==\d+)\u3000[ \t]*(?=mov\b)', r'\1 ', text)
+    # Two commands stand on lines of prose, and are shown as the story's words: a second copy of
+    # the command above it, behind an opening bracket (Day 6, at Arihiko's door), and a "br" left
+    # on the end of a line of dialogue. Each is put out of the way in as many characters as it
+    # had: a saved game is tied to the script's length, and to the places in it.
+    stray = '\n\u300cld c,":a;image\\tachi\\ari_t03.jpg",%type_crossfade_fst\n'
+    text = text.replace(stray, stray.replace('\u300c', ';', 1))        # a comment
+    text = text.replace('\u77e5\u9053\u5417\uff1f\u300dbr\n', '\u77e5\u9053\u5417\uff1f\u300d  \n')   # spaces, which prose does not draw
 
     members = {}
 

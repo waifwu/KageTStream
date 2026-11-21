@@ -111,6 +111,11 @@ const ui = new UI({ ...host, loader });
 ui.engine = engine;
 engine.labelLog.add('se100');
 assert(ui.heardTracks().size > 0);
+// No command stands on a line of prose (behind a stray bracket, or after a closing one), where it
+// would be shown as the story's words.
+for (const line of script.split('\n')) {
+  if (/^[^\x00-\x7f]/.test(line)) assert(!/image\\|%type_|[」』]br\s*$/.test(line), 'a command on a line of prose: ' + line.slice(0, 40));
+}
 // Force a repeated daily message, then a fresh one: it must execute rnd again.
 const begin = script.indexOf('rnd %msgno,208\n;inc %msgno');
 assert(begin >= 0);

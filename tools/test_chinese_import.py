@@ -87,6 +87,21 @@ class ChineseImportTests(unittest.TestCase):
         self.assertEqual((self.out / 'script-chs.txt').read_text(encoding='utf-8'),
                          'if %month==1 && %day==1 mov $0,"　新年快乐"\n　正文\n')
 
+    def test_commands_on_lines_of_prose_are_put_away_in_place(self):
+        source = ('ld c,":a;image\\tachi\\ari_t03.jpg",%type_crossfade_fst\n\n'
+                  '「ld c,":a;image\\tachi\\ari_t03.jpg",%type_crossfade_fst\n\n'
+                  '「……啊、是你啊。」\n'
+                  '「知道吗？」br\n「………………」\\\n')
+        self.write(self.source / 'nscript.txt', source)
+        self.run_import()
+        text = (self.out / 'script-chs.txt').read_text(encoding='utf-8')
+        self.assertEqual(len(text), len(source))
+        self.assertEqual(text.count('\n'), source.count('\n'))
+        self.assertIn('\n;ld c,":a;image\\tachi\\ari_t03.jpg",%type_crossfade_fst\n', text)
+        self.assertTrue(text.startswith('ld c,'))
+        self.assertIn('「知道吗？」  \n「………………」', text)
+        self.assertIn('「……啊、是你啊。」', text)
+
     def test_archives_and_loose_files_and_unsafe_paths(self):
         self.write(self.source / 'arc.nsa', b'archive')
         self.write(self.source / 'arc1.nsa', b'patch')
