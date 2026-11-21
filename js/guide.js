@@ -190,6 +190,17 @@ export class Guide {
     return done;
   }
 
+  // Where the guide stands. It is kept with each page of the text history, and put back when the
+  // reader returns to that page: a choice made again is then the same step again, a choice that
+  // left the guide has not been made yet, and a day returned to is not counted twice.
+  place() { return { step: this.step, lost: this.lost, active: this.active, day: this.state.day }; }
+  returnTo(p) {
+    this.step = p.step;
+    this.lost = p.lost;
+    this.active = p.active;
+    if (this.state.day !== p.day) { this.state.day = p.day; this.save(); }
+  }
+
   // Which of these options the guide would take: its place in the list, or -1 when the guide
   // has nothing to say about this choice (not one of the day's, or the guide has been left).
   suggest(texts) {

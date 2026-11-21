@@ -619,14 +619,35 @@ export class Shell {
   }
 
   // ---------------------------------------------------------------- text history
-  // pages: [{ lines: [string], now: bool }], oldest first
+  // pages: [{ lines: [string], now: bool, back: bool }], oldest first. A page with `back` can be
+  // returned to: a click or a tap on it asks, and on "yes" the history answers with the page's
+  // place in the list (otherwise with null, as it is left).
   log(pages, color) {
     return this.openLayer('veil log', (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', 'Text history'));
-      layer.appendChild(el('div', 'page-note', 'Scroll past the end to return'));
+      const note = el('div', 'page-note');
+      const leave = t('Scroll past the end to return');
+      const phone = document.documentElement.classList.contains('phone');
+      note.textContent = pages.some((p) => p.back)
+        ? t(phone ? 'Tap a page to go back to it' : 'Click a page to go back to it') + ' \u00b7 ' + leave : leave;
+      layer.appendChild(note);
       const scroll = el('div', 'log-scroll');
       scroll.style.color = color || '';
-      for (const p of pages) scroll.appendChild(el('div', 'log-page' + (p.now ? ' now' : ''), p.lines.join('\n')));
+      let asking = false;
+      pages.forEach((p, i) => {
+        const page = el('div', 'log-page' + (p.now ? ' now' : '') + (p.back ? ' returns' : ''));
+        page.textContent = p.lines.join('\n');       // the story's own words, as they are
+        // (a finger that scrolls makes no click; the question stands over the history, which stays
+        // where it was scrolled to if the answer is no)
+        if (p.back) page.addEventListener('click', async () => {
+          if (asking || ctl.closed) return;
+          asking = true;
+          const yes = await this.confirm('Return to this page?', 'Anything not saved since is left behind.');
+          asking = false;
+          if (yes) ctl.done(i);
+        });
+        scroll.appendChild(page);
+      });
       layer.appendChild(scroll);
       this.back(layer, ctl);
       const atEnd = () => scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2;

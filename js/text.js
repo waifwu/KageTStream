@@ -155,6 +155,9 @@ export class TextLayer {
     this.ops = [];
     this.st = newState(this.win, storyFont);
     this.history = [];
+    this.point = null;
+    this.lastPoint = null;
+    this.turned = 0;
     this.redraw();
   }
 
@@ -162,6 +165,7 @@ export class TextLayer {
     this.win = win;
     this.winImage = win.image ? await this.gfx.loadPlain(win.image) : null;
     this.ops = [];
+    this.point = null;
     this.st = newState(win, storyFont);
     this.redraw();
   }
@@ -206,12 +210,26 @@ export class TextLayer {
   }
   clear(pushHistory) {
     if (pushHistory && this.ops.some((o) => o.t === 'c' && o.c !== '　')) {
-      this.history.push({ ops: this.ops, win: this.win, winImage: this.winImage });
+      this.history.push({ ops: this.ops, win: this.win, winImage: this.winImage, no: this.turned++, point: this.point || this.lastPoint });
       if (this.history.length > 200) this.history.shift();
     }
+    this.point = null;
     this.ops = [];
     this.st = newState(this.win, storyFont);
     this.redraw();
+  }
+
+  // Where the page on screen can be returned to from the text history (ui.js lookback): the first
+  // of the engine's snapshots taken while it is the page, which is the one taken as its first line
+  // begins. `onMark` gives what the host keeps beside it (main.js: where the guide stands). A page
+  // no snapshot was taken on (the rest of a paragraph too long for the page before, a stretch the
+  // script does not let be saved) returns to the last one taken before it, as a game saved on that
+  // page would: for the rest of a paragraph, where the paragraph begins. `at` is how many pages had
+  // been turned by then (each page in the history has its number, `no`): the pages that are still
+  // behind the reader once returned there.
+  mark(snap) {
+    this.lastPoint = { snap, beside: this.onMark ? this.onMark() : null, at: this.turned };
+    if (!this.point) this.point = this.lastPoint;
   }
 
   // set a stream of operations for a window, in the story font of the moment
@@ -332,6 +350,8 @@ export class TextLayer {
     }
     this.ops = ops;
     this.history = [];
+    this.point = null;
+    this.lastPoint = null;
     this.reflow();
   }
 }

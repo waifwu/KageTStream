@@ -673,6 +673,15 @@ export class Engine {
           await this.doReset();
         } else if (e.kind === 'load') {
           await this.applySnapshot(e.data);
+        } else if (e.kind === 'back') {
+          // A page of the text history returned to (ui.js lookback): a load, but within the same
+          // sitting. A scene being read again is still that, the pages before this one are still
+          // in the history, and music that has not changed goes on playing.
+          const { replaying, replayFirst } = this;
+          await this.applySnapshot(e.data.snap, true);
+          this.replaying = replaying;
+          this.replayFirst = replayFirst;
+          this.host.text.history = e.data.history;
         } else if (e.kind === 'replay') {
           // one scene on its own: set the window up as the story does, play the scene, then back to the title.
           // Or a block of the script ({ label, stop }), which ends where it reaches the label `stop`.
@@ -811,7 +820,7 @@ export class Engine {
     if (eol < 0) eol = this.len;
     const tok = s.slice(start, eol);
     this.pc = eol;
-    if (this.saveon) this.takeSnapshot(start);
+    if (this.saveon) this.takeSnapshot(start, true);
     this.unread = !this.textRead(start);
     await this.enterTextMode();
     await this.typeText(tok, fromBadCommand);
@@ -966,7 +975,9 @@ export class Engine {
   }
 
   // ------------------------------------------------------------------ save / load
-  takeSnapshot(pc) {
+  // `page`: taken as a line of text or a choice begins, where the page on screen can be returned to
+  // from the text history (text.js mark); the script's own "savegame" is not such a place
+  takeSnapshot(pc, page) {
     const { gfx, text } = this.host;
     const nums = {}, strs = {}, arrays = {};
     for (const k in this.nums) if (+k < GLOBAL_BORDER && this.nums[k]) nums[k] = this.nums[k];
@@ -991,6 +1002,7 @@ export class Engine {
       flow: this.currentFlow,
       stop: this.replayStop || undefined,
     };
+    if (page && text.mark) text.mark(this.snapshot);
     return this.snapshot;
   }
 
@@ -1020,8 +1032,10 @@ export class Engine {
     this.jumpTo('start');
   }
 
-  async applySnapshot(snap) {
+  // `sameSitting`: the snapshot is of this sitting (a page of the text history), not out of a slot
+  async applySnapshot(snap, sameSitting) {
     const { gfx, text, audio } = this.host;
+    const playing = this.bgm;
     this.resetLocal();
     if (this.host.onState) this.host.onState();
     if (this.host.onMusic) this.host.onMusic();
@@ -1050,7 +1064,10 @@ export class Engine {
     await text.restore(snap.text);
     gfx.present(this.textMode);
     this.bgm = snap.bgm;
-    if (this.bgm) audio.playBgm(this.bgm.file, this.bgm.loop); else audio.stopBgm(0);
+    // (the track that was playing, asked for again, would begin again)
+    const goesOn = sameSitting && playing && this.bgm && playing.file === this.bgm.file && playing.loop === this.bgm.loop;
+    if (!this.bgm) audio.stopBgm(0);
+    else if (!goesOn) audio.playBgm(this.bgm.file, this.bgm.loop);
     this.waveLoop = snap.waveLoop;
     if (this.waveLoop) audio.playSe(this.waveLoop, true);
     this.snapshot = snap;
@@ -1495,7 +1512,7 @@ async function select(name) {
     if (!this.tryComma()) break;
   }
   const ret = this.pc;
-  if (this.saveon) this.takeSnapshot(start);
+  if (this.saveon) this.takeSnapshot(start, true);
   await this.enterTextMode();
   this.setSkip(false);
   this.flushGlobals();

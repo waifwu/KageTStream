@@ -282,7 +282,7 @@ async function boot() {
         ['Guide', 'Optional, and off until you turn it on. It follows the walkthrough that came with the copy, one day at a time, and marks the choice to take.'],
         ['Settings', 'One page for everything: the story\u2019s font, text speed, sound, and the game\u2019s own four switches.'],
         ['Saves', 'Twenty slots with a picture and a line of the page, kept in this browser.'],
-        ['History', 'Everything read this session, as one scroll.'],
+        ['History', 'Everything read this session, as one scroll; a click or a tap on a page goes back to it.'],
         ['16:9', 'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.'],
         ['Languages', 'The story in English, Japanese, Portuguese, Spanish or Simplified Chinese, each from its own script and with its own pictures, and the interface in the same language. Chosen on the Play page or in Settings.'],
         ['HD pictures', 'The standing pictures and event CGs, enlarged four times so they stay sharp on a large screen. On by default and switched in Settings; backgrounds and menus are the game\u2019s own.'],
@@ -565,6 +565,7 @@ async function boot() {
       ['Quick bar', 'Swipe down'],
       ['Menu', 'Swipe right, or two-finger tap'],
       ['Text history', 'Swipe up'],
+      ['Return to a page of the text history', 'Tap'],
       ['Fast-forward', 'Hold a finger down'],
       ['Put the quick bar away', 'Tap beside it'],
     ] },
@@ -690,6 +691,9 @@ async function boot() {
   // days of their own and end back on the story's page or the title.
   const guide = new Guide(guideText, settings.guide, () => { settings.guide = guide.state; saveSettings(); });
   host.guide = guide;
+  // what is kept beside the place a page of the text history can be returned to, and put back with it
+  text.onMark = () => ({ guide: guide.place(), dayStart: host.dayStart });
+  host.onReturn = (beside) => { if (!beside) return; guide.returnTo(beside.guide); host.dayStart = beside.dayStart; };
   host.onMusic = () => ui.releaseMusic(false);
   host.onLabel = (name) => {
     if (name === 'f500') host.dayStart = Object.assign({}, engine.nums);     // the values a day begins with (for the flowchart's route)

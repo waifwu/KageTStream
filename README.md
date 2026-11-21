@@ -319,7 +319,9 @@ the story.
   lettering is small.
 * **Save / Load** — twenty slots, each with a picture of the scene, the time and
   a line of the page.
-* **Text history** — the last 200 pages read this session, as one scroll.
+* **Text history** — the last 200 pages read this session, as one scroll. A click
+  or a tap on a page goes back to it: the story returns to where that page began
+  (the game asks first; what was read after it is left behind unless it was saved).
 * **Flowchart** — built from the script's own flow section
   (`js/flowchart-model.js`), in three tabs. *The day* is laid out by place and
   time: Morning across the top, School, Mansion and Street as columns, Night
@@ -454,6 +456,7 @@ the story.
 | Left click / tap / Enter / Space | Advance text, pick the highlighted item |
 | Right click / two-finger tap / swipe right / Esc / Backspace | The menu |
 | Mouse wheel up / swipe up / ↑ / PageUp | Text history |
+| Click / tap on a page of the text history | Go back to that page |
 | Pointer at the top edge / swipe down | The quick bar |
 | Ctrl (hold) / a finger held on the picture | Fast-forward through text already read, while held |
 | S | Toggle fast-forward (stops at the next choice, or on a click) |

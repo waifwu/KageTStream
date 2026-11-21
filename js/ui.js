@@ -376,13 +376,20 @@ export class UI {
   }
 
   // ------------------------------------------------------------------ text history
+  // A page that has a place to return to (text.js mark) can be chosen, and the story goes back to
+  // where that page began: the engine takes it as it takes a load (engine.js run, "back"), with
+  // the pages turned before that place still in the history.
   async lookback() {
     const { text, shell } = this.host;
-    const pages = text.history.map((p) => ({ lines: text.historyLines(p), now: false }));
+    const pages = text.history.map((p) => ({ lines: text.historyLines(p), now: false, back: !!p.point }));
     const now = text.linesOf(text.glyphs);
     if (now.some((l) => l.trim())) pages.push({ lines: now, now: true });
     if (!pages.length) { shell.toast('Nothing has been read yet.'); return; }
-    await shell.log(pages, this.engine.lookbackColor);
+    const i = await shell.log(pages, this.engine.lookbackColor);
+    const page = typeof i === 'number' ? text.history[i] : null;
+    if (!page || !page.point) return;
+    if (this.host.onReturn) this.host.onReturn(page.point.beside);
+    throw new Signal('back', { snap: page.point.snap, history: text.history.filter((p) => p.no < page.point.at) });
   }
 
   // ------------------------------------------------------------------ gallery (from the title)
