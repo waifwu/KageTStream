@@ -4,6 +4,12 @@
 // track is fetched whole and decoded; when it is ready, a Web Audio buffer that loops by itself is
 // set to start at the moment the element's first pass ends, and the element is let run out. An
 // element restarting its stream leaves a gap at every loop; the buffer has none.
+//
+// Only one of the two is ever to sound. The moment is worked out from where the element is, and
+// the element can be held up after that (its stream waiting for more, a phone pausing it for a
+// call or for another app and starting it again): so until the buffer has taken over, the element
+// is checked against the time set for it, and the time is set again if it no longer fits. Once
+// the buffer has taken over, the element is kept from starting again under it.
 
 export class AudioSys {
   constructor(loader) {
@@ -12,6 +18,9 @@ export class AudioSys {
     this.bgmEl.preload = 'auto';
     this.onBgmEnded = null;
     this.bgmEl.addEventListener('ended', () => { if (!this.loopSrc && this.onBgmEnded) this.onBgmEnded(); });
+    // the element started by something other than this file (a headset's button, the system going on
+    // with what it had paused) while the looping buffer is the one playing: it stays silent
+    this.bgmEl.addEventListener('play', () => { if (this.loopOwns()) this.bgmEl.pause(); });
     this.ctx = null;
     this.gain = null;
     this.seSource = null;
@@ -26,6 +35,7 @@ export class AudioSys {
     this.loopSrc = null;      // ... and the buffer source once it is set to (or does) play
     this.loopGain = null;     // that source's own gain, for a fade
     this.loopAt = 0;          // the AudioContext time at which it takes over
+    this.loopOff = 0;         // checks in a row that found the element off that time (watchLoop)
     this.loopTimer = 0;
     this.fade = null;
     this.pending = null;
@@ -224,12 +234,20 @@ export class AudioSys {
     clearTimeout(this.loopTimer);
     const el = this.bgmEl, buf = this.loopBuf;
     if (token !== this.bgmToken || !buf || this.loopSrc || !this.wantPlay) return;
-    if (el.paused || el.readyState < 2) { this.loopTimer = setTimeout(() => this.handOver(token), 250); return; }
-    const left = buf.duration - el.currentTime;
-    if (!(left > 0.3)) {
-      // too near the end to time it: let the element come round, and try again
-      this.loopTimer = setTimeout(() => this.handOver(token), (Math.max(0, left) + 0.5) * 1000);
-      return;
+    const later = (ms) => { this.loopTimer = setTimeout(() => this.handOver(token), ms); };
+    // a moment can only be set on a clock that is running, for an element that is playing
+    if (this.asleep || this.ctx.state !== 'running') { later(250); return; }
+    let left = 0;
+    // (an element that has ended let its pass run out with no buffer to follow it, the time set
+    // for one having been taken back: the buffer begins now)
+    if (!el.ended) {
+      if (el.paused || el.readyState < 2) { later(250); return; }
+      left = buf.duration - el.currentTime;
+      if (!(left > 0.3)) {
+        // too near the end to time it: let the element come round, and try again
+        later((Math.max(0, left) + 0.5) * 1000);
+        return;
+      }
     }
     const g = this.ctx.createGain();
     g.connect(this.bgmGain);
@@ -242,6 +260,56 @@ export class AudioSys {
     el.loop = false;                                  // the element plays its first pass out, then stops
     this.loopSrc = src;
     this.loopGain = g;
+    this.loopOff = 0;
+    this.watchLoop(token);
+  }
+
+  // The looping buffer is the one playing (not merely set to).
+  loopOwns() { return !!this.loopSrc && this.ctx.currentTime >= this.loopAt - 0.05; }
+
+  // Between the moment being set and the buffer taking over: the element must still be on its way
+  // to ending at that moment. If it is not (held up, paused, or its pass already over), the time
+  // is taken back and set again from where the element now is.
+  watchLoop(token) {
+    clearTimeout(this.loopTimer);
+    // (asleep, both stand still and go on together: there is nothing to check until then)
+    if (this.asleep) { this.loopTimer = setTimeout(() => this.watchLoop(token), 250); return; }
+    const until = this.loopAt - this.ctx.currentTime;
+    this.loopTimer = setTimeout(() => {
+      const el = this.bgmEl, src = this.loopSrc;
+      if (token !== this.bgmToken || !src) return;
+      if (this.asleep) { this.watchLoop(token); return; }
+      const now = this.ctx.currentTime;
+      if (now >= this.loopAt) {
+        if (!el.paused) el.pause();                   // the buffer has it: whatever is left of the element's pass is cut
+        return;
+      }
+      // (how far the element is from ending at that moment. Read in Safari it wavers by a tenth of
+      // a second either way with nothing wrong, so it counts only when it is more and stays more;
+      // what is left of a smaller one is cut off above, as the buffer takes over)
+      const drift = (src.buffer.duration - el.currentTime) - (this.loopAt - now);
+      this.loopOff = Math.abs(drift) > 0.2 ? this.loopOff + 1 : 0;
+      if (el.ended || el.paused || this.ctx.state !== 'running' || this.loopOff >= 2) {
+        this.unsetLoop();
+        this.handOver(token);
+        return;
+      }
+      this.watchLoop(token);
+    }, until > 0.25 ? 200 : Math.max(0, until * 1000) + 30);
+  }
+
+  // Take back a buffer that was set to start and has not yet: the element loops by itself again.
+  unsetLoop() {
+    const src = this.loopSrc, g = this.loopGain;
+    this.loopSrc = null;
+    this.loopGain = null;
+    if (!src) return;
+    try { src.stop(); } catch (e) { /* already stopped */ }
+    src.disconnect();
+    g.disconnect();
+    // (not an element whose pass is already over: told to loop it would no longer count as ended,
+    // and would stay where it is, silent, with handOver waiting for it to play)
+    if (!this.bgmEl.ended) this.bgmEl.loop = true;
   }
 
   // Stop a looping buffer (fading it over fadeMs if it has taken over) and forget the one waiting.
