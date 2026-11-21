@@ -579,11 +579,16 @@ repository. Every push to `main` builds and publishes to
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
   (`data/arc/`, `data/cd/`, `data/default.ttf`, and the translation patches'
   `data/pt/arc/`, `data/es/arc/` and `data/chs/arc/`) for a year without asking again; they
-  never change. The page, `css/`, `js/` and the scripts, manifest and guide
-  keep Pages' default (`max-age=0, must-revalidate`), since a deploy changes
-  them. So do the HD pictures, `data/hd/`: unlike the game's files they can be
-  made again (`tools/hd.py`), and a browser asks after them each time (an
-  unchanged one is not sent again).
+  never change. The HD pictures (`data/hd/arc/` and the patches' `data/hd/pt/`,
+  `data/hd/es/`, `data/hd/chs/`) are kept for a year too: the game lets go of
+  the ones it has not shown for a while to stay within a phone's memory, and
+  one wanted again should not cost a trip to the server. Unlike the game's
+  files they can be made again (`tools/hd.py`); a picture made again under the
+  same name is not seen for a year by a browser that has the old one, whatever
+  `_headers` says afterwards, so give it another name. The page, `css/`,
+  `js/`, the scripts, manifest and guide, and the HD pictures' list
+  (`data/hd/index.json`) keep Pages' default (`max-age=0, must-revalidate`),
+  since a deploy changes them.
 * `404.html` answers any unknown path with a 404 status and a link back to the
   game, so a missing asset is an error rather than the opening page.
 * To check a deploy: a game file should carry the year-long cache and an
@@ -591,6 +596,7 @@ repository. Every push to `main` builds and publishes to
 
   ```bash
   curl -sI https://kagetsu.pages.dev/data/cd/track02.ogg | grep -i cache-control
+  curl -sI https://kagetsu.pages.dev/data/hd/index.json | grep -i cache-control    # max-age=0: still checked
   curl -s -o /dev/null -w "%{http_code}\n" https://kagetsu.pages.dev/no-such-file
   ```
 * Pages does not answer byte-range requests for these files, so a streamed

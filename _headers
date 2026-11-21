@@ -2,8 +2,8 @@
 #
 # The game's pictures, sounds, music and font are the original files and never change, so a
 # browser may keep them for a year without asking again. Everything else (the page, css/, js/,
-# and the script, manifest and guide in data/) changes with a deploy and keeps Pages' default:
-# kept, but checked with the server each time.
+# and the script, manifest, guide and the HD pictures' list in data/) changes with a deploy and
+# keeps Pages' default: kept, but checked with the server each time.
 
 /data/arc/*
   Cache-Control: public, max-age=31536000, immutable
@@ -22,4 +22,22 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /data/default.ttf
+  Cache-Control: public, max-age=31536000, immutable
+
+# The HD pictures (tools/hd.py): made from the game's own, and kept for a year like them. The game
+# lets go of the ones it has not shown for a while to stay within a phone's memory (js/gfx.js),
+# and one let go and wanted again would otherwise be asked after over the network each time.
+# Their list, /data/hd/index.json, is not among these: it says which pictures have an HD file, and
+# is checked with the server each time. A picture made again under the same name is not seen for a
+# year by a browser that has the old one, whatever is changed here afterwards: give it another name.
+/data/hd/arc/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/hd/pt/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/hd/es/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/hd/chs/*
   Cache-Control: public, max-age=31536000, immutable
