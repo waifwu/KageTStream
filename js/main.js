@@ -407,7 +407,8 @@ async function boot() {
   // the enlarged standing pictures and CGs (tools/hd.py), if data/ has them: without the list, or
   // with one that cannot be read, the game shows its own pictures
   const hdIndex = await fetch(DATA + 'hd/index.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  const loader = new Loader(DATA, manifest, manifest.files.some((f) => f.startsWith(own)) ? own : '', hdIndex);
+  // (how much decoded picture is kept for a return to it: a phone's browser ends a page that takes too much)
+  const loader = new Loader(DATA, manifest, manifest.files.some((f) => f.startsWith(own)) ? own : '', hdIndex, (PHONE ? 128 : 512) * 1048576);
   loader.hdOn = !!loader.hd && settings.hd !== false;
   const gfx = new Gfx(canvas, loader, scale, settings.wide);
   const text = new TextLayer(gfx);

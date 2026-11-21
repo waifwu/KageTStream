@@ -19,16 +19,30 @@ export const WIDE_W = 854;      // 16:9 at the game's height, to the whole pixel
 const HUMAN_Z = 499; // sprites with a higher number are drawn behind standing pictures
 const QUAKE_AMP = 12;
 
+// What a picture takes once decoded: four bytes a pixel, whatever its file weighs. An HD picture
+// (four times the game's size each way) takes sixteen times what the game's own does: 19 MB for
+// a 640 x 480 one, where that takes a little over 1 MB.
+const MB = 1048576;
+export const decodedBytes = (pic) => (pic ? (pic.naturalWidth || pic.width || 0) * (pic.naturalHeight || pic.height || 0) * 4 : 0);
+
 export class Loader {
   // `own`: a folder of the data whose files stand in for the shared ones ("pt/" for the
   // Portuguese patch's pictures and sounds, see tools/extract.py --pt), or nothing.
   // `hd`: data/hd/index.json (tools/hd.py), or nothing: the standing pictures and event CGs
   // enlarged `scale` times, shown in place of the game's own while `hdOn`.
-  constructor(base, manifest, own, hd) {
+  // `budget`: how many bytes of decoded pictures are kept for a return to them (main.js gives a
+  // phone less). Kept by their number alone, the last eighty came to some 900 MB over a long read
+  // with HD pictures on (150 MB with the game's own). A reader on an iPhone found the game back at
+  // its opening page after half an hour with HD on, and not with it off: a page taking too much
+  // is ended by the phone's browser, and this is the likeliest of what it was taking.
+  constructor(base, manifest, own, hd, budget) {
     this.base = base;
     this.files = new Set(manifest.files);
     this.own = own || '';
-    this.images = new Map();
+    this.images = new Map();      // address -> the picture (a promise of it), the one used last at the end
+    this.sizes = new Map();       // address -> its decoded bytes, once it has loaded
+    this.held = 0;                // ... and their sum
+    this.budget = budget || 512 * MB;
     this.hd = hd && hd.scale > 1 ? { scale: hd.scale, alpha: new Set(hd.alpha || []), plain: new Set(hd.plain || []) } : null;
     this.hdOn = !!this.hd;
   }
@@ -72,7 +86,8 @@ export class Loader {
     const url = hd || this.resolve(name);
     if (!url) return Promise.resolve(null);
     let p = this.images.get(url);
-    if (!p) {
+    if (p) { this.images.delete(url); this.images.set(url, p); }      // used again: the last to go
+    else {
       p = new Promise((res) => {
         const tryLoad = (left) => {
           const img = new Image();
@@ -80,7 +95,7 @@ export class Loader {
           img.onerror = () => {
             if (left > 0) { setTimeout(() => tryLoad(left - 1), left > 1 ? 600 : 2000); return; }
             console.warn('failed to load', url);
-            if (this.images.get(url) === p) this.images.delete(url);
+            if (this.images.get(url) === p) this.drop(url);
             res(null);
           };
           img.src = url;
@@ -89,12 +104,34 @@ export class Loader {
       });
       if (hd) p = p.then((img) => img || this.image(name));
       this.images.set(url, p);
-      if (this.images.size > 80) this.images.delete(this.images.keys().next().value);
+      const kept = p;
+      kept.then((img) => {
+        if (!img || this.images.get(url) !== kept || this.sizes.has(url)) return;
+        this.sizes.set(url, decodedBytes(img));
+        this.held += this.sizes.get(url);
+        this.trim();
+      });
+      this.trim();
     }
     return p;
   }
+  // The pictures used longest ago are let go until what is kept is within the budget (and no more
+  // than eighty). The last few stay whatever they take: they are the ones on screen and the ones
+  // fetched ahead (prefetch), which would otherwise push each other out before they are shown.
+  // A picture let go here is still held by whatever shows it; it is fetched again if asked for.
+  trim() {
+    for (const url of this.images.keys()) {
+      if (this.images.size <= 8 || (this.images.size <= 80 && this.held <= this.budget)) break;
+      this.drop(url);
+    }
+  }
+  drop(url) {
+    this.images.delete(url);
+    this.held -= this.sizes.get(url) || 0;
+    this.sizes.delete(url);
+  }
   // Start loading pictures the script will soon ask for, so they are ready when it does.
-  // Only names not already held or on their way; the cache keeps 80, so a few at a time.
+  // Only names not already held or on their way; the cache keeps the last few whatever their size (trim).
   // Each comes as [name, transparency]: ":a;" asks for a standing picture, no tag for a background
   // (what the script shows with "bg"), so the file fetched is the one the script will ask for.
   prefetch(names) {
@@ -247,7 +284,13 @@ export class Gfx {
     this.fctx = this.frame.getContext('2d');
     this.work = makeCanvas(1, 1);                   // transition source / menu backdrop
     this.wctx = this.work.getContext('2d');
+    // Sprites ready to be shown again, the one used last at the end: by their number (48), and by
+    // the bytes of their pictures, as the loader's are, within the same budget again. (An HD sprite
+    // is its HD picture, the very one the loader keeps, so the two mostly hold the same pictures:
+    // over the whole walkthrough a phone's 128 MB each comes to 250 MB at most, not 256.) The
+    // last four stay whatever they take.
     this.spriteCache = new Map();
+    this.spriteBytes = 0;
     this.sides = new Map();
     this.text = null;
     this.shownText = false;
@@ -290,6 +333,7 @@ export class Gfx {
     if (!l.hd || l.hdOn === !!on) return;
     l.hdOn = !!on;
     this.spriteCache.clear();
+    this.spriteBytes = 0;
     const bg = this.bg, jobs = [];
     if (bg.raw) {
       jobs.push(l.image(parseTag(bg.file).file, 'plain').then((raw) => {
@@ -334,7 +378,12 @@ export class Gfx {
       }
       if (this.loader.hdOn === hdOn) {        // (not kept if HD was switched while it loaded)
         this.spriteCache.set(tag, data);
-        if (this.spriteCache.size > 48) this.spriteCache.delete(this.spriteCache.keys().next().value);
+        this.spriteBytes += decodedBytes(data.canvas);
+        for (const [old, d] of this.spriteCache) {
+          if (this.spriteCache.size <= 4 || (this.spriteCache.size <= 48 && this.spriteBytes <= this.loader.budget)) break;
+          this.spriteCache.delete(old);
+          this.spriteBytes -= decodedBytes(d.canvas);
+        }
       }
     } else {
       this.spriteCache.delete(tag);
