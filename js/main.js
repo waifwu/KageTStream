@@ -182,10 +182,13 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, plainLog: false, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, logPlain: PHONE, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
 
-  shell.plainLog = !!settings.plainLog;      // Settings > Text history: Plain (shell.js log)
+  // Settings > Text history: Plain (shell.js log). A phone starts on Plain: on an iPhone, opening the
+  // blurred history ended the game and the plain one did not (issue #3). (Its key is not the first
+  // one it had, plainLog, so that a Blurred saved while that was the only way in does not stand.)
+  shell.plainLog = !!settings.logPlain;
 
   // What the game was doing, written down as it plays (`host.trace`, below) and looked at here the
   // next time the page loads. A page that ends as pages do (closed, reloaded, left) says so as it
@@ -660,9 +663,9 @@ async function boot() {
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
-        // (the history without the blur of the picture behind it and without its entrance: for a
-        // phone on which opening it ends the game, and to learn whether those are why)
-        { key: 'plainLog', label: 'Text history', options: [['Blurred', false], ['Plain', true]] },
+        // (the history without the blur of the picture behind it and without its entrance; what a
+        // phone starts with)
+        { key: 'logPlain', label: 'Text history', options: [['Blurred', false], ['Plain', true]] },
         ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
@@ -719,7 +722,7 @@ async function boot() {
       audio.setMuted(settings.muted);
       audio.setVolumes(settings.bgmVol, settings.seVol);
       shell.setAmbient(settings[glowKey()]);
-      shell.plainLog = !!settings.plainLog;
+      shell.plainLog = !!settings.logPlain;
       saveSettings();
     });
   };
@@ -814,7 +817,7 @@ async function boot() {
       pages: text.turned, history: text.history.length, opens: tr.opens,
       pictures: [loader.images.size, mb(loader.held)], sprites: [gfx.spriteCache.size, mb(gfx.spriteBytes)],
       sounds: [audio.buffers.size, mb(se)], track: audio.decoded ? 1 : 0,
-      plain: !!settings.plainLog, steps: tr.steps, layers: tr.layers, standalone: standalone(),
+      plain: !!shell.plainLog, steps: tr.steps, layers: tr.layers, standalone: standalone(),
       view: window.innerWidth + 'x' + window.innerHeight + ' @' + (window.devicePixelRatio || 1),
     }, true);
   };

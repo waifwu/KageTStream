@@ -223,11 +223,14 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 .log-page { padding: 24px 0 26px; border-top: 1px solid rgba(248, 238, 219, .22); font: 29px/45px var(--story-font, "NSFont"), var(--serif); white-space: pre-wrap; text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, .85); }
 .log-page:first-child { border-top: 0; }
 .log-page.now { opacity: .62; }
-/* Settings > Text history: Plain. No blur of the picture behind it (its own ground is nearly solid
-   instead, so the words still stand clear) and no entrance for its pages. */
+/* The history's pages come in together, as one scroll (.log-scroll, with the fades below), not each by
+   itself: there can be two hundred of them, nearly all out of sight, and an entrance for every one
+   held the first frame up for a second or two on a phone.
+   Settings > Text history: Plain. No blur of the picture behind it (its own ground is nearly solid
+   instead, so the words still stand clear) and no entrance at all. */
 .log.plain { -webkit-backdrop-filter: none; backdrop-filter: none;
   background: linear-gradient(162deg, rgba(34, 24, 56, .97), rgba(72, 44, 76, .95) 46%, rgba(96, 58, 28, .94)); }
-.log.plain .log-page, .log.plain .page-title, .log.plain .page-note, .log.plain .back { animation: none; }
+.log.plain .log-scroll, .log.plain .page-title, .log.plain .page-note, .log.plain .back { animation: none; }
 /* a page that can be returned to (a click or a tap on it) */
 .log-page.returns { cursor: pointer; margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 6px; transition: background-color .12s; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { .log-page.returns:hover { background-color: rgba(248, 238, 219, .09); } }
@@ -430,8 +433,8 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
    rises into place, a little after one another. */
 @keyframes rise { from { opacity: 0; translate: 0 10px; } }
 @keyframes fadein { from { opacity: 0; } }
-.page-title, .page-note, .fc-count, .fc-tabs, .sm-head, .sm-side, .gt-note, .back, .fc-tools, .fc-legend, .excerpt { animation: fadein .32s ease-out backwards; }
-.sm-item, .gp-item, .gt-item, .mp-row, .slot, .cg, .cf-row, .cf-sec, .gp-aside, .mp-player, .dialog, .hm-panel > *, .log-page, .chip.on { animation: rise .34s cubic-bezier(.2, .7, .2, 1) backwards; }
+.page-title, .page-note, .fc-count, .fc-tabs, .sm-head, .sm-side, .gt-note, .back, .fc-tools, .fc-legend, .excerpt, .log-scroll { animation: fadein .32s ease-out backwards; }
+.sm-item, .gp-item, .gt-item, .mp-row, .slot, .cg, .cf-row, .cf-sec, .gp-aside, .mp-player, .dialog, .hm-panel > *, .chip.on { animation: rise .34s cubic-bezier(.2, .7, .2, 1) backwards; }
 .fc-view, .cg-grid, .fc-card.on { animation: fadein .28s ease-out backwards; }
 .vw-img { opacity: 0; transition: opacity .28s ease-out; }
 .vw-img.on { opacity: 1; }

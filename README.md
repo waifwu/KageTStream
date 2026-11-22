@@ -463,10 +463,11 @@ the story.
   history it also says how far the page had got (built, first frame, settled,
   first scroll, closing) and how long after it was asked for.
 * **Text history: Blurred or Plain** (Settings) — the history lies over the
-  picture and blurs it, and its pages rise into place. Plain opens it without
-  the blur and without that entrance, on a nearly solid ground. It is there for
-  a phone on which opening the history ends the game, and to learn whether the
-  blur or the entrance is why.
+  picture and blurs it, and fades in. Plain opens it without the blur and
+  without any entrance, on a nearly solid ground. A phone starts on Plain: on
+  an iPhone, opening the blurred history ended the game and the plain one did
+  not. Its pages no longer rise into place one by one in either: with a long
+  history that held the first frame up for a second or two on a phone.
 
 ## Controls
 
