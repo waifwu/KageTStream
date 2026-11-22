@@ -622,8 +622,13 @@ export class Shell {
   // pages: [{ lines: [string], now: bool, back: bool }], oldest first. A page with `back` can be
   // returned to: a click or a tap on it asks, and on "yes" the history answers with the page's
   // place in the list (otherwise with null, as it is left).
-  log(pages, color) {
-    return this.openLayer('veil log', (layer, ctl) => {
+  // `onStep(name, facts)` is told how far the page has got (built, first frame, settled, first
+  // scroll, closing): main.js keeps it in the note of what the game is doing, so that a game that
+  // ends with the history open says where in it. `this.plainLog` (Settings > Text history) opens
+  // it without the blur of the picture behind it and without its entrance (css: .log.plain).
+  log(pages, color, onStep) {
+    const step = (name, facts) => { if (onStep) onStep(name, facts); };
+    return this.openLayer('veil log' + (this.plainLog ? ' plain' : ''), (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', 'Text history'));
       const note = el('div', 'page-note');
       const leave = t('Scroll past the end to return');
@@ -676,7 +681,13 @@ export class Shell {
         // open on the newest finished page, with the page being read just below it
         const target = pages.length && pages[pages.length - 1].now && last.previousElementSibling ? last.previousElementSibling : last;
         scroll.scrollTop = target ? Math.max(0, target.offsetTop + target.offsetHeight - scroll.clientHeight) : 0;
+        step('built', { layers: this.sheet.children.length });
+        requestAnimationFrame(() => requestAnimationFrame(() => { if (!ctl.closed) step('first frame'); }));
+        setTimeout(() => { if (!ctl.closed) step('settled'); }, 700);
       };
+      scroll.addEventListener('scroll', () => step('first scroll'), { passive: true, once: true });
+      const close = ctl.done;
+      ctl.done = (v) => { if (!ctl.closed) step('closing'); close(v); };
     });
   }
 

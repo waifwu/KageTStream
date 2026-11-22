@@ -223,6 +223,11 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 .log-page { padding: 24px 0 26px; border-top: 1px solid rgba(248, 238, 219, .22); font: 29px/45px var(--story-font, "NSFont"), var(--serif); white-space: pre-wrap; text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, .85); }
 .log-page:first-child { border-top: 0; }
 .log-page.now { opacity: .62; }
+/* Settings > Text history: Plain. No blur of the picture behind it (its own ground is nearly solid
+   instead, so the words still stand clear) and no entrance for its pages. */
+.log.plain { -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: linear-gradient(162deg, rgba(34, 24, 56, .97), rgba(72, 44, 76, .95) 46%, rgba(96, 58, 28, .94)); }
+.log.plain .log-page, .log.plain .page-title, .log.plain .page-note, .log.plain .back { animation: none; }
 /* a page that can be returned to (a click or a tap on it) */
 .log-page.returns { cursor: pointer; margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 6px; transition: background-color .12s; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { .log-page.returns:hover { background-color: rgba(248, 238, 219, .09); } }

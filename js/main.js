@@ -182,8 +182,10 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, plainLog: false, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
+
+  shell.plainLog = !!settings.plainLog;      // Settings > Text history: Plain (shell.js log)
 
   // What the game was doing, written down as it plays (`host.trace`, below) and looked at here the
   // next time the page loads. A page that ends as pages do (closed, reloaded, left) says so as it
@@ -202,6 +204,10 @@ async function boot() {
       'Doing: ' + r.doing + ' (noted ' + at + ', ' + Math.max(0, Math.round((r.t - r.began) / 60000)) + ' min after starting)',
       'Script ' + r.lang + ', HD pictures ' + (r.hd ? 'on' : 'off') + ', ' + (r.wide ? '16:9' : '4:3') + ', canvas ' + r.canvas,
       r.pages + ' pages read, ' + r.history + ' in the history, history opened ' + r.opens + ' times',
+      // (a note from before these were kept has none of them)
+      ...(r.steps ? ['History ' + (r.plain ? 'plain' : 'blurred') + ', ' + (r.layers === undefined ? '?' : r.layers) + ' layers when built, steps (ms since opening): '
+        + (r.steps.map((s) => s[0] + ' +' + s[1]).join(', ') || 'none')] : []),
+      ...(r.view ? ['Home Screen app: ' + (r.standalone ? 'yes' : 'no') + ', view ' + r.view] : []),
       'Kept: ' + r.pictures[0] + ' pictures (' + r.pictures[1] + ' MB), ' + r.sprites[0] + ' sprites (' + r.sprites[1] + ' MB), '
         + r.sounds[0] + ' sound effects (' + r.sounds[1] + ' MB), music decoded: ' + (r.track ? 'yes' : 'no'),
     ].join('\n');
@@ -654,6 +660,9 @@ async function boot() {
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
         { key: 'ambient', label: 'Glow around the picture', options: onOff },
+        // (the history without the blur of the picture behind it and without its entrance: for a
+        // phone on which opening it ends the game, and to learn whether those are why)
+        { key: 'plainLog', label: 'Text history', options: [['Blurred', false], ['Plain', true]] },
         ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
@@ -710,6 +719,7 @@ async function boot() {
       audio.setMuted(settings.muted);
       audio.setVolumes(settings.bgmVol, settings.seVol);
       shell.setAmbient(settings[glowKey()]);
+      shell.plainLog = !!settings.plainLog;
       saveSettings();
     });
   };
@@ -789,7 +799,10 @@ async function boot() {
   let build = '';
   fetch('js/main.js', { method: 'HEAD', cache: 'no-store' })
     .then((r) => { build = (r.headers.get('etag') || r.headers.get('last-modified') || '').replace(/^W\//, '').replace(/"/g, '').slice(0, 32); }).catch(() => {});
-  const tr = { doing: '', at: 0, opens: 0, hidden: document.hidden, clean: false };
+  // (`steps`: how far the text history got the last time it was opened, each with the milliseconds
+  // since it was asked for: a game that ends with the history open says where in it)
+  const tr = { doing: '', at: 0, opens: 0, hidden: document.hidden, clean: false, steps: [], openedAt: 0, layers: undefined };
+  const standalone = () => navigator.standalone === true || (!!window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
   const writeTrace = () => {
     if (replaced || !started || !tr.doing) return;
     let se = 0;
@@ -801,11 +814,15 @@ async function boot() {
       pages: text.turned, history: text.history.length, opens: tr.opens,
       pictures: [loader.images.size, mb(loader.held)], sprites: [gfx.spriteCache.size, mb(gfx.spriteBytes)],
       sounds: [audio.buffers.size, mb(se)], track: audio.decoded ? 1 : 0,
+      plain: !!settings.plainLog, steps: tr.steps, layers: tr.layers, standalone: standalone(),
+      view: window.innerWidth + 'x' + window.innerHeight + ' @' + (window.devicePixelRatio || 1),
     }, true);
   };
-  host.trace = (doing, now) => {
-    if (doing === 'history open') tr.opens++;
+  host.trace = (doing, now, facts) => {
     const t = Date.now();
+    if (doing === 'history open') { tr.opens++; tr.steps = []; tr.openedAt = t; tr.layers = undefined; }
+    if (doing.startsWith('history ')) { tr.steps.push([doing.slice(8), t - tr.openedAt]); if (tr.steps.length > 8) tr.steps.shift(); }
+    if (facts && facts.layers !== undefined) tr.layers = facts.layers;
     tr.doing = doing;
     if (!now && t - tr.at < 2000) return;
     tr.at = t;

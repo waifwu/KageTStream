@@ -400,7 +400,7 @@ export class UI {
     if (now.some((l) => l.trim())) pages.push({ lines: now, now: true });
     if (!pages.length) { shell.toast('Nothing has been read yet.'); return; }
     if (this.host.trace) this.host.trace('history open', true);
-    const i = await shell.log(pages, this.engine.lookbackColor);
+    const i = await shell.log(pages, this.engine.lookbackColor, (name, facts) => { if (this.host.trace) this.host.trace('history ' + name, true, facts); });
     if (this.host.trace) this.host.trace('history closed', true);
     const page = typeof i === 'number' ? text.history[i] : null;
     if (!page || !page.point) return;

@@ -459,7 +459,14 @@ the story.
   neither when the page next loads, the game ended while it was being played,
   as it does when a phone's browser ends a page for taking too much memory: the
   opening page then shows the note once, with a button to copy it for a report.
-  The note stays in the browser and is no part of a save export.
+  The note stays in the browser and is no part of a save export. For the text
+  history it also says how far the page had got (built, first frame, settled,
+  first scroll, closing) and how long after it was asked for.
+* **Text history: Blurred or Plain** (Settings) — the history lies over the
+  picture and blurs it, and its pages rise into place. Plain opens it without
+  the blur and without that entrance, on a nearly solid ground. It is there for
+  a phone on which opening the history ends the game, and to learn whether the
+  blur or the entrance is why.
 
 ## Controls
 
