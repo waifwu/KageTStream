@@ -444,10 +444,22 @@ the story.
   branching is left alone, so the story still plays as your progress has it.
 * **Loading** — the game's files arrive as they are needed. While the story
   waits for a click, the next pictures the script names are fetched ahead
-  (`Engine.upcomingImages` in `js/engine.js`, `Loader.prefetch` in `js/gfx.js`),
+  (`Engine.upcomingImages` in `js/engine.js`, `Loader.prefetch` in `js/gfx.js`):
+  half a second into the wait, and not while the menu or the text history is
+  open over the story,
   and a picture that fails to load is tried twice more before it is given up.
   Story music that loops streams at once and is swapped for a gapless loop
-  once it has been decoded (`js/audio.js`).
+  once it has been decoded (`js/audio.js`). It is decoded only when it has
+  played for four seconds: a decoded track is some 50 MB, and fast-forward
+  passes a change of music every second or two.
+* **If the game stops without warning** — the game keeps a short note of what
+  it is doing (reading, fast-forward, history open, how many pictures and
+  sounds it holds, which build of the page). A page that is closed, reloaded or
+  put in the background says so in the note as it goes. If the note says
+  neither when the page next loads, the game ended while it was being played,
+  as it does when a phone's browser ends a page for taking too much memory: the
+  opening page then shows the note once, with a button to copy it for a report.
+  The note stays in the browser and is no part of a save export.
 
 ## Controls
 
@@ -576,6 +588,10 @@ repository. Every push to `main` builds and publishes to
   published only once it is added to the build command there.
 * Only `index.html`, `favicon.ico`, `404.html`, `_headers`, `css/`, `js/` and
   `data/` are published. `README.md` and `tools/` stay in the repository.
+  (That is why the iPhone Home Screen icon, `css/apple-touch-icon.png`, is kept
+  in `css/`: the Android app's icon, its middle three quarters at 180 x 180. An
+  iPhone takes the icon when the page is added to the Home Screen, so one added
+  before has to be added again to show it.)
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
   (`data/arc/`, `data/cd/`, `data/default.ttf`, and the translation patches'
   `data/pt/arc/`, `data/es/arc/` and `data/chs/arc/`) for a year without asking again; they

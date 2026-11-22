@@ -10,6 +10,15 @@
 // call or for another app and starting it again): so until the buffer has taken over, the element
 // is checked against the time set for it, and the time is set again if it no longer fits. Once
 // the buffer has taken over, the element is kept from starting again under it.
+//
+// The track is not fetched and decoded as it starts, but once it has played a few seconds
+// (ARM_AFTER). A decoded track is some 50 MB; fast-forward goes through a change of music every
+// second or two, and decoding each one made 375 MB of them in 25 seconds, every one but the last
+// thrown away as soon as it was made, for the browser to clear up when it gets to it. A track that
+// is gone again within those seconds is now never decoded. Its first pass is far longer than the
+// wait, so the buffer is still ready well before it is wanted.
+
+const ARM_AFTER = 4000;
 
 export class AudioSys {
   constructor(loader) {
@@ -37,6 +46,7 @@ export class AudioSys {
     this.loopAt = 0;          // the AudioContext time at which it takes over
     this.loopOff = 0;         // checks in a row that found the element off that time (watchLoop)
     this.loopTimer = 0;
+    this.armTimer = 0;        // the wait before a track is fetched whole and decoded (ARM_AFTER)
     this.fade = null;
     this.pending = null;
     this.unlocked = false;
@@ -180,7 +190,11 @@ export class AudioSys {
     };
     if (!whole) {
       begin(url);
-      if (loop) this.armLoop(token, url);
+      // (the track decoded last is at hand: nothing to wait for)
+      if (loop) {
+        if (this.decoded && this.decoded.url === url) this.armLoop(token, url);
+        else this.armTimer = setTimeout(() => { if (token === this.bgmToken && this.wantPlay) this.armLoop(token, url); }, ARM_AFTER);
+      }
       return;
     }
     el.pause();
@@ -315,6 +329,7 @@ export class AudioSys {
   // Stop a looping buffer (fading it over fadeMs if it has taken over) and forget the one waiting.
   dropLoop(fadeMs) {
     clearTimeout(this.loopTimer);
+    clearTimeout(this.armTimer);
     this.loopBuf = null;
     const src = this.loopSrc, g = this.loopGain;
     this.loopSrc = null;

@@ -248,7 +248,7 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .ask { display: flex; align-items: center; justify-content: center; background: rgba(22, 14, 34, .55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .dialog { min-width: 520px; max-width: 760px; padding: 44px 60px 34px; text-align: center; box-shadow: 0 18px 60px rgba(14, 8, 20, .6); }
 .dialog .q { font-size: 31px; line-height: 44px; }
-.dialog .q small { display: block; margin-top: 6px; font-size: 20px; line-height: 30px; font-style: italic; color: var(--ink-soft); }
+.dialog .q small { display: block; white-space: pre-line; margin-top: 6px; font-size: 20px; line-height: 30px; font-style: italic; color: var(--ink-soft); }
 .dialog .opts { display: flex; justify-content: center; gap: 110px; margin-top: 30px; }
 .dialog .opt { font-size: 31px; padding: 2px 14px 4px; color: var(--ink-soft); border-bottom: 1.5px solid transparent; transition: color .12s; }
 .dialog .opt.cur { color: var(--ink); border-bottom-color: var(--rule); }

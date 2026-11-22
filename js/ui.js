@@ -27,9 +27,20 @@ export class UI {
     e.flushGlobals();
     const typed = Math.max(0, text.glyphs.length - this.waitGlyphs);
     this.waitGlyphs = kind === '\\' ? 0 : text.glyphs.length;
+    if (this.host.trace) this.host.trace(e.skipping() ? 'fast-forward' : 'reading');
     if (e.skipping()) { await this.host.frame(); return; }
-    // the reader is reading: fetch the pictures the next pages will want
-    if (gfx.loader) gfx.loader.prefetch(e.upcomingImages());
+    // The reader is reading: fetch the pictures the next pages will want. Not at once, but when
+    // the story has stood here for half a second, and not while a page of the interface is open
+    // over it. Fetched at once, the pictures ahead were being decoded just as fast-forward stopped
+    // and the history or the menu was opened: up to six of them, 40 MB with HD pictures, on top
+    // of what opening that page takes. A reader who goes on sooner than that is not waiting for them.
+    let ahead = 0;
+    const lookAhead = () => {
+      if (input.modal) { ahead = setTimeout(lookAhead, 500); return; }
+      ahead = 0;
+      if (gfx.loader) gfx.loader.prefetch(e.upcomingImages());
+    };
+    ahead = setTimeout(lookAhead, 500);
 
     const cur = noCursor ? null : e.cursors[kind === '@' ? 0 : 1];
     const sp = cur && cur.sprite;
@@ -88,6 +99,7 @@ export class UI {
         if (e.skipping()) break;
       }
     } finally {
+      clearTimeout(ahead);
       shell.setContext('busy');
     }
     gfx.blit();
@@ -200,6 +212,7 @@ export class UI {
     const { gfx, input, text, shell } = this.host;
     const e = this.engine;
     input.flush();
+    if (this.host.trace) this.host.trace('at a choice', true);
     const [on, off] = e.selectColor;
     const saved = text.color;
     const spans = [];
@@ -286,6 +299,7 @@ export class UI {
     const e = this.engine;
     const { shell, audio } = this.host;
     // the script's own list, with this port's pages before its last entry
+    if (this.host.trace) this.host.trace('menu open', true);
     const items = e.rmenu.map((r) => ({ label: cleanLabel(r.label), value: r.action }));
     const extra = [{ label: 'Flowchart', value: 'flowchart' }];
     if (this.host.guide && this.host.guide.available) extra.push({ label: 'Guide', value: 'guide' });
@@ -385,7 +399,9 @@ export class UI {
     const now = text.linesOf(text.glyphs);
     if (now.some((l) => l.trim())) pages.push({ lines: now, now: true });
     if (!pages.length) { shell.toast('Nothing has been read yet.'); return; }
+    if (this.host.trace) this.host.trace('history open', true);
     const i = await shell.log(pages, this.engine.lookbackColor);
+    if (this.host.trace) this.host.trace('history closed', true);
     const page = typeof i === 'number' ? text.history[i] : null;
     if (!page || !page.point) return;
     if (this.host.onReturn) this.host.onReturn(page.point.beside);

@@ -20,13 +20,14 @@ export class Storage {
       return v ? JSON.parse(v) : null;
     } catch (e) { return null; }
   }
-  set(key, val) {
+  // `quiet`: something not worth a warning when it cannot be written (main.js, the note of what the game is doing)
+  set(key, val, quiet) {
     const v = JSON.stringify(val);
     try {
       if (this.ls) this.ls.setItem(this.prefix + key, v); else this.mem.set(key, v);
       return true;
     } catch (e) {
-      console.warn('could not write save data', e);
+      if (!quiet) console.warn('could not write save data', e);
       return false;
     }
   }
@@ -49,6 +50,7 @@ export class Storage {
         if (k.startsWith(this.prefix)) out[k.slice(this.prefix.length)] = this.ls.getItem(k);
       }
     } else for (const [k, v] of this.mem) out[k] = v;
+    delete out.trace;       // (what this sitting was doing is no part of a save)
     return out;
   }
   eraseAll() {
@@ -60,7 +62,7 @@ export class Storage {
   }
   importAll(obj) {
     for (const k in obj) {
-      if (typeof obj[k] !== 'string') continue;
+      if (typeof obj[k] !== 'string' || k === 'trace') continue;
       if (this.ls) this.ls.setItem(this.prefix + k, obj[k]); else this.mem.set(k, obj[k]);
     }
   }

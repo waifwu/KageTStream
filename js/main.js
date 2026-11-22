@@ -184,6 +184,55 @@ async function boot() {
   const storage = new Storage('nsweb:game:');
   const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
+
+  // What the game was doing, written down as it plays (`host.trace`, below) and looked at here the
+  // next time the page loads. A page that ends as pages do (closed, reloaded, left) says so as it
+  // goes, and one put in the background says that. A note that says neither is of a page that
+  // ended while it was being played, with no warning: a phone's browser does that to a page that
+  // takes too much memory. It is shown once on the opening page, to be copied into a report: it is
+  // the only account there is of what was happening on the reader's own device.
+  const lastTrace = storage.get('trace');
+  storage.set('trace', null, true);
+  const traceText = (r) => {
+    const two = (n) => String(n).padStart(2, '0');
+    const d = new Date(r.t);
+    const at = d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+    return [
+      'Kagetsu Tohya in the browser, build ' + (r.build || 'unknown'),
+      'Doing: ' + r.doing + ' (noted ' + at + ', ' + Math.max(0, Math.round((r.t - r.began) / 60000)) + ' min after starting)',
+      'Script ' + r.lang + ', HD pictures ' + (r.hd ? 'on' : 'off') + ', ' + (r.wide ? '16:9' : '4:3') + ', canvas ' + r.canvas,
+      r.pages + ' pages read, ' + r.history + ' in the history, history opened ' + r.opens + ' times',
+      'Kept: ' + r.pictures[0] + ' pictures (' + r.pictures[1] + ' MB), ' + r.sprites[0] + ' sprites (' + r.sprites[1] + ' MB), '
+        + r.sounds[0] + ' sound effects (' + r.sounds[1] + ' MB), music decoded: ' + (r.track ? 'yes' : 'no'),
+    ].join('\n');
+  };
+  // (a browser may refuse the clipboard: the older way is tried, and if that fails too the note
+  // stays up, to be read off or photographed)
+  const copyText = async (text) => {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* the older way, then */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;left:-999px;top:0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  };
+  const showTrace = async (r) => {
+    const text = traceText(r);
+    for (let failed = false; ;) {
+      const lead = failed ? t('It could not be copied.') : t('If you report it, these details help:');
+      const pick = await shell.ask('The game stopped without warning last time.', lead + '\n' + text, [['Copy', 'copy'], ['Close', true]], 1);
+      if (pick !== 'copy') return;
+      if (await copyText(text)) { shell.toast('Copied.'); return; }
+      failed = true;
+    }
+  };
   // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
   // its shape at once, the opening page with it; the game's picture when it is made (below).
   // The glow around the picture is kept for each shape by itself: on at 4:3, where it softens the
@@ -370,6 +419,7 @@ async function boot() {
     });
     if (location.hash === '#play') history.replaceState(null, '', location.pathname + location.search);
     shell.setHomeStatus('Loading the game’s script…');
+    if (lastTrace && lastTrace.doing && !lastTrace.clean && !lastTrace.hidden) showTrace(lastTrace);
   }
   document.getElementById('import-file').addEventListener('change', async (ev) => {
     const f = ev.target.files[0];
@@ -377,6 +427,7 @@ async function boot() {
     try {
       storage.importAll(JSON.parse(await f.text()));
       replaced = true;
+      storage.set('trace', null, true);      // (nothing is written after this, so the page could not say it ended as it should)
       location.reload();
     } catch (e) { shell.notice('That file is not a save export.'); }
   });
@@ -731,9 +782,47 @@ async function boot() {
   refresh();
 
   let started = false;
+  // The note of what the game is doing (see `lastTrace` above): written at once when a page of the
+  // interface opens or closes, and otherwise no more than every two seconds. `build` is the published main.js's own stamp, so a
+  // report says which version of the page the reader had.
+  const began = Date.now();
+  let build = '';
+  fetch('js/main.js', { method: 'HEAD', cache: 'no-store' })
+    .then((r) => { build = (r.headers.get('etag') || r.headers.get('last-modified') || '').replace(/^W\//, '').replace(/"/g, '').slice(0, 32); }).catch(() => {});
+  const tr = { doing: '', at: 0, opens: 0, hidden: document.hidden, clean: false };
+  const writeTrace = () => {
+    if (replaced || !started || !tr.doing) return;
+    let se = 0;
+    for (const b of audio.buffers.values()) se += b.length * b.numberOfChannels * 4;
+    const mb = (n) => Math.round(n / 1048576);
+    storage.set('trace', {
+      v: 1, t: Date.now(), doing: tr.doing, clean: tr.clean, hidden: tr.hidden, build, began, lang,
+      hd: !!loader.hdOn, wide: !!settings.wide, canvas: canvas.width + 'x' + canvas.height,
+      pages: text.turned, history: text.history.length, opens: tr.opens,
+      pictures: [loader.images.size, mb(loader.held)], sprites: [gfx.spriteCache.size, mb(gfx.spriteBytes)],
+      sounds: [audio.buffers.size, mb(se)], track: audio.decoded ? 1 : 0,
+    }, true);
+  };
+  host.trace = (doing, now) => {
+    if (doing === 'history open') tr.opens++;
+    const t = Date.now();
+    tr.doing = doing;
+    if (!now && t - tr.at < 2000) return;
+    tr.at = t;
+    writeTrace();
+  };
+  window.addEventListener('pagehide', () => { tr.clean = true; writeTrace(); });
+  window.addEventListener('pageshow', () => { tr.clean = false; writeTrace(); });
+  document.addEventListener('visibilitychange', () => { tr.hidden = document.hidden; writeTrace(); });
+  if (ANDROID) {
+    const suspend = window.appSuspend, resume = window.appResume;
+    window.appSuspend = () => { tr.hidden = true; writeTrace(); suspend(); };
+    window.appResume = () => { tr.hidden = false; writeTrace(); resume(); };
+  }
   start = () => {
     if (started) return;
     started = true;
+    host.trace('started', true);
     if (PHONE && !ANDROID) enterFull();    // the whole screen, on its side (while Play is still a touch: a browser asks for one)
     shell.ambientSource = () => gfx.screen;    // the picture as it is displayed
     shell.ambientVersion = () => gfx.drawn;    // and how often it has been drawn on
