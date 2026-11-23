@@ -849,6 +849,20 @@ export class Engine {
     let instant = false;
     let due = Date.now();
     let wordStart = true;
+    // The page is put together and shown as its letters come, but only once for each frame the
+    // screen shows: at the fast speed a letter comes every 8 ms, two to a frame of an ordinary
+    // screen, and the first of the two pictures was made for nothing. A letter that comes before
+    // the last picture has been shown waits for the next one. (Every wait below shows the page
+    // first, so none is left unshown.)
+    let shown = true;
+    const show = () => {
+      if (!shown) return;
+      gfx.present(true);
+      const frame = this.host.frame;
+      if (!frame) return;
+      shown = false;
+      frame().then(() => { shown = true; });
+    };
 
     // `breaking` is a space between words: the line may break there, and then nothing is typed
     const put = async (ch, breaking) => {
@@ -866,7 +880,7 @@ export class Engine {
       due += d;
       const now = Date.now();
       if (due - now >= 4) {
-        gfx.present(true);
+        show();
         await this.host.sleep(due - now);
         if (input.takeClick()) instant = true;
       } else if (due < now - 100) due = now;

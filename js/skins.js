@@ -85,17 +85,26 @@ function unletter(x, w, h, y0, y1, q, easeAtEnd) {
   const d = id.data;
   const out = new Uint8ClampedArray(d);
   const R = Math.round(w * 0.06);
-  const buf = new Uint8Array(2 * R + 1);
+  // The quantile of each pixel's span is read from a count of the span's values, which is kept as
+  // the span moves along the row (one value in, one out), and the place of the quantile in it is
+  // followed from pixel to pixel: it rarely moves by more than a step. (Sorting each span afresh
+  // gave the same picture in a hundred times the time: some 0.2 s on a computer, more on a phone,
+  // with the page standing still for it as the title came up.)
+  const count = new Uint16Array(256);
   for (let y = 0; y < rows; y++) {
     const qy = q(y);
     for (let ch = 0; ch < 3; ch++) {
+      const at = y * w * 4 + ch;
+      count.fill(0);
+      let a = 0, b = -1, n = 0, v = 0, below = 0;      // the span a..b holds n values, `below` of them under v
       for (let px = 0; px < w; px++) {
-        const a = Math.max(0, px - R), b = Math.min(w - 1, px + R);
-        let n = 0;
-        for (let k = a; k <= b; k++) buf[n++] = d[(y * w + k) * 4 + ch];
-        const sub = buf.subarray(0, n);
-        sub.sort();
-        out[(y * w + px) * 4 + ch] = sub[Math.floor(n * qy)];
+        const na = Math.max(0, px - R), nb = Math.min(w - 1, px + R);
+        while (b < nb) { const c = d[at + ++b * 4]; count[c]++; n++; if (c < v) below++; }
+        while (a < na) { const c = d[at + a++ * 4]; count[c]--; n--; if (c < v) below--; }
+        const k = Math.floor(n * qy);                  // the value wanted is the k-th of the span, in order
+        while (below > k) below -= count[--v];
+        while (below + count[v] <= k) below += count[v++];
+        out[at + px * 4] = v;
       }
     }
   }

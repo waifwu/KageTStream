@@ -753,10 +753,17 @@ export class Gfx {
   }
 
   // draw `fn` on top of the last presented frame (cursors, button highlights)
-  overlay(fn, space = 'game') {
-    this.blit();
-    this.prep(this.sctx, space);
-    fn(this.sctx);
+  // (`same`: the picture is as it was, with a small mark of its own drawn again, as the waiting
+  // cursor's next frame is. It is not counted as drawn on: the glow around the stage goes by the
+  // count, and counted, every blink of the cursor had the glow painted and its blur worked out
+  // again, ten times a second for as long as the story waited.)
+  overlay(fn, space = 'game', same = false) {
+    const n = this.drawn;
+    try {
+      this.blit();
+      this.prep(this.sctx, space);
+      fn(this.sctx);
+    } finally { if (same) this.drawn = n; }
   }
 
   // copy the current frame, without text, into the work canvas (menu backdrop)

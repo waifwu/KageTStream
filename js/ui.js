@@ -50,13 +50,14 @@ export class UI {
     const cells = sp ? sp.data.cells : 1;
     const animated = cells > 1 && sp.data.loop !== 3;
     let cell = 0, dir = 1;
-    const draw = () => {
+    // (`again`: the cursor's next frame, over a picture that has not changed; see gfx.overlay)
+    const draw = (again) => {
       if (!sp) { gfx.blit(); return; }
       const x = cur.abs ? cur.x : text.cursorX() + cur.x;
       const y = cur.abs ? cur.y : text.cursorY() + cur.y;
-      gfx.overlay((ctx) => gfx.drawSprite(ctx, sp, x, y, cell));
+      gfx.overlay((ctx) => gfx.drawSprite(ctx, sp, x, y, cell), 'game', again);
     };
-    draw();
+    draw(false);
     shell.setContext('text');
     const started = performance.now();
     const autoDelay = (900 + typed * 45) * [1.7, 1, 0.55][e.autoPace];
@@ -76,7 +77,7 @@ export class UI {
               cell += dir;
             } else if (sp.data.loop === 1) cell = Math.min(cells - 1, cell + 1);
             else cell = (cell + 1) % cells;
-            draw();
+            draw(true);
           }
           continue;
         }
