@@ -642,7 +642,9 @@ export class Shell {
 
   // ---------------------------------------------------------------- save / load
   // slots: [{ no, info: { time, thumb, excerpt } | null, disabled }]
-  saves(title, note, slots) {
+  // (`loading`: it is the page to load from, where a filled slot is the one to point at; its title
+  // is the script's own, in the script's language, and says nothing that can be gone by)
+  saves(title, note, slots, loading) {
     return this.openLayer('paper saves', (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', title));
       layer.appendChild(el('div', 'page-note', note));
@@ -681,7 +683,7 @@ export class Shell {
         return true;
       };
       ctl.ready = () => {
-        const first = slots.findIndex((s) => !s.disabled && (title.toLowerCase().includes('load') ? s.info : !s.info));
+        const first = slots.findIndex((s) => !s.disabled && (loading ? s.info : !s.info));
         ctl.setCur(first >= 0 ? first : ctl.items.indexOf(back));
       };
     });
@@ -1132,7 +1134,7 @@ export class Shell {
       const bar = el('div', 'mp-player');
       const mk = (cls, title, fn) => {
         const b = el('button', cls);
-        b.title = title;
+        b.title = tr(title);
         ctl.nav(b, () => { fn(); paint(); });
         return b;
       };
@@ -1853,7 +1855,7 @@ export class Shell {
         if (t.fog) {
           const toggle = (key, label, title) => {
             const b = el('button', 'fc-tool fc-switch' + (prefs[key] ? ' set' : ''), label);
-            b.title = title;
+            b.title = tr(title);
             tools.appendChild(ctl.nav(b, () => { prefs[key] = !prefs[key]; if (opts.savePrefs) opts.savePrefs(); show(index, selected); }));
           };
           toggle('all', 'Everything', 'Draw the whole chart, or only what has been reached');
@@ -1973,7 +1975,7 @@ export const h = {
   },
   facts: (panel, facts) => {
     const g = el('div', 'hm-facts');
-    for (const [big, small] of facts) { const d = el('div'); d.appendChild(el('b', null, big)); d.appendChild(document.createTextNode(small)); g.appendChild(d); }
+    for (const [big, small] of facts) { const d = el('div'); d.appendChild(el('b', null, big)); d.appendChild(document.createTextNode(tr(small))); g.appendChild(d); }
     panel.appendChild(g);
   },
   actions: (panel, actions) => {
@@ -1998,7 +2000,7 @@ export const h = {
   // a link that leaves the page
   link: (panel, lead, text, href) => {
     const p = el('p');
-    if (lead) p.appendChild(document.createTextNode(lead + ' '));
+    if (lead) p.appendChild(document.createTextNode(tr(lead) + ' '));
     const a = el('a', 'hm-link', text);
     a.href = href;
     a.target = '_blank';

@@ -148,6 +148,7 @@ export const CHS = {
   'Drawn from the script’s own flow and laid out by place and time. It shows what you have reached; choosing a scene lights the ways to it and on from it, and hints, if you turn them on, say how to reach the rest.': '根据剧本流程生成，按地点与时间排列，显示已到达的场景。选择场景可高亮前后路线，开启提示后可查看其他场景的到达条件。',
   'Optional, and off until you turn it on. It follows the walkthrough that came with the copy, one day at a time, and marks the choice to take.': '攻略默认关闭。开启后将按附带攻略逐轮推进，并标记推荐选项。',
   'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': '在同一页面调整正文字体、文字速度、声音，以及原游戏的四项设置。',
+  'saves of 20': '存档（共 20 个）', 'scene read': '已读场景', 'scenes read': '已读场景',
   'Saves': '存档', 'Twenty slots with a picture and a line of the page, kept in this browser.': '提供二十个存档位置，附带截图和文本摘要，保存在此浏览器中。',
   'History': '历史文本', 'Everything read this session, as one scroll; a click or a tap on a page goes back to it.': '连续滚动查看本次游玩的阅读记录；点击某一页即可回到该处。',
   'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.': '可在游玩页面和设置中开启宽屏。背景将放大以填满屏幕，上下边缘可能被裁切；标题和各菜单会使用宽屏布局。',
@@ -196,7 +197,7 @@ export const CHS = {
 };
 
 const day = (n) => '第 ' + n + ' 轮';
-const entry = (s) => ({ op: '序章', 'a day': '一日', ep: '终章' })[s] || s;
+const entry = (s) => ({ op: '序章', 'a day': '一日', ep: '终章' })[s.toLowerCase()] || s;      // (it comes capitalised, as the English has it)
 export const CHS_RULES = [
   [/^Track (\d+)$/, (m) => '曲目 ' + m[1]],
   [/^No\. ?(\d+)$/, (m) => '存档 ' + m[1]],

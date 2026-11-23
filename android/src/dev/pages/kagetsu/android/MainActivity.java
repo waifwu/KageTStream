@@ -375,22 +375,29 @@ public class MainActivity extends Activity {
             String name = "www" + path;
             String type = type(path);
             String head = header(req, "Range");
+            // (what was opened for this answer, until the answer's own stream has it: closed here if no answer comes of it)
+            AssetFileDescriptor fd = null;
+            FileInputStream in = null;
             try {
                 // a stored (uncompressed) entry of the APK: it can be read from any byte
-                AssetFileDescriptor fd = assets.openFd(name);
-                FileInputStream in = new FileInputStream(fd.getFileDescriptor());
+                fd = assets.openFd(name);
+                in = new FileInputStream(fd.getFileDescriptor());
                 long size = fd.getLength(), a = 0, b = size - 1;
                 int code = 200;
                 Matcher m = head == null ? null : RANGE.matcher(head.trim());
                 if (m != null && m.matches() && (!m.group(1).isEmpty() || !m.group(2).isEmpty())) {
-                    if (!m.group(1).isEmpty()) {
-                        a = Long.parseLong(m.group(1));
-                        if (!m.group(2).isEmpty()) b = Math.min(size - 1, Long.parseLong(m.group(2)));
-                    } else {
-                        a = Math.max(0, size - Long.parseLong(m.group(2)));
+                    try {
+                        if (!m.group(1).isEmpty()) {
+                            a = Long.parseLong(m.group(1));
+                            if (!m.group(2).isEmpty()) b = Math.min(size - 1, Long.parseLong(m.group(2)));
+                        } else {
+                            a = Math.max(0, size - Long.parseLong(m.group(2)));
+                        }
+                        if (a < size && a <= b) code = 206;
+                        else { a = 0; b = size - 1; }
+                    } catch (NumberFormatException tooLong) {      // a number no file is as long as: the whole file, as for any range that cannot be met
+                        a = 0; b = size - 1;
                     }
-                    if (a < size && a <= b) code = 206;
-                    else { a = 0; b = size - 1; }
                 }
                 // The WebView applies the Range itself (it skips into the stream and works out Content-Length from
                 // available()), so the body starts at the file's first byte; it ends after the range's last one,
@@ -402,17 +409,24 @@ public class MainActivity extends Activity {
                 InputStream body = "HEAD".equals(req.getMethod()) ? empty(in, fd) : new Slice(in, b + 1, fd);
                 return new WebResourceResponse(type, encoding(type), code, code == 206 ? "Partial Content" : "OK", h, body);
             } catch (FileNotFoundException e) {
+                shut(in, fd);
                 // Not stored: a compressed entry can still be read whole (no ranges), else it is missing.
                 try {
-                    InputStream in = assets.open(name);
-                    return new WebResourceResponse(type, encoding(type), 200, "OK", headers(), in);
+                    InputStream whole = assets.open(name);
+                    return new WebResourceResponse(type, encoding(type), 200, "OK", headers(), whole);
                 } catch (IOException missing) {
                     return status(404, "Not Found");
                 }
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
+                shut(in, fd);
                 Log.w(TAG, name + ": " + e);
                 return status(500, "Internal Server Error");
             }
+        }
+
+        private void shut(Closeable in, Closeable fd) {
+            try { if (in != null) in.close(); } catch (IOException ignored) { }
+            try { if (fd != null) fd.close(); } catch (IOException ignored) { }
         }
 
         private InputStream empty(FileInputStream in, Closeable fd) {

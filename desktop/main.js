@@ -67,7 +67,8 @@ async function serve(request) {
   if (rel === '') rel = 'index.html';
   const file = path.resolve(ROOT, rel);
   const inside = file.startsWith(path.resolve(ROOT) + path.sep);
-  if (!inside || !PUBLISHED.test(rel.replace(/\\/g, '/'))) return plain(404, 'Not found');
+  // (the file's own path is what is tested, not the request's: "data/..%2FREADME.md" begins with data/ and is not in it)
+  if (!inside || !PUBLISHED.test(path.relative(ROOT, file).split(path.sep).join('/'))) return plain(404, 'Not found');
 
   let stat;
   try { stat = await fs.promises.stat(file); } catch (e) { return plain(404, 'Not found'); }

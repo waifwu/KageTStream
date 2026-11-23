@@ -382,6 +382,9 @@ export class Gfx {
         data = img && img.hdScale ? this.hdSprite(img, t) : this.buildSprite(img, t, raw);
       }
       if (this.loader.hdOn === hdOn) {        // (not kept if HD was switched while it loaded)
+        // (the same picture asked for twice at once is built twice: the second takes the first's place, and its count)
+        const had = this.spriteCache.get(tag);
+        if (had) this.spriteBytes -= decodedBytes(had.canvas);
         this.spriteCache.set(tag, data);
         this.spriteBytes += decodedBytes(data.canvas);
         for (const [old, d] of this.spriteCache) {

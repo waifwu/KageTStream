@@ -4,6 +4,10 @@
 // are pages of the shell.
 import { Signal } from './engine.js';
 import { cleanLabel } from './text.js';
+
+// The title of the save or the load page, as the script gives it (savename): without the marks
+// set around it there ("□■Save game■□", "■・Cargar partida・■").
+const pageTitle = (name) => cleanLabel(name).replace(/[■□]/g, '').replace(/\s+/g, ' ').trim().replace(/^[・\s]+|[・\s]+$/g, '');
 import { parseFlow, layoutFlow, sideStories, simulateDay, SPECIAL } from './flowchart-model.js';
 import { similarity } from './guide.js';
 import { findSkin } from './skins.js';
@@ -358,7 +362,7 @@ export class UI {
     const { shell } = this.host;
     if (!e.snapshot) { shell.toast('There is nothing to save yet.'); return; }
     const slots = this.slots(false);
-    const no = await shell.saves(cleanLabel(e.saveName[0]).replace(/[■□]/g, '').replace(/\s+/g, ' ').trim() || 'Save game', 'Choose where to keep this page', slots);
+    const no = await shell.saves(pageTitle(e.saveName[0]) || 'Save game', 'Choose where to keep this page', slots, false);
     if (!no) return;
     if (slots[no - 1].info && !(await shell.confirm('Write over No. ' + String(no).padStart(2, '0') + '?'))) return;
     if (e.saveToSlot(no)) shell.toast('Saved in No. ' + String(no).padStart(2, '0') + '.');
@@ -368,7 +372,7 @@ export class UI {
   async loadMenu() {
     const e = this.engine;
     const { shell, storage } = this.host;
-    const no = await shell.saves(cleanLabel(e.saveName[1]).replace(/[■□]/g, '').replace(/\s+/g, ' ').trim() || 'Load game', 'Choose a page to return to', this.slots(true));
+    const no = await shell.saves(pageTitle(e.saveName[1]) || 'Load game', 'Choose a page to return to', this.slots(true), true);
     if (!no) return;
     if (!(await shell.confirm('Return to No. ' + String(no).padStart(2, '0') + '?', 'Anything not saved since is left behind.'))) return;
     const data = storage.loadSlot(no);

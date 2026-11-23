@@ -346,6 +346,7 @@ const JA = {
     '任意の機能で、オンにするまでは働きません。付属の攻略手順を一回ずつたどり、選ぶ選択肢に印を付けます。',
   'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': 'すべてを一ページに。物語のフォント、文字の速さ、音、そしてゲーム本来の設定項目。',
   'Saves': 'セーブ',
+  'saves of 20': 'セーブ（全20枠）', 'scene read': '既読シーン', 'scenes read': '既読シーン',
   'Twenty slots with a picture and a line of the page, kept in this browser.': '画面の絵とページの一行が付く二十枠。このブラウザに保存されます。',
   'History': '回想',
   'Everything read this session, as one scroll; a click or a tap on a page goes back to it.': '今回読んだすべてを、一続きで。ページをクリックまたはタップすると、そこへ戻ります。',
@@ -726,6 +727,7 @@ const PT = {
     'Opcional, e desligado até você ligá-lo. Segue o detonado que veio com a cópia, um dia de cada vez, e marca a escolha a fazer.',
   'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': 'Uma página para tudo: a fonte da história, a velocidade do texto, o som e as quatro opções do próprio jogo.',
   'Saves': 'Jogos salvos',
+  'saves of 20': 'jogos salvos de 20', 'scene read': 'cena lida', 'scenes read': 'cenas lidas',
   'Twenty slots with a picture and a line of the page, kept in this browser.': 'Vinte espaços, cada um com uma imagem e uma linha da página, guardados neste navegador.',
   'History': 'Histórico',
   'Everything read this session, as one scroll; a click or a tap on a page goes back to it.': 'Tudo o que foi lido nesta sessão, em uma só rolagem; um clique ou um toque em uma página volta a ela.',
@@ -1112,6 +1114,7 @@ const ES = {
     'Opcional, y desactivada hasta que la actives. Sigue la guía de juego que venía con la copia, un día cada vez, y marca la decisión a tomar.',
   'One page for everything: the story’s font, text speed, sound, and the game’s own four switches.': 'Una página para todo: la fuente de la historia, la velocidad del texto, el sonido y las cuatro opciones del propio juego.',
   'Saves': 'Partidas',
+  'saves of 20': 'partidas de 20', 'scene read': 'escena leída', 'scenes read': 'escenas leídas',
   'Twenty slots with a picture and a line of the page, kept in this browser.': 'Veinte espacios, cada uno con una imagen y una línea de la página, guardados en este navegador.',
   'History': 'Historial',
   'Everything read this session, as one scroll; a click or a tap on a page goes back to it.': 'Todo lo leído en esta sesión, en un solo desplazamiento; un clic o un toque en una página vuelve a ella.',
@@ -1271,7 +1274,10 @@ const PT_RULES = [
 // story page's entries are as its picture writes them.
 const DÍA = (n) => 'Día ' + n;
 const MEM = (n) => 'Memoria ' + n;
+// An entry of the story's page, as that page names it in Spanish ("Un día"; Op and Ep keep their names).
+// (It comes capitalised, as the English has it; the table below is for one that does not.)
 const ENTRY_ES = { op: 'op', 'a day': 'un día', ep: 'ep' };
+const entryEs = (s) => ES[s] || ENTRY_ES[s] || s;
 const ES_RULES = [
   [/^Track (\d+)$/, (m) => 'Pista ' + m[1]],
   [/^No\. ?(\d+)$/, (m) => MEM(m[1])],
@@ -1294,12 +1300,12 @@ const ES_RULES = [
   [/^Day (\d+): still to come$/, (m) => DÍA(m[1]) + ': por venir'],
   [/^Make Day (\d+) next up$/, (m) => 'Hacer del ' + DÍA(m[1]) + ' el siguiente'],
   [/^Start “(.+)” on the story’s page, and the choices listed for Day (\d+) are marked as you reach them\.$/,
-    (m) => 'Empieza “' + (ENTRY_ES[m[1]] || m[1]) + '” en la página de la historia, y las decisiones del ' + DÍA(m[2]) + ' se marcan a medida que llegas a ellas.'],
+    (m) => 'Empieza “' + entryEs(m[1]) + '” en la página de la historia, y las decisiones del ' + DÍA(m[2]) + ' se marcan a medida que llegas a ellas.'],
   [/^The guide is off, so nothing is marked\. Turn it on above to have Day (\d+)’s choices marked\.$/,
     (m) => 'La guía está desactivada, así que no se marca nada. Actívala arriba para que se marquen las decisiones del ' + DÍA(m[1]) + '.'],
   [/^The walkthrough is (\d+) play-throughs of the story’s day, meant to be played in order\. It calls each one a Day\.$/,
     (m) => 'La guía de juego son ' + m[1] + ' partidas del día de la historia, para jugar en orden. A cada una la llama Día.'],
-  [/^Begins with “(.+)” on the story’s page\.$/, (m) => 'Empieza con “' + (ENTRY_ES[m[1]] || m[1]) + '” en la página de la historia.'],
+  [/^Begins with “(.+)” on the story’s page\.$/, (m) => 'Empieza con “' + entryEs(m[1]) + '” en la página de la historia.'],
   [/^There is a quiz in this one\. Its questions come from one of (\d+) sets; the right answer is marked in each\.$/,
     (m) => 'Este tiene un cuestionario. Sus preguntas salen de uno de ' + m[1] + ' grupos; en cada una se marca la respuesta correcta.'],
   [/^Guide: this is Day (\d+) of the walkthrough\.( In its quiz, miss a question on purpose\.)?$/,
