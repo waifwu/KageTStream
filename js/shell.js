@@ -1976,6 +1976,20 @@ export const h = {
     for (const [k, v] of rows) { g.appendChild(el('div', 'k', k)); g.appendChild(el('div', 'v', v)); }
     panel.appendChild(g);
   },
+  // the Controls page: [[what the mouse or a finger does, the keys' names, what it does]], a rule
+  // between rows. The first two come already translated (a key's name is what is printed on it).
+  controls: (panel, rows) => {
+    const g = el('div', 'hm-rows hm-controls');
+    for (const [how, keys, what] of rows) {
+      const k = el('div', 'k');
+      if (how) k.appendChild(el('span', 'hm-how')).textContent = how;
+      for (const name of keys) k.appendChild(el('kbd')).textContent = name;
+      if (!how && !keys.length) k.textContent = '—';
+      g.appendChild(k);
+      g.appendChild(el('div', 'v', what));
+    }
+    panel.appendChild(g);
+  },
   facts: (panel, facts) => {
     const g = el('div', 'hm-facts');
     for (const [big, small] of facts) { const d = el('div'); d.appendChild(el('b', null, big)); d.appendChild(document.createTextNode(tr(small))); g.appendChild(d); }

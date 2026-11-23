@@ -67,19 +67,19 @@ function sceneNamesLatin(src, lead) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const frame = () => new Promise((r) => (document.hidden ? setTimeout(r, 16) : requestAnimationFrame(() => r())));
 
-// The opening page's Controls: the mouse and the touch screen as they are, the keys as they are set
-// (Settings > Controls changes them).
-const keyList = (...parts) => parts.flat().filter(Boolean).join(t(', ')) || '\u2014';
+// The opening page's Controls, a row to an action: what the mouse and the touch screen do, the keys
+// as they are set (Settings > Controls changes them), and what it does. The page draws each key as a cap.
+const gestures = (...parts) => parts.map((s) => t(s)).join(t(', '));
 const controlsRows = () => [
-  [keyList(t('Click, tap'), names('confirm')), 'Go on to the next line, or take what is pointed at.'],
-  [keyList(t('Right-click, two-finger tap'), t('swipe right'), names('menu')), 'The menu: save, load, history, flowchart, guide, settings, title.'],
-  [keyList(t('Wheel up'), t('swipe up'), names('up', 'pageup')), 'Text history. Scroll past its end to return.'],
-  [names('hold').length ? keyList(names('hold'), t('or a finger, held down')) : t('A finger held down'), 'Fast-forward through what you have read, for as long as it is held.'],
-  [keyList(names('skip')), 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
-  [keyList(names('auto')), 'Let the story advance by itself.'],
-  [keyList(names('speed0', 'speed1', 'speed2')), 'Text speed: slow, normal, fast.'],
-  [keyList(names('mute', 'full')), 'Mute, fullscreen.'],
-  [keyList(t('Top edge'), t('swipe down')), 'The quick bar appears while the story waits for you. On a touch screen a swipe brings it down, and a tap beside it puts it away.'],
+  [gestures('Click, tap'), names('confirm'), 'Go on to the next line, or take what is pointed at.'],
+  [gestures('Right-click, two-finger tap', 'swipe right'), names('menu'), 'The menu: save, load, history, flowchart, guide, settings, title.'],
+  [gestures('Wheel up', 'swipe up'), names('up', 'pageup'), 'Text history. Scroll past its end to return.'],
+  [gestures('A finger held down'), names('hold'), 'Fast-forward through what you have read, for as long as it is held.'],
+  ['', names('skip'), 'Fast-forward on and off. It stops at a choice; a click stops it too.'],
+  ['', names('auto'), 'Let the story advance by itself.'],
+  ['', names('speed0', 'speed1', 'speed2'), 'Text speed: slow, normal, fast.'],
+  ['', names('mute', 'full'), 'Mute, fullscreen.'],
+  [gestures('Top edge', 'swipe down'), [], 'The quick bar appears while the story waits for you. On a touch screen a swipe brings it down, and a tap beside it puts it away.'],
 ];
 
 // The desktop program (desktop/main.js) serves these same pages over its own scheme. It is only the
@@ -323,7 +323,7 @@ async function boot() {
     } },
     { plate: 'Controls', build(p) {
       h.head(p, 'Mouse, keyboard and touch');
-      h.rows(p, controlsRows());
+      h.controls(p, controlsRows());
       h.p(p, 'The keys can be changed once the game is running: Settings, then Controls.', 'fine');
     } },
     { plate: 'Save data', build(p) {

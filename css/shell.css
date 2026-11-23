@@ -101,6 +101,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hm-panel .fine { font-size: 19px; line-height: 30px; font-style: italic; color: var(--ink-soft); }
 .hm-rows { display: grid; grid-template-columns: 290px 1fr; column-gap: 26px; row-gap: 4px; margin: 4px 0 16px; }
 .hm-rows .k { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+/* the Controls page: what the mouse or a finger does in plain italics, each key as a cap, a rule between rows.
+   Both sides of a row are set on the same line height, so the caps stand on the line of the words beside them. */
+.hm-controls { grid-template-columns: 360px 1fr; column-gap: 0; row-gap: 0; margin: 0 0 22px; }
+.hm-controls > * { padding: 12px 0; border-top: 1px solid rgba(92, 102, 140, .2); }
+.hm-controls > :nth-child(-n + 2) { padding-top: 0; border-top: 0; }
+.hm-controls .k { padding-right: 20px; font-size: 20px; line-height: 35px; letter-spacing: 0; text-transform: none; }
+.hm-how { margin-right: 10px; font-style: italic; }
+.hm-controls kbd { display: inline-block; min-width: 34px; margin: 0 7px 0 0; padding: 0 8px; box-sizing: border-box; font: inherit; font-size: 17px; line-height: 26px; text-align: center; white-space: nowrap;
+  color: var(--ink); border: 1.5px solid rgba(92, 102, 140, .34); border-bottom-width: 3px; border-radius: 5px; background: rgba(255, 255, 255, .32); }
 .hm-files { row-gap: 14px; margin: 18px 0 26px; align-items: baseline; }
 :root:lang(ja) .hm-files .k { letter-spacing: .12em; }
 .hm-facts { display: flex; gap: 60px; margin: 12px 0 22px; }
@@ -629,6 +638,11 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .upright .hm-rows .k { margin-top: 18px; font-size: 22px; line-height: 34px; }
 .upright .hm-rows .k:first-child { margin-top: 0; }
 .upright .hm-files .v { margin-bottom: 4px; }
+.upright .hm-controls > * { border-top: 0; }
+.upright .hm-controls .k { margin-top: 0; padding: 20px 0 2px; border-top: 1px solid rgba(92, 102, 140, .2); font-size: 27px; line-height: 44px; }
+.upright .hm-controls .k:first-child { padding-top: 0; border-top: 0; }
+.upright .hm-controls .v { padding: 0 0 20px; }
+.upright .hm-controls kbd { min-width: 44px; padding: 0 12px; font-size: 23px; line-height: 34px; }
 .upright .hm-link { font-size: 29px; }
 .upright .hm-facts { gap: 56px; }
 .upright .hm-facts div { font-size: 22px; }
