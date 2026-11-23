@@ -16,10 +16,10 @@ const DATA = 'data/';
 // The story's languages. English is data/script.txt; each other one is data/script-<code>.txt and is
 // offered only where the data holds it (tools/extract.py --ja / --pt / --es / --chs).
 // The opening page names them in full; Settings uses short names to fit its column.
-const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja'], ['Portugu\u00eas', 'pt'], ['Espa\u00f1ol', 'es'], ['简体中文', 'chs']];
-const SHORT = { en: 'EN', ja: 'JA', pt: 'PT-BR', es: 'ES', chs: '简中' };
+const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja'], ['Portugu\u00eas', 'pt'], ['Espa\u00f1ol', 'es'], ['简体中文', 'chs'], ['Русский', 'ru']];
+const SHORT = { en: 'EN', ja: 'JA', pt: 'PT-BR', es: 'ES', chs: '简中', ru: 'RU' };
 const scriptOf = (l) => 'script-' + l + '.txt';
-const SWITCH = { en: 'Switch the story to English?', ja: 'Switch the story to Japanese?', pt: 'Switch the story to Portuguese?', es: 'Switch the story to Spanish?', chs: 'Switch the story to Simplified Chinese?' };
+const SWITCH = { en: 'Switch the story to English?', ja: 'Switch the story to Japanese?', pt: 'Switch the story to Portuguese?', es: 'Switch the story to Spanish?', chs: 'Switch the story to Simplified Chinese?', ru: 'Switch the story to Russian?' };
 
 // What the Japanese script calls its scenes. Each says so in the question it asks before a re-read
 // ("ここは、「学校・昼休み～食堂。…」のシーンです。"): the place before the first "・", then the name.
@@ -310,7 +310,7 @@ async function boot() {
         ['Saves', 'Twenty slots with a picture and a line of the page, kept in this browser.'],
         ['History', 'Everything read this session, as one scroll.'],
         ['16:9', 'The picture fills a wide screen, with nothing bare at its sides.'],
-        ['Languages', 'The story in English, Japanese, Portuguese, Spanish or Simplified Chinese.'],
+        ['Languages', 'The story in English, Japanese, Portuguese, Spanish, Simplified Chinese or Russian.'],
         ['HD pictures', 'The standing pictures and event CGs, enlarged four times so they stay sharp on a large screen.'],
         ['Keys', 'Every key can be changed, in Settings under Controls.'],
         ['Phones', 'Played with the phone on its side, across the whole screen.'],

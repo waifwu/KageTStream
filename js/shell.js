@@ -2032,13 +2032,18 @@ export const h = {
     panel.appendChild(p);
   },
   // one of a few: [[label, value]], the current value, and what to do when another is taken
+  // its name over a row of the choices, joined, the one taken filled in (the Play page's switches)
   choice: (panel, label, options, current, fn) => {
-    const g = el('div', 'hm-choice' + (label === 'Language' ? ' languages' : ''));
+    const g = el('div', 'hm-choice' + (label === 'Language' ? ' languages' : label === 'Aspect ratio' ? ' aspect' : ''));
     g.appendChild(el('span', 'k', label));
+    const row = g.appendChild(el('div', 'hm-seg'));
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', tr(label));
     for (const [text, value] of options) {
-      const b = el('button', 'hm-link' + (value === current ? ' on' : ''), text);
+      const b = el('button', value === current ? 'on' : null, text);
+      b.setAttribute('aria-pressed', String(value === current));
       if (value !== current) b.addEventListener('click', (e) => { e.stopPropagation(); fn(value); });
-      g.appendChild(b);
+      row.appendChild(b);
     }
     panel.appendChild(g);
   },

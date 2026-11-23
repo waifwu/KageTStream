@@ -6,6 +6,8 @@
     python3 tools/extract.py --pt "<the Portuguese patch's game folder>"
     python3 tools/extract.py --es "<the Spanish patch's folder>"
     python3 tools/extract.py --chs "<the Chinese game folder, or extracted/ holding nscript.txt and arc0/arc1>"
+    python3 tools/extract.py --ru "<the Ren'Py release with Russian: its .zip, .app or game folder>" \
+                             --ru-english "<the copy's nscriptoriginal.dat, the old English script>"
 
 The other forms add another language to the data that is already there (any of them can also be
 given together with the first, or with one another). With one the player offers a language switch.
@@ -22,6 +24,10 @@ What it does
   * --es <folder> -> data/script-es.txt and data/es/arc/..., the same way
   * --chs <source> -> data/script-chs.txt (GBK or UTF-8) and data/chs/arc/...;
                      numbered bgm/02.mp3 through bgm/18.mp3 reuse the shared CD tracks
+  * --ru <release>  -> data/script-ru.txt: this port's script with the Russian of a Ren'Py release
+                     (game/tl/russian/), paired line by line through the old English script it was
+                     converted from (--ru-english); see tools/russian.py. Its pictures with Russian
+                     words -> data/ru/arc/...
   * data/manifest.json lists every extracted file (lower-case, forward slashes).
 
 Nothing is re-encoded: images and audio are written byte-for-byte as stored.
@@ -495,10 +501,31 @@ def add_patch(code, src, out):
     print('%s script: %d lines' % (name, text.count('\n')))
 
 
+def add_russian(src, english, out):
+    """Writes data/script-ru.txt from a Ren'Py release's Russian (tools/russian.py) and lists it."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import renpy_read
+    import russian
+    release = renpy_read.Release(src)
+    old_text = japanese_script(english)       # the same de-obfuscation as any nscript.dat
+    cur_text = open(os.path.join(out, 'script.txt'), encoding='utf-8').read()
+    text, _, _ = russian.build(release, old_text, cur_text)
+    with open(os.path.join(out, 'script-ru.txt'), 'wb') as f:
+        f.write(text.encode('utf-8'))
+    added = {'script-ru.txt'} | russian.add_pictures(release, out)
+    mpath = os.path.join(out, 'manifest.json')
+    manifest = json.load(open(mpath)) if os.path.exists(mpath) else {'files': []}
+    keep = [f for f in manifest['files'] if not f.startswith('ru/') and f != 'script-ru.txt']
+    manifest['files'] = sorted(set(keep) | added)
+    with open(mpath, 'w') as f:
+        json.dump(manifest, f)
+    print('russian script: %d lines' % text.count('\n'))
+
+
 def main():
     args = sys.argv[1:]
     extra = {}
-    for flag in ('--ja', '--pt', '--es', '--chs'):
+    for flag in ('--ja', '--pt', '--es', '--chs', '--ru', '--ru-english'):
         if flag in args:
             k = args.index(flag)
             if k + 1 >= len(args):
@@ -507,14 +534,21 @@ def main():
             extra[flag[2:]] = args[k + 1]
             del args[k:k + 2]
     ja = extra.pop('ja', None)
+    ru = extra.pop('ru', None)
+    ru_english = extra.pop('ru-english', None)
+    if ru and not ru_english:
+        print('--ru needs --ru-english: the old English script (nscriptoriginal.dat) the release was made from')
+        return 1
     here = os.path.dirname(os.path.abspath(__file__))
-    if not args and (ja or extra):      # only other languages, into the data that is there
+    if not args and (ja or ru or extra):      # only other languages, into the data that is there
         out = os.path.abspath(os.path.join(here, '..', 'data'))
         os.makedirs(out, exist_ok=True)
         if ja:
             add_japanese(ja, out)
         for code, src in extra.items():
             add_patch(code, src, out)
+        if ru:
+            add_russian(ru, ru_english, out)
         return 0
     if not args:
         print(__doc__)
@@ -599,6 +633,8 @@ def main():
         add_japanese(ja, out)
     for code, src in extra.items():
         add_patch(code, src, out)
+    if ru:
+        add_russian(ru, ru_english, out)
     return 0
 
 

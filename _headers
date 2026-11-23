@@ -18,6 +18,10 @@
 /data/chs/arc/*
   Cache-Control: public, max-age=31536000, immutable
 
+# the Russian translation's pictures (tools/extract.py --ru), made once from the Ren'Py release's
+/data/ru/arc/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /data/cd/*
   Cache-Control: public, max-age=31536000, immutable
 

@@ -81,6 +81,33 @@ is also put right in a few places that are wrong in the Windows build too:
 No line of the script moves. Three of the English patch's translator cards
 that the Spanish credits still name are in neither archive, and are skipped.
 
+The Russian translation comes from a different kind of release: the Ren'Py
+version of the game (`KagetsuTohya-1.0`, for Windows, macOS or Linux), which
+keeps its Russian as translations of its English lines (`game/tl/russian/`).
+Give it the release (its `.zip`, `.app` or folder) and the old English script
+it was made from, the copy's `nscriptoriginal.dat`:
+
+```bash
+python3 tools/extract.py --ru "/path/to/KagetsuTohya-1.0-mac.zip" --ru-english "/path/to/Kagetsu Tohya/Game/nscriptoriginal.dat"
+```
+
+Nothing of the release is run: its compiled scripts and its archive's index are
+Python pickles, read by a reader that gives back no callable of theirs
+(`tools/renpy_read.py`). Each English line of the release is found in the old
+English script by its words, and its Russian (by the identifier Ren'Py gives the
+line) is written at the same line of this port's script, `data/script-ru.txt`;
+choices, daily messages and the menus are found as strings the same way
+(`tools/russian.py`). The two English scripts have the same lines in the same
+places, only the words differ, so no label, command or skip moves; the walkthrough
+plays through it for both endings as through the English. The release's 54
+pictures with Russian words on them (the credits, the chapters' names, the
+translators' cards, Imogirisou's title, the card Ciel holds up) are AVIF at
+1920×1080; ffmpeg reads them, and each is made back into this port's own shape
+and size under `data/ru/arc/`. What the English patch added and the release does
+not have stays in English: the staff room's message and scene selectors, jukebox
+and easter eggs, and the titles and artists of the gallery's guest and submitted
+art.
+
 ### HD pictures
 
 The sprites and event CGs can be shown enlarged (Settings, *HD pictures*). The
@@ -267,8 +294,10 @@ the story.
 * **Opening page** — five plates over the twilight field: About (with a link to
   the source on GitHub), Controls, Save data, Download (the desktop program and the Android app),
   Play. It opens with none chosen, so a stray click starts nothing. The Play
-  page has the language and aspect-ratio switches, and "press any button"
-  in the middle of the space below them. A click anywhere in that space, down
+  page has the language and aspect-ratio switches (each its name over a row of
+  its choices, joined, the one taken filled in; the two shapes drawn beside
+  4:3 and 16:9), and "press any button" in the middle of the shaded space below
+  them, set off by a rule. A click anywhere in that space, down
   to the panel's foot, starts the game (and is the click a browser needs before
   it will play sound); a click above it, among the switches, does not.
 * **The game's own menus** — the title, Start game and each story's page are
@@ -299,7 +328,7 @@ the story.
   "upright" rules in `css/shell.css`). The title stands low on the picture with
   the five plates in a column under it, a plate's page fills the screen with
   **Back** at its foot, and the Play page names the languages by their short
-  names (EN, JA, PT-BR, ES, 简中). **Play** starts the game, takes the whole
+  names (EN, JA, PT-BR, ES, 简中, RU). **Play** starts the game, takes the whole
   screen and asks for it to be kept on its side (Android; an iPhone's browser
   has no fullscreen, and gives the page the whole screen only when it is opened
   from the Home Screen; so it is offered neither Full on the quick bar nor
@@ -347,8 +376,8 @@ the story.
   guide is on and which ending it leads to. On the flowchart the day's route is
   drawn in amber. `node tools/guide-check.mjs [normal|true]` plays the whole
   walkthrough through the real script and reports any step that does not match
-  a choice the game offers (none, for either ending). Add `ja`, `pt`, `es` or
-  `chs` to play the Japanese, Portuguese, Spanish or Chinese script the same way.
+  a choice the game offers (none, for either ending). Add `ja`, `pt`, `es`,
+  `chs` or `ru` to play the Japanese, Portuguese, Spanish, Chinese or Russian script the same way.
 * **Settings** — one page for everything: story font (a serif, the default; the
   game's own; or a sans), text speed, auto pace, the guide's marks, the game's own four
   switches (instant effects, skip parts already read, daily message, skip
@@ -394,9 +423,9 @@ the story.
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
   the resolution the picture is drawn at, so they stay as sharp as the text.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
-  holds another language's script) — English, 日本語, Português, Español or
-  简体中文 on the opening page, EN, JA, PT-BR, ES or 简中 in Settings (five full
-  names do not fit its column), each offered when its script is in `data/`. On the opening page nothing is
+  holds another language's script) — English, 日本語, Português, Español,
+  简体中文 or Русский on the opening page, EN, JA, PT-BR, ES, 简中 or RU in Settings
+  (six full names do not fit its column), each offered when its script is in `data/`. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
   From Settings it asks first, then starts again from the opening page with the
   other script. What has been read, the gallery, the flowchart and the
@@ -435,8 +464,19 @@ the story.
   name: planning and script, Dhty, Natdon and 骤风; translation, 9栋424, 骡子,
   仙堂麻寻 and Coko; editing, B-rabbit, 天降の⑨ and 某7; proofreading, Haxis,
   Xiayu and 诅咒之子.
+  Russian is the translation of the Ren'Py release (see Run it, `--ru`). Its
+  translators' cards in the credits name Kisska♥Sadistka, Samurai_jugg and
+  MCreeper. The interface is in Russian, in the release's words where it has
+  them: Старт, Загрузка, Настройки, Галерея from its title; the stories and the
+  dreams as its menu pictures write them (Сумерки Луговой Луны. Сказочная
+  принцесса, Десять ночей грёз, Удачи, Сиэль-сенсей, …), and the special story
+  as its title picture does (Пьющая сновидящая луна); Оп, День, Еп and
+  Помощь from its story page; Сохранить, Загрузить, История and Назад from its
+  game menu; a save slot a "Слот". Counts are written without a noun that would
+  have to agree with them ("Прочитано сцен: 3 из 229"). The release gives its
+  scenes no names, so the flowchart keeps the English ones.
   The opening page's plates and the quick bar are set a little closer in
-  Portuguese and Spanish, so their longer words fit.
+  Portuguese, Spanish and Russian, so their longer words fit.
 * **Unlock everything** (Settings; off by default) — asks
   first, then opens every scene on the flowchart (each can be read on its own),
   every picture and track in the Gallery, every story on the Start game
@@ -534,17 +574,19 @@ js/input.js             mouse / touch / keyboard
 js/keys.js              which key does what: the keys it comes with, and the reader's own (Settings > Controls)
 js/storage.js           saves and persistent ("global") variables
 js/main.js              boot, and the opening page's words
-js/i18n.js              the interface's words in Japanese, Portuguese and Spanish
+js/i18n.js              the interface's words in Japanese, Portuguese, Spanish and Russian
 desktop/main.js         the desktop program: the window, and the files served to it
 desktop/tools/make-icon.js  draws the program's icons and the site's favicon.ico
 android/build_apk.sh    builds the Android app: the site's files inside one APK
 android/src/            the Android app: the WebView, and the files served to it
-tools/extract.py        unpacks a game folder into data/; --ja / --pt / --es add another language
+tools/extract.py        unpacks a game folder into data/; --ja / --pt / --es / --chs / --ru add another language
+tools/russian.py        the Russian script and pictures, from the Ren'Py release (extract.py --ru)
+tools/renpy_read.py     reads a Ren'Py release's scripts, translations and archive without running them
 tools/dryrun.mjs        headless test: runs the interpreter over the whole script
 tools/guide-check.mjs   headless test: plays the walkthrough through the real script
 tools/serve.py          the local server for playing: http.server, telling the browser not to keep stale copies
 tools/hd.py             converts enlarged PNGs of the sprites and CGs into data/hd/ (Settings > HD pictures)
-data/                   extracted game data (generated); data/pt/, data/es/ the patches' own pictures and sounds;
+data/                   extracted game data (generated); data/pt/, data/es/, data/chs/, data/ru/ the translations' own pictures and sounds;
                         data/hd/ the HD pictures and their list
 ```
 
@@ -605,7 +647,7 @@ repository. Every push to `main` builds and publishes to
   before has to be added again to show it.)
 * `_headers` lets browsers keep the game's own pictures, sounds, music and font
   (`data/arc/`, `data/cd/`, `data/default.ttf`, and the translation patches'
-  `data/pt/arc/`, `data/es/arc/` and `data/chs/arc/`) for a year without asking again; they
+  `data/pt/arc/`, `data/es/arc/`, `data/chs/arc/` and `data/ru/arc/`) for a year without asking again; they
   never change. The HD pictures (`data/hd/arc/` and the patches' `data/hd/pt/`,
   `data/hd/es/`, `data/hd/chs/`) are kept for a year too: the game lets go of
   the ones it has not shown for a while to stay within a phone's memory, and

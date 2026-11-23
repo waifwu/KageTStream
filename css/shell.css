@@ -137,12 +137,14 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 :root:lang(ja) .cg.locked::after { content: "未見"; }
 :root:lang(ja) .cf-sec, :root:lang(ja) .hm-plate, :root:lang(ja) .hm-press, :root:lang(ja) #quickbar .plate,
 :root:lang(ja) .hm-choice .k, :root:lang(ja) .hm-facts div, :root:lang(ja) .hm-brand, :root:lang(ja) .gd-sub, :root:lang(ja) .fc-sub { letter-spacing: .12em; text-indent: 0; }
-/* Portuguese and Spanish: the same words, and the opening page's plates set closer so their longer
-   names ("Dados salvos", "Acerca de") still end before the brand at the left */
+/* Portuguese, Spanish and Russian: the same words, and the opening page's plates set closer so their longer
+   names ("Dados salvos", "Acerca de", "Сохранения") still end before the brand at the left */
 :root:lang(pt) .slot.empty .thumb::after { content: "Vazio"; }
 :root:lang(pt) .cg.locked::after { content: "Ainda não vista"; }
 :root:lang(es) .slot.empty .thumb::after { content: "Vacío"; }
 :root:lang(es) .cg.locked::after { content: "Aún no vista"; }
+:root:lang(ru) .slot.empty .thumb::after { content: "Пусто"; }
+:root:lang(ru) .cg.locked::after { content: "Ещё не открыто"; }
 :root:lang(zh) { --serif: "Songti SC", SimSun, "Noto Serif CJK SC", "Noto Serif SC", serif; }
 :root:lang(zh) #stage *, :root:lang(zh) #home *, :root:lang(zh) #phone-note p { font-style: normal; }
 :root:lang(zh) .slot.empty .thumb::after { content: "空白存档"; }
@@ -151,26 +153,34 @@ a.hm-link { text-decoration: none; }      /* the rule under it is the border: no
 :root:lang(zh) #quickbar .plate, :root:lang(zh) .hm-choice .k, :root:lang(zh) .hm-facts div,
 :root:lang(zh) .hm-brand, :root:lang(zh) .gd-sub, :root:lang(zh) .fc-sub { letter-spacing: .08em; text-indent: 0; }
 :root:lang(zh) .hm-files .k { letter-spacing: .08em; }
-/* Five languages share the settings column and the opening page's language row. */
-.hm-choice.languages { flex-wrap: wrap; gap: 18px; }
+/* Six languages share the settings column. */
 .config .cols .cf-opts.languages { gap: 18px; }
-:root:lang(pt) .hm-strip.tight .hm-plate, :root:lang(es) .hm-strip.tight .hm-plate { padding: 0 14px; letter-spacing: .16em; text-indent: .16em; }
-:root:lang(pt) .hm-choice .k, :root:lang(es) .hm-choice .k { min-width: 270px; }
+:root:lang(pt) .hm-strip.tight .hm-plate, :root:lang(es) .hm-strip.tight .hm-plate, :root:lang(ru) .hm-strip.tight .hm-plate { padding: 0 14px; letter-spacing: .16em; text-indent: .16em; }
 /* the quick bar's plates are as wide as their (longer) words, set closer: "Configuración" */
-:root:lang(pt) #quickbar .plate, :root:lang(es) #quickbar .plate { width: auto; padding: 0 10px 12px; letter-spacing: .14em; text-indent: .14em; }
-:root:lang(pt) #quickbar, :root:lang(es) #quickbar { padding-right: 64px; }      /* clear of the moon at the corner */
-.hm-choice { display: flex; align-items: baseline; gap: 34px; margin: 26px 0 0; }
-.hm-choice + .hm-choice { margin-top: 14px; }
-.hm-choice .k { min-width: 170px; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
-.hm-choice .hm-link { color: var(--ink-soft); border-color: transparent; }
-.hm-choice .hm-link:hover { color: var(--ink); border-color: var(--rule); }
-.hm-choice .hm-link.on { color: var(--ink); border-color: var(--ink); cursor: default; }
+:root:lang(pt) #quickbar .plate, :root:lang(es) #quickbar .plate, :root:lang(ru) #quickbar .plate { width: auto; padding: 0 10px 12px; letter-spacing: .14em; text-indent: .14em; }
+:root:lang(pt) #quickbar, :root:lang(es) #quickbar, :root:lang(ru) #quickbar { padding-right: 64px; }      /* clear of the moon at the corner */
+/* the Play page's switches: the name over its choices, joined in one frame, the one taken filled in ink */
+.hm-choice { margin: 26px 0 0; }
+.hm-choice + .hm-choice { margin-top: 22px; }
+.hm-choice .k { display: block; margin: 0 0 10px 2px; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.hm-seg { display: inline-flex; flex-wrap: wrap; border: 1.5px solid rgba(92, 102, 140, .34); border-radius: 6px; background: rgba(255, 255, 255, .3); overflow: hidden; }
+.hm-seg button { padding: 7px 20px 8px; font-size: 23px; line-height: 32px; color: var(--ink-soft); border-left: 1px solid rgba(92, 102, 140, .22); transition: background-color .12s, color .12s; }
+.hm-seg button:first-child { border-left: 0; }
+.hm-seg button:hover { color: var(--ink); background: rgba(255, 255, 255, .6); }
+.hm-seg button.on { color: var(--paper); background: var(--ink); cursor: default; }
+/* the picture's two shapes, drawn before their names */
+.hm-choice.aspect button::before { content: ""; display: inline-block; width: 21px; height: 16px; margin-right: 11px; vertical-align: -1px; box-sizing: border-box;
+  border: 1.5px solid currentColor; border-radius: 2px; }
+.hm-choice.aspect button + button::before { width: 28px; }
 .hm-press { display: block; margin: 46px auto 10px; padding: 14px 40px; font-size: 27px; letter-spacing: .42em; text-indent: .42em; text-transform: uppercase; color: var(--ink); animation: blink 2.2s ease-in-out infinite; }
 /* the Play page: "press any button" in the middle of the space left under the switches */
 .hm-panel.hm-play { display: flex; flex-direction: column; align-items: flex-start; }
-.hm-play > p + .hm-choice { margin-top: 12px; }     /* margins do not collapse in a flex box: 14 + 12 = the usual 26 */
-/* the space under the switches, out to the panel's edges and foot (its padding), starts the game */
-.hm-play .hm-start { flex: 1 0 auto; align-self: stretch; display: flex; margin: 0 -64px -30px; padding: 24px 64px 30px; }
+.hm-play > p + .hm-choice { margin-top: 18px; }     /* margins do not collapse in a flex box: 14 + 18 */
+/* the space under the switches, out to the panel's edges and foot (its padding), starts the game: set off by a
+   rule and a shade of ink, so it reads as the place to click */
+.hm-play .hm-start { flex: 1 0 auto; align-self: stretch; display: flex; margin: 34px -64px -30px; padding: 24px 64px 30px;
+  border-top: 1px solid rgba(92, 102, 140, .22); background: rgba(46, 53, 83, .045); transition: background-color .15s; }
+.hm-play .hm-start.go:hover { background: rgba(46, 53, 83, .08); }
 .hm-play .hm-start.go { cursor: pointer; }
 .hm-play .hm-press { margin: auto; }
 .hm-press[disabled] { animation: none; opacity: .45; cursor: default; letter-spacing: .1em; text-transform: none; font-style: italic; }
@@ -664,11 +674,15 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .upright .hm-features b { font-size: 31px; line-height: 44px; }
 .upright .hm-features span { font-size: 25px; line-height: 38px; }
 .upright .hm-actions { flex-direction: column; align-items: flex-start; gap: 26px; }
-.upright .hm-choice { flex-wrap: wrap; gap: 8px 36px; margin-top: 30px; }
-.upright .hm-choice .k { flex-basis: 100%; min-width: 0; font-size: 22px; }
-.upright .hm-choice .hm-link { font-size: 31px; }
+.upright .hm-choice { margin-top: 30px; }
+.upright .hm-choice .k { margin-bottom: 12px; font-size: 22px; }
+.upright .hm-seg button { padding: 8px 17px 9px; font-size: 29px; line-height: 40px; }
+.upright .hm-choice.aspect button::before { width: 26px; height: 20px; }
+.upright .hm-choice.aspect button + button::before { width: 35px; }
 .upright .hm-press { padding: 14px 10px; font-size: 32px; letter-spacing: .3em; text-indent: .3em; white-space: nowrap; }
-.upright .hm-play .hm-start { margin: 0 -44px -36px; padding: 30px 44px 36px; }
+/* the longer words ("pressione qualquer botão", "нажмите любую кнопку") on one line in the page's 614 */
+:root.upright:lang(pt) .hm-press, :root.upright:lang(es) .hm-press, :root.upright:lang(ru) .hm-press { font-size: 27px; letter-spacing: .14em; text-indent: .14em; }
+.upright .hm-play .hm-start { margin: 36px -44px -36px; padding: 30px 44px 36px; }
 .hm-back { display: none; }
 .upright #home.tabbed > .hm-back { display: block; bottom: calc(40px + env(safe-area-inset-bottom, 0px) * var(--px, 1)); font-size: 36px; color: var(--cream); }
 /* a question asked from there */

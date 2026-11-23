@@ -19,7 +19,7 @@ import { Guide, choiceTranslator } from '../js/guide.js';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const data = path.join(here, '..', 'data');
 const english = fs.readFileSync(path.join(data, 'script.txt'), 'utf8');
-const other = ['ja', 'pt', 'es', 'chs'].find((l) => process.argv.includes(l));
+const other = ['ja', 'pt', 'es', 'chs', 'ru'].find((l) => process.argv.includes(l));
 const script = other ? fs.readFileSync(path.join(data, 'script-' + other + '.txt'), 'utf8') : english;
 const told = other ? choiceTranslator(script, english) : null;
 const ending = process.argv.includes('true') ? 'true' : 'normal';
