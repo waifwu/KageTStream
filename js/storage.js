@@ -20,16 +20,18 @@ export class Storage {
       return v ? JSON.parse(v) : null;
     } catch (e) { return null; }
   }
-  // `quiet`: something not worth a warning when it cannot be written (main.js, the note of what the game is doing)
-  set(key, val, quiet) {
+  set(key, val) {
     const v = JSON.stringify(val);
     try {
       if (this.ls) this.ls.setItem(this.prefix + key, v); else this.mem.set(key, v);
       return true;
     } catch (e) {
-      if (!quiet) console.warn('could not write save data', e);
+      console.warn('could not write save data', e);
       return false;
     }
+  }
+  remove(key) {
+    try { if (this.ls) this.ls.removeItem(this.prefix + key); else this.mem.delete(key); } catch (e) { /* nothing to remove */ }
   }
   loadGlobals() { return this.get('global'); }
   saveGlobals(g) { return this.set('global', g); }
@@ -50,7 +52,6 @@ export class Storage {
         if (k.startsWith(this.prefix)) out[k.slice(this.prefix.length)] = this.ls.getItem(k);
       }
     } else for (const [k, v] of this.mem) out[k] = v;
-    delete out.trace;       // (what this sitting was doing is no part of a save)
     return out;
   }
   eraseAll() {
@@ -62,7 +63,7 @@ export class Storage {
   }
   importAll(obj) {
     for (const k in obj) {
-      if (typeof obj[k] !== 'string' || k === 'trace') continue;
+      if (typeof obj[k] !== 'string') continue;
       if (this.ls) this.ls.setItem(this.prefix + k, obj[k]); else this.mem.set(k, obj[k]);
     }
   }

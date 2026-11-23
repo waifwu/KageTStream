@@ -104,6 +104,7 @@ const onPhone = () => {
   return /Mobi|iPhone|iPod/i.test(navigator.userAgent) || (coarse && Math.min(window.screen.width, window.screen.height) < 600);
 };
 const PHONE = onPhone();
+const IPHONE = !DESKTOP && !ANDROID && /iPhone|iPod/i.test(navigator.userAgent);
 const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const sideways = () => {
   try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* not to be had here */ }
@@ -182,74 +183,22 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, logPlain: PHONE, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
+  storage.remove('trace');      // (a note that earlier builds of this page kept of what the game was doing)
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
 
-  // Settings > Text history: Plain (shell.js log). A phone starts on Plain: on an iPhone, opening the
-  // blurred history ended the game and the plain one did not (issue #3). (Its key is not the first
-  // one it had, plainLog, so that a Blurred saved while that was the only way in does not stand.)
-  shell.plainLog = !!settings.logPlain;
 
-  // What the game was doing, written down as it plays (`host.trace`, below) and looked at here the
-  // next time the page loads. A page that ends as pages do (closed, reloaded, left) says so as it
-  // goes, and one put in the background says that. A note that says neither is of a page that
-  // ended while it was being played, with no warning: a phone's browser does that to a page that
-  // takes too much memory. It is shown once on the opening page, to be copied into a report: it is
-  // the only account there is of what was happening on the reader's own device.
-  const lastTrace = storage.get('trace');
-  storage.set('trace', null, true);
-  const traceText = (r) => {
-    const two = (n) => String(n).padStart(2, '0');
-    const d = new Date(r.t);
-    const at = d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
-    return [
-      'Kagetsu Tohya in the browser, build ' + (r.build || 'unknown'),
-      'Doing: ' + r.doing + ' (noted ' + at + ', ' + Math.max(0, Math.round((r.t - r.began) / 60000)) + ' min after starting)',
-      'Script ' + r.lang + ', HD pictures ' + (r.hd ? 'on' : 'off') + ', ' + (r.wide ? '16:9' : '4:3') + ', canvas ' + r.canvas,
-      r.pages + ' pages read, ' + r.history + ' in the history, history opened ' + r.opens + ' times',
-      // (a note from before these were kept has none of them)
-      ...(r.steps ? ['History ' + (r.plain ? 'plain' : 'blurred') + ', ' + (r.layers === undefined ? '?' : r.layers) + ' layers when built, steps (ms since opening): '
-        + (r.steps.map((s) => s[0] + ' +' + s[1]).join(', ') || 'none')] : []),
-      ...(r.view ? ['Home Screen app: ' + (r.standalone ? 'yes' : 'no') + ', view ' + r.view
-        + (r.fit ? ', fitted for ' + r.fit + ', turned ' + (r.turns || 0) + ' times' : '')] : []),
-      ...(r.sizes ? ['Window: ' + r.sizes + ', fitted late: ' + ((r.late || []).join(', ') || 'never')] : []),
-      'Kept: ' + r.pictures[0] + ' pictures (' + r.pictures[1] + ' MB), ' + r.sprites[0] + ' sprites (' + r.sprites[1] + ' MB), '
-        + r.sounds[0] + ' sound effects (' + r.sounds[1] + ' MB), music decoded: ' + (r.track ? 'yes' : 'no'),
-    ].join('\n');
-  };
-  // (a browser may refuse the clipboard: the older way is tried, and if that fails too the note
-  // stays up, to be read off or photographed)
-  const copyText = async (text) => {
-    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* the older way, then */ }
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.cssText = 'position:fixed;left:-999px;top:0';
-      document.body.appendChild(ta);
-      ta.select();
-      ta.setSelectionRange(0, text.length);
-      const ok = document.execCommand('copy');
-      ta.remove();
-      return ok;
-    } catch (e) { return false; }
-  };
-  const showTrace = async (r) => {
-    const text = traceText(r);
-    for (let failed = false; ;) {
-      const lead = failed ? t('It could not be copied.') : t('If you report it, these details help:');
-      const pick = await shell.ask('The game stopped without warning last time.', lead + '\n' + text, [['Copy', 'copy'], ['Close', true]], 1);
-      if (pick !== 'copy') return;
-      if (await copyText(text)) { shell.toast('Copied.'); return; }
-      failed = true;
-    }
-  };
   // The picture at the game's own 4:3, or at 16:9 with nothing bare at its sides. The stage takes
   // its shape at once, the opening page with it; the game's picture when it is made (below).
   // The glow around the picture is kept for each shape by itself: on at 4:3, where it softens the
   // bare sides of a wide window, and off at 16:9 until the reader turns it on there.
   const glowKey = () => (settings.wide ? 'ambientWide' : 'ambient');
-  let applyWide = () => { shell.setWide(settings.wide); shell.setAmbient(settings[glowKey()]); };
+  // (An iPhone at 16:9 has no glow, and Settings does not offer it there: the picture all but fills
+  // the screen, and the glow is the whole screen blurred several times a second, the kind of thing
+  // that was taken off a phone's menus and history after issue #3.)
+  const noGlow = () => IPHONE && !!settings.wide;
+  const glowOn = () => !noGlow() && !!settings[glowKey()];
+  let applyWide = () => { shell.setWide(settings.wide); shell.setAmbient(glowOn()); };
   // 16:9 fills the screen by cutting into the pictures: the reader is told so before it is taken
   // (it is what they asked for, so "Yes" is the answer pointed at)
   const confirmWide = async () => (await shell.ask('Switch the picture to 16:9?',
@@ -298,7 +247,7 @@ async function boot() {
   const homeArt = new Image();
   homeArt.src = DATA + 'arc/image/gamestart/load.jpg';
   shell.ambientSource = () => (homeArt.complete && homeArt.naturalWidth ? homeArt : null);
-  shell.setAmbient(settings[glowKey()]);
+  shell.setAmbient(glowOn());
 
   // -------------------------------------------------------------- opening page
   let ready = false;
@@ -430,7 +379,6 @@ async function boot() {
     });
     if (location.hash === '#play') history.replaceState(null, '', location.pathname + location.search);
     shell.setHomeStatus('Loading the game’s script…');
-    if (lastTrace && lastTrace.doing && !lastTrace.clean && !lastTrace.hidden) showTrace(lastTrace);
   }
   document.getElementById('import-file').addEventListener('change', async (ev) => {
     const f = ev.target.files[0];
@@ -438,7 +386,6 @@ async function boot() {
     try {
       storage.importAll(JSON.parse(await f.text()));
       replaced = true;
-      storage.set('trace', null, true);      // (nothing is written after this, so the page could not say it ended as it should)
       location.reload();
     } catch (e) { shell.notice('That file is not a save export.'); }
   });
@@ -546,7 +493,7 @@ async function boot() {
   // where the pointer is taken to be all follow.
   applyWide = () => {
     shell.setWide(settings.wide);
-    shell.setAmbient(settings[glowKey()]);
+    shell.setAmbient(glowOn());
     gfx.setWide(settings.wide);
     input.vw = gfx.VW;
     input.ox = gfx.OX;
@@ -664,15 +611,12 @@ async function boot() {
         { key: 'seVol', label: 'Sound effects', range: true },
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
-        { key: 'ambient', label: 'Glow around the picture', options: onOff },
-        // (the history without the blur of the picture behind it and without its entrance; what a
-        // phone starts with)
-        { key: 'logPlain', label: 'Text history', options: [['Blurred', false], ['Plain', true]] },
+        ...(noGlow() ? [] : [{ key: 'ambient', label: 'Glow around the picture', options: onOff }]),
         ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
     ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
-      : key === 'unlockAll' ? !!settings.unlockAll : key === 'controls' ? null : key === 'lang' ? lang : key === 'ambient' ? !!settings[glowKey()] : settings[key]), async (key, value) => {
+      : key === 'unlockAll' ? !!settings.unlockAll : key === 'controls' ? null : key === 'lang' ? lang : key === 'ambient' ? glowOn() : settings[key]), async (key, value) => {
       if (key === 'controls') { await (PHONE ? openTouch() : openControls()); return; }
       if (key === 'lang') {
         if (value === lang) return;
@@ -723,8 +667,7 @@ async function boot() {
       engine.autoPace = settings.autoPace;
       audio.setMuted(settings.muted);
       audio.setVolumes(settings.bgmVol, settings.seVol);
-      shell.setAmbient(settings[glowKey()]);
-      shell.plainLog = !!settings.logPlain;
+      shell.setAmbient(glowOn());
       saveSettings();
     });
   };
@@ -797,58 +740,9 @@ async function boot() {
   refresh();
 
   let started = false;
-  // The note of what the game is doing (see `lastTrace` above): written at once when a page of the
-  // interface opens or closes, and otherwise no more than every two seconds. `build` is the published main.js's own stamp, so a
-  // report says which version of the page the reader had.
-  const began = Date.now();
-  let build = '';
-  fetch('js/main.js', { method: 'HEAD', cache: 'no-store' })
-    .then((r) => { build = (r.headers.get('etag') || r.headers.get('last-modified') || '').replace(/^W\//, '').replace(/"/g, '').slice(0, 32); }).catch(() => {});
-  // (`steps`: how far the text history got the last time it was opened, each with the milliseconds
-  // since it was asked for: a game that ends with the history open says where in it)
-  const tr = { doing: '', at: 0, opens: 0, hidden: document.hidden, clean: false, steps: [], openedAt: 0, layers: undefined };
-  const standalone = () => navigator.standalone === true || (!!window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  const writeTrace = () => {
-    if (replaced || !started || !tr.doing) return;
-    let se = 0;
-    for (const b of audio.buffers.values()) se += b.length * b.numberOfChannels * 4;
-    const mb = (n) => Math.round(n / 1048576);
-    storage.set('trace', {
-      v: 1, t: Date.now(), doing: tr.doing, clean: tr.clean, hidden: tr.hidden, build, began, lang,
-      hd: !!loader.hdOn, wide: !!settings.wide, canvas: canvas.width + 'x' + canvas.height,
-      pages: text.turned, history: text.history.length, opens: tr.opens,
-      pictures: [loader.images.size, mb(loader.held)], sprites: [gfx.spriteCache.size, mb(gfx.spriteBytes)],
-      sounds: [audio.buffers.size, mb(se)], track: audio.decoded ? 1 : 0,
-      plain: !!shell.plainLog, steps: tr.steps, layers: tr.layers, standalone: standalone(),
-      view: window.innerWidth + 'x' + window.innerHeight + ' @' + (window.devicePixelRatio || 1),
-      fit: shell.fitFor, turns: shell.turns, late: shell.late,
-      sizes: 'viewport ' + (window.visualViewport ? Math.round(window.visualViewport.width) + 'x' + Math.round(window.visualViewport.height) : '?')
-        + ', document ' + document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight
-        + ', ' + (window.matchMedia && window.matchMedia('(orientation: portrait)').matches ? 'upright' : 'sideways'),
-    }, true);
-  };
-  host.trace = (doing, now, facts) => {
-    const t = Date.now();
-    if (doing === 'history open') { tr.opens++; tr.steps = []; tr.openedAt = t; tr.layers = undefined; }
-    if (doing.startsWith('history ')) { tr.steps.push([doing.slice(8), t - tr.openedAt]); if (tr.steps.length > 8) tr.steps.shift(); }
-    if (facts && facts.layers !== undefined) tr.layers = facts.layers;
-    tr.doing = doing;
-    if (!now && t - tr.at < 2000) return;
-    tr.at = t;
-    writeTrace();
-  };
-  window.addEventListener('pagehide', () => { tr.clean = true; writeTrace(); });
-  window.addEventListener('pageshow', () => { tr.clean = false; writeTrace(); });
-  document.addEventListener('visibilitychange', () => { tr.hidden = document.hidden; writeTrace(); });
-  if (ANDROID) {
-    const suspend = window.appSuspend, resume = window.appResume;
-    window.appSuspend = () => { tr.hidden = true; writeTrace(); suspend(); };
-    window.appResume = () => { tr.hidden = false; writeTrace(); resume(); };
-  }
   start = () => {
     if (started) return;
     started = true;
-    host.trace('started', true);
     if (PHONE && !ANDROID) enterFull();    // the whole screen, on its side (while Play is still a touch: a browser asks for one)
     shell.ambientSource = () => gfx.screen;    // the picture as it is displayed
     shell.ambientVersion = () => gfx.drawn;    // and how often it has been drawn on

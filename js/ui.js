@@ -27,7 +27,6 @@ export class UI {
     e.flushGlobals();
     const typed = Math.max(0, text.glyphs.length - this.waitGlyphs);
     this.waitGlyphs = kind === '\\' ? 0 : text.glyphs.length;
-    if (this.host.trace) this.host.trace(e.skipping() ? 'fast-forward' : 'reading');
     if (e.skipping()) { await this.host.frame(); return; }
     // The reader is reading: fetch the pictures the next pages will want. Not at once, but when
     // the story has stood here for half a second, and not while a page of the interface is open
@@ -212,7 +211,6 @@ export class UI {
     const { gfx, input, text, shell } = this.host;
     const e = this.engine;
     input.flush();
-    if (this.host.trace) this.host.trace('at a choice', true);
     const [on, off] = e.selectColor;
     const saved = text.color;
     const spans = [];
@@ -299,7 +297,6 @@ export class UI {
     const e = this.engine;
     const { shell, audio } = this.host;
     // the script's own list, with this port's pages before its last entry
-    if (this.host.trace) this.host.trace('menu open', true);
     const items = e.rmenu.map((r) => ({ label: cleanLabel(r.label), value: r.action }));
     const extra = [{ label: 'Flowchart', value: 'flowchart' }];
     if (this.host.guide && this.host.guide.available) extra.push({ label: 'Guide', value: 'guide' });
@@ -399,9 +396,7 @@ export class UI {
     const now = text.linesOf(text.glyphs);
     if (now.some((l) => l.trim())) pages.push({ lines: now, now: true });
     if (!pages.length) { shell.toast('Nothing has been read yet.'); return; }
-    if (this.host.trace) this.host.trace('history open', true);
-    const i = await shell.log(pages, this.engine.lookbackColor, (name, facts) => { if (this.host.trace) this.host.trace('history ' + name, true, facts); });
-    if (this.host.trace) this.host.trace('history closed', true);
+    const i = await shell.log(pages, this.engine.lookbackColor);
     const page = typeof i === 'number' ? text.history[i] : null;
     if (!page || !page.point) return;
     if (this.host.onReturn) this.host.onReturn(page.point.beside);

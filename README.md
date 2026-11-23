@@ -370,7 +370,9 @@ the story.
   picture whole, over a soft copy of itself. It can be switched at any time
   (the opening page's Play tab has the same switch), and saves are the same in
   either shape. The glow around the picture is kept for each shape by itself:
-  on at 4:3, off at 16:9 until it is turned on there.
+  on at 4:3, off at 16:9 until it is turned on there. An iPhone at 16:9 has no
+  glow and Settings does not offer it there: the picture all but fills the
+  screen, and the glow is the whole screen blurred several times a second.
 * **HD pictures** (Settings; on by default, shown when `data/hd/` is there) —
   the sprites and event CGs drawn from their 4× files (`tools/hd.py`, above)
   in place of the game's own. Each takes exactly the room and the place the
@@ -452,28 +454,17 @@ the story.
   once it has been decoded (`js/audio.js`). It is decoded only when it has
   played for four seconds: a decoded track is some 50 MB, and fast-forward
   passes a change of music every second or two.
-* **If the game stops without warning** — the game keeps a short note of what
-  it is doing (reading, fast-forward, history open, how many pictures and
-  sounds it holds, which build of the page). A page that is closed, reloaded or
-  put in the background says so in the note as it goes. If the note says
-  neither when the page next loads, the game ended while it was being played,
-  as it does when a phone's browser ends a page for taking too much memory: the
-  opening page then shows the note once, with a button to copy it for a report.
-  The note stays in the browser and is no part of a save export. For the text
-  history it also says how far the page had got (built, first frame, settled,
-  first scroll, closing) and how long after it was asked for. It says, too,
-  what size of window the picture was last fitted for, how many times the
-  phone was turned, and whether the picture ever had to be fitted late.
 * **A phone that is turned** — the picture is fitted to the window again at
   every sign that its size has changed, and the size is looked at again several
   times in the two seconds after one, and at each touch. An iPhone's Home
   Screen app can announce a turn while the window still has its old size and
   say nothing after: the picture then stayed small, in a corner.
-* **Text history: Blurred or Plain** (Settings) — the history lies over the
-  picture and blurs it, and fades in. Plain opens it without the blur and
-  without any entrance, on a nearly solid ground. A phone starts on Plain: on
-  an iPhone, opening the blurred history ended the game and the plain one did
-  not. Its pages no longer rise into place one by one in either: with a long
+* **Nothing blurred on a phone** — the pages that lie over the picture (the
+  menu, the text history, a question) blur it; on a phone they stand on a
+  nearly solid ground instead, and the history has no entrance. On an iPhone,
+  opening the blurred history ended the game and the plain one did not. There
+  is no setting for it: a phone is plain, everything else is blurred. The
+  history's pages do not rise into place one by one anywhere: with a long
   history that held the first frame up for a second or two on a phone.
 
 ## Controls

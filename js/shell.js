@@ -133,26 +133,21 @@ export class Shell {
   // left the picture fitted for the other way up (small, in a corner) until something else moved.
   // So every sign of a change is taken, the size is looked at again several times in the two
   // seconds after one, and once more at each touch: a picture that is fitted wrongly does not
-  // stay so. (`turns`, `fitFor` and `late` go into the note of how the game last ended, main.js:
-  // `late` is what found the picture fitted for a size the window no longer had, each time one
-  // of the later looks did, so that a note says whether a phone really does this.)
+  // stay so.
   watchSize() {
-    this.turns = 0;
-    this.late = [];
     let timers = [];
-    const stale = () => window.innerWidth + 'x' + window.innerHeight !== this.fitFor;
-    const check = (by) => { if (!stale()) return; this.fit(); this.late.push(by); if (this.late.length > 6) this.late.shift(); };
+    const check = () => { if (window.innerWidth + 'x' + window.innerHeight !== this.fitFor) this.fit(); };
     const changed = () => {
       this.fit();
       timers.forEach(clearTimeout);
-      timers = [60, 200, 450, 900, 1800].map((ms) => setTimeout(() => check(ms + 'ms'), ms));
+      timers = [60, 200, 450, 900, 1800].map((ms) => setTimeout(check, ms));
     };
     window.addEventListener('resize', changed);
-    window.addEventListener('orientationchange', () => { this.turns++; changed(); });
+    window.addEventListener('orientationchange', changed);
     window.addEventListener('pageshow', changed);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', changed);
     try { if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', changed); } catch (e) { /* not to be had here */ }
-    window.addEventListener('pointerdown', () => check('touch'), true);
+    window.addEventListener('pointerdown', check, true);
   }
   // The opening page's title on one line, upright. Its face is whichever serif the phone has (few
   // have Palatino), and some are a good deal wider: the title is set smaller until it fits.
@@ -650,13 +645,10 @@ export class Shell {
   // pages: [{ lines: [string], now: bool, back: bool }], oldest first. A page with `back` can be
   // returned to: a click or a tap on it asks, and on "yes" the history answers with the page's
   // place in the list (otherwise with null, as it is left).
-  // `onStep(name, facts)` is told how far the page has got (built, first frame, settled, first
-  // scroll, closing): main.js keeps it in the note of what the game is doing, so that a game that
-  // ends with the history open says where in it. `this.plainLog` (Settings > Text history) opens
-  // it without the blur of the picture behind it and without its entrance (css: .log.plain).
-  log(pages, color, onStep) {
-    const step = (name, facts) => { if (onStep) onStep(name, facts); };
-    return this.openLayer('veil log' + (this.plainLog ? ' plain' : ''), (layer, ctl) => {
+  // On a phone it opens without the blur of the picture behind it and without its entrance (css:
+  // "a phone: nothing blurred").
+  log(pages, color) {
+    return this.openLayer('veil log', (layer, ctl) => {
       layer.appendChild(el('h1', 'page-title', 'Text history'));
       const note = el('div', 'page-note');
       const leave = t('Scroll past the end to return');
@@ -709,13 +701,7 @@ export class Shell {
         // open on the newest finished page, with the page being read just below it
         const target = pages.length && pages[pages.length - 1].now && last.previousElementSibling ? last.previousElementSibling : last;
         scroll.scrollTop = target ? Math.max(0, target.offsetTop + target.offsetHeight - scroll.clientHeight) : 0;
-        step('built', { layers: this.sheet.children.length });
-        requestAnimationFrame(() => requestAnimationFrame(() => { if (!ctl.closed) step('first frame'); }));
-        setTimeout(() => { if (!ctl.closed) step('settled'); }, 700);
       };
-      scroll.addEventListener('scroll', () => step('first scroll'), { passive: true, once: true });
-      const close = ctl.done;
-      ctl.done = (v) => { if (!ctl.closed) step('closing'); close(v); };
     });
   }
 
