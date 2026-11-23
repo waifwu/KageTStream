@@ -461,7 +461,14 @@ the story.
   opening page then shows the note once, with a button to copy it for a report.
   The note stays in the browser and is no part of a save export. For the text
   history it also says how far the page had got (built, first frame, settled,
-  first scroll, closing) and how long after it was asked for.
+  first scroll, closing) and how long after it was asked for. It says, too,
+  what size of window the picture was last fitted for, how many times the
+  phone was turned, and whether the picture ever had to be fitted late.
+* **A phone that is turned** — the picture is fitted to the window again at
+  every sign that its size has changed, and the size is looked at again several
+  times in the two seconds after one, and at each touch. An iPhone's Home
+  Screen app can announce a turn while the window still has its old size and
+  say nothing after: the picture then stayed small, in a corner.
 * **Text history: Blurred or Plain** (Settings) — the history lies over the
   picture and blurs it, and fades in. Plain opens it without the blur and
   without any entrance, on a nearly solid ground. A phone starts on Plain: on

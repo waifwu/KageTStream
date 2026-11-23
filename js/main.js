@@ -210,7 +210,9 @@ async function boot() {
       // (a note from before these were kept has none of them)
       ...(r.steps ? ['History ' + (r.plain ? 'plain' : 'blurred') + ', ' + (r.layers === undefined ? '?' : r.layers) + ' layers when built, steps (ms since opening): '
         + (r.steps.map((s) => s[0] + ' +' + s[1]).join(', ') || 'none')] : []),
-      ...(r.view ? ['Home Screen app: ' + (r.standalone ? 'yes' : 'no') + ', view ' + r.view] : []),
+      ...(r.view ? ['Home Screen app: ' + (r.standalone ? 'yes' : 'no') + ', view ' + r.view
+        + (r.fit ? ', fitted for ' + r.fit + ', turned ' + (r.turns || 0) + ' times' : '')] : []),
+      ...(r.sizes ? ['Window: ' + r.sizes + ', fitted late: ' + ((r.late || []).join(', ') || 'never')] : []),
       'Kept: ' + r.pictures[0] + ' pictures (' + r.pictures[1] + ' MB), ' + r.sprites[0] + ' sprites (' + r.sprites[1] + ' MB), '
         + r.sounds[0] + ' sound effects (' + r.sounds[1] + ' MB), music decoded: ' + (r.track ? 'yes' : 'no'),
     ].join('\n');
@@ -819,6 +821,10 @@ async function boot() {
       sounds: [audio.buffers.size, mb(se)], track: audio.decoded ? 1 : 0,
       plain: !!shell.plainLog, steps: tr.steps, layers: tr.layers, standalone: standalone(),
       view: window.innerWidth + 'x' + window.innerHeight + ' @' + (window.devicePixelRatio || 1),
+      fit: shell.fitFor, turns: shell.turns, late: shell.late,
+      sizes: 'viewport ' + (window.visualViewport ? Math.round(window.visualViewport.width) + 'x' + Math.round(window.visualViewport.height) : '?')
+        + ', document ' + document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight
+        + ', ' + (window.matchMedia && window.matchMedia('(orientation: portrait)').matches ? 'upright' : 'sideways'),
     }, true);
   };
   host.trace = (doing, now, facts) => {

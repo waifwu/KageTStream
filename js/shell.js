@@ -75,7 +75,7 @@ export class Shell {
     this.lastAmbient = 0;
     this.makeGrain();
     this.fit();
-    window.addEventListener('resize', () => this.fit());
+    this.watchSize();
     window.addEventListener('keydown', (e) => this.onKey(e), true);
     // (a page waiting to be told a key hears of keys let go as well: see controls())
     window.addEventListener('keyup', (e) => { const top = this.layers[this.layers.length - 1]; if (top && top.grab) top.grab(e); }, true);
@@ -107,6 +107,7 @@ export class Shell {
   // once it starts, the stage is the picture's shape again, and the phone is asked to be turned.
   fit() {
     const iw = window.innerWidth, ih = window.innerHeight;
+    this.fitFor = iw + 'x' + ih;
     const up = this.uprightHome && this.homeOpen && ih > iw;
     if (up !== this.upright) {
       this.upright = up;
@@ -125,6 +126,33 @@ export class Shell {
     const x = Math.round((iw - w * s) / 2), y = Math.round((ih - hh * s) / 2);
     this.stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
     this.fitTitle();
+  }
+  // The stage is fitted again whenever the window's size changes. A phone that is turned does not
+  // always say so in a way that can be relied on: an iPhone's Home Screen app can send its one
+  // `resize` while the window still has the size it had before the turn, and nothing after, which
+  // left the picture fitted for the other way up (small, in a corner) until something else moved.
+  // So every sign of a change is taken, the size is looked at again several times in the two
+  // seconds after one, and once more at each touch: a picture that is fitted wrongly does not
+  // stay so. (`turns`, `fitFor` and `late` go into the note of how the game last ended, main.js:
+  // `late` is what found the picture fitted for a size the window no longer had, each time one
+  // of the later looks did, so that a note says whether a phone really does this.)
+  watchSize() {
+    this.turns = 0;
+    this.late = [];
+    let timers = [];
+    const stale = () => window.innerWidth + 'x' + window.innerHeight !== this.fitFor;
+    const check = (by) => { if (!stale()) return; this.fit(); this.late.push(by); if (this.late.length > 6) this.late.shift(); };
+    const changed = () => {
+      this.fit();
+      timers.forEach(clearTimeout);
+      timers = [60, 200, 450, 900, 1800].map((ms) => setTimeout(() => check(ms + 'ms'), ms));
+    };
+    window.addEventListener('resize', changed);
+    window.addEventListener('orientationchange', () => { this.turns++; changed(); });
+    window.addEventListener('pageshow', changed);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', changed);
+    try { if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', changed); } catch (e) { /* not to be had here */ }
+    window.addEventListener('pointerdown', () => check('touch'), true);
   }
   // The opening page's title on one line, upright. Its face is whichever serif the phone has (few
   // have Palatino), and some are a good deal wider: the title is set smaller until it fits.
