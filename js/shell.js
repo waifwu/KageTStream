@@ -1154,10 +1154,18 @@ export class Shell {
       bar.appendChild(prev); bar.appendChild(play); bar.appendChild(next); bar.appendChild(mid); bar.appendChild(repeat);
       layer.appendChild(bar);
 
-      let dragging = false, shownPlay = null;
-      seek.addEventListener('pointerdown', () => { dragging = true; });
-      seek.addEventListener('change', () => { api.seek(seek.value / 1000); dragging = false; paint(); });
-      seek.addEventListener('input', () => { const st = api.state(); now.textContent = clock((seek.value / 1000) * st.duration); });
+      // While the handle is held the slider is the reader's, and `change` gives it back. But no
+      // `change` comes when the handle is let go where it was picked up, or the touch is taken away:
+      // the slider would then never follow the music again. So letting go gives it back as well, a
+      // moment later: a `change` on its way comes after the finger is up, and is to find the
+      // slider where the reader left it.
+      let dragging = false, shownPlay = null, freeing = null;
+      const hold = () => { clearTimeout(freeing); dragging = true; };
+      const free = () => { clearTimeout(freeing); freeing = setTimeout(() => { dragging = false; }, 400); };
+      seek.addEventListener('pointerdown', hold);
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture', 'blur']) seek.addEventListener(type, free);
+      seek.addEventListener('change', () => { clearTimeout(freeing); api.seek(seek.value / 1000); dragging = false; paint(); });
+      seek.addEventListener('input', () => { if (dragging) hold(); const st = api.state(); now.textContent = clock((seek.value / 1000) * st.duration); });
       const paint = () => {
         const st = api.state();
         const t = tracks.find((x) => x.no === st.no);
@@ -1177,7 +1185,7 @@ export class Shell {
       };
       const timer = setInterval(paint, 250);
       const done = ctl.done;
-      ctl.done = (v) => { clearInterval(timer); done(v); };
+      ctl.done = (v) => { clearInterval(timer); clearTimeout(freeing); done(v); };
       this.back(layer, ctl);
       ctl.onKey = (e) => {
         if (e.key === ' ') { api.toggle(); paint(); return true; }
@@ -1245,8 +1253,9 @@ export class Shell {
       this.back(layer, ctl);
       const onFs = () => rows.forEach((r) => r.repaint && r.repaint());
       document.addEventListener('fullscreenchange', onFs);
+      document.addEventListener('webkitfullscreenchange', onFs);
       const done = ctl.done;
-      ctl.done = (v) => { document.removeEventListener('fullscreenchange', onFs); done(v); };
+      ctl.done = (v) => { document.removeEventListener('fullscreenchange', onFs); document.removeEventListener('webkitfullscreenchange', onFs); done(v); };
     });
   }
 

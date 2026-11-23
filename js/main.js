@@ -109,6 +109,16 @@ const IPHONE = !DESKTOP && !ANDROID && (
   || (PHONE && navigator.maxTouchPoints > 1 && /Mac/i.test(navigator.platform || navigator.userAgent))
 );
 const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+// Whether the whole screen can be asked for at all. An iPhone's browser has no such thing, and the
+// Android app is always on the whole screen: neither is offered "Full" or a Fullscreen setting.
+const CAN_FULL = (() => {
+  if (ANDROID) return false;
+  const d = document.documentElement;
+  if (!(d.requestFullscreen || d.webkitRequestFullscreen)) return false;
+  const may = document.fullscreenEnabled !== undefined ? document.fullscreenEnabled : document.webkitFullscreenEnabled;
+  return may !== false;
+})();
+if (!CAN_FULL) document.documentElement.classList.add('nofull');
 const sideways = () => {
   try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* not to be had here */ }
 };
@@ -121,6 +131,10 @@ const enterFull = () => {
   asking = true;
   const over = () => { asking = false; };
   try { Promise.resolve(ask.call(d, { navigationUI: 'hide' })).then(() => { over(); sideways(); }, over); } catch (e) { over(); }
+};
+const leaveFull = () => {
+  const out = document.exitFullscreen || document.webkitExitFullscreen;
+  try { if (out) Promise.resolve(out.call(document)).catch(() => {}); } catch (e) { /* it was not on the whole screen */ }
 };
 function phoneSetup(upright) {
   document.documentElement.classList.add('phone');
@@ -442,12 +456,11 @@ async function boot() {
   const saveSettings = () => storage.saveSettings(settings);
   const refresh = () => { if (engine) shell.setModes({ skip: engine.skipMode, auto: engine.autoMode }); };
   const fullscreen = (on) => {
-    if (ANDROID) return;          // the app is always on the whole screen
-    const is = !!document.fullscreenElement;
+    if (!CAN_FULL) return;        // (the Android app is always on the whole screen; an iPhone's browser never)
+    const is = isFull();
     if (on === undefined) on = !is;
-    if (on && !is && PHONE) enterFull();
-    else if (on && !is && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
-    else if (!on && is) document.exitFullscreen();
+    if (on && !is) enterFull();
+    else if (!on && is) leaveFull();
   };
   const actions = {
     skip() { engine.setSkip(!engine.skipMode); input.push({ type: 'wake' }); },
@@ -619,10 +632,10 @@ async function boot() {
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
         { key: 'ambient', label: 'Glow around the picture', options: onOff, show: () => !noGlow() },
-        ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
+        ...(CAN_FULL ? [{ key: 'full', label: 'Fullscreen', options: onOff }] : []),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
-    ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? !!document.fullscreenElement
+    ], (key) => (GAME[key] ? GAME[key].get() : key === 'guide' ? guide.state.on : key === 'full' ? isFull()
       : key === 'unlockAll' ? !!settings.unlockAll : key === 'controls' ? null : key === 'lang' ? lang : key === 'ambient' ? glowOn() : settings[key]), async (key, value) => {
       if (key === 'controls') { await (PHONE ? openTouch() : openControls()); return; }
       if (key === 'lang') {

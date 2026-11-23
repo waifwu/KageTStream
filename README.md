@@ -302,7 +302,8 @@ the story.
   names (EN, JA, PT-BR, ES, 简中). **Play** starts the game, takes the whole
   screen and asks for it to be kept on its side (Android; an iPhone's browser
   has no fullscreen, and gives the page the whole screen only when it is opened
-  from the Home Screen). From then on, held upright, a notice asks for the
+  from the Home Screen; so it is offered neither Full on the quick bar nor
+  Fullscreen in Settings). From then on, held upright, a notice asks for the
   phone to be turned; it stands outside the stage, at the screen's own size.
   With the opening page on its side, the first touch takes the whole screen as
   before. A finger drawn across the picture

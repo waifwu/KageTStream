@@ -1275,6 +1275,10 @@ function cond(neg) {
         default: f = a < b;
       }
     }
+    // (notif turns each term round by itself: "notif A && B" is "not A, and not B", which is what
+    // the game's scripts are written for. Its gallery says `notif %4031==0 && fchk $4001 lsp ...`
+    // for "a picture is named here and has not been seen": as "not (A and B)" every named picture
+    // would be marked as not seen.)
     if (neg ? f : !f) ok = false;
     this.ws();
     if (s[this.pc] === '&') { while (s[this.pc] === '&') this.pc++; continue; }

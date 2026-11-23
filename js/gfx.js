@@ -826,10 +826,14 @@ export class Gfx {
   }
 
   // part of the destination frame, in the view's coordinates
+  // (Only what lies within the frame is asked for. The strips of a shutter or a curtain run past
+  // its edge: the view is not a whole number of them across at either shape, and a curtain counts
+  // one more than fit. A browser is to clip such a piece itself, but not all have done so.)
   part(x, y, w, h, dx = x, dy = y) {
-    if (w <= 0 || h <= 0) return;
+    const x0 = Math.max(0, x), y0 = Math.max(0, y), x1 = Math.min(this.VW, x + w), y1 = Math.min(H, y + h);
+    if (x1 <= x0 || y1 <= y0) return;
     const S = this.S;
-    this.sctx.drawImage(this.frame, x * S, y * S, w * S, h * S, dx, dy, w, h);
+    this.sctx.drawImage(this.frame, x0 * S, y0 * S, (x1 - x0) * S, (y1 - y0) * S, dx + x0 - x, dy + y0 - y, x1 - x0, y1 - y0);
   }
   whole(img, dx, dy) {
     this.sctx.drawImage(img, 0, 0, this.VW * this.S, H * this.S, dx, dy, this.VW, H);
@@ -901,7 +905,9 @@ export class Gfx {
     this.compose(this.fctx, withText);
     this.dirty = false;
     const c = this.sctx;
-    await this.animate(dur, (t) => {
+    // (as for a transition: none of it where there is no time for it, or nobody to see it; a page
+    // that is hidden draws no frames, and the story would wait for them)
+    if (dur > 0 && !(isSkipping && isSkipping()) && !document.hidden) await this.animate(dur, (t) => {
       let dx = 0, dy = 0;
       const v = Math.sin(Math.PI * 2 * amp * t) * QUAKE_AMP * amp * (1 - t);
       if (kind === 'quakex') dx = v;

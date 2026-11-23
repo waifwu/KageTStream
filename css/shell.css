@@ -570,9 +570,10 @@ input[type="range"]::-moz-range-thumb { width: 17px; height: 17px; border: 0; bo
 .phone #quickbar { height: auto; display: grid; grid-template-columns: repeat(3, 1fr); padding: 16px 130px 56px;
   background: linear-gradient(to bottom, rgba(26, 18, 42, .97), rgba(30, 21, 50, .96) 86%, rgba(34, 24, 56, 0)); }
 .phone .wide #quickbar { padding-left: 300px; padding-right: 300px; }
-/* The Android app (android/) is always on the whole screen: no Full, and the eight that are left in two rows */
-.android #quickbar [data-act="full"] { display: none; }
-.phone.android #quickbar { grid-template-columns: repeat(4, 1fr); }
+/* Where the whole screen cannot be asked for (the Android app, android/, is always on it; an iPhone's
+   browser has no such thing): no Full, and the eight that are left in two rows */
+.nofull #quickbar [data-act="full"] { display: none; }
+.phone.nofull #quickbar { grid-template-columns: repeat(4, 1fr); }
 .phone .plate { width: auto; height: 108px; padding: 0 0 16px; font-size: 33px; letter-spacing: .2em; text-indent: .2em; }
 .phone .plate::after { bottom: 22px; height: 3px; }
 .phone .plate:hover::after { left: 30%; right: 30%; }
