@@ -295,30 +295,28 @@ async function boot() {
       h.p(p, 'Kagetsu Tohya, playing in a web browser. A small engine written in JavaScript reads the game’s own script, pictures, sound and music as they are in your copy; nothing in them was rewritten or re-encoded.');
       h.p(p, 'An unofficial fan project, not affiliated with TYPE-MOON. Please support the official release.', 'fine');
       h.link(p, 'The source is on GitHub:', 'github.com/waifwu/KageTStream', 'https://github.com/waifwu/KageTStream');
+      // the game's files in three numbers (the script has 72,288 lines), and the program it follows
       h.head(p, 'How it was taken apart');
-      h.rows(p, [
-        ['The program', 'ONScripter-EN, an open reimplementation of NScripter. Its behaviour was followed from its public source.'],
-        ['The script', 'One file of about 72,000 lines, hidden by a single XOR. It is run as written.'],
-        ['The archives', 'Two NSA archives holding 1,194 pictures and sound effects.'],
-        ['The music', 'Seventeen tracks, which the script asks for by number.'],
-      ]);
+      h.facts(p, [['72,000', 'lines of script'], ['1,194', 'pictures and sound effects'], ['17', 'music tracks']], 'counts');
+      h.p(p, 'ONScripter-EN, an open reimplementation of NScripter. Its behaviour was followed from its public source.', 'fine');
+      // a line each, two to a row: the Controls tab and the README say the rest
       h.head(p, 'What is new here');
-      h.rows(p, [
-        ['The menus', 'The title, Start game and each story\u2019s page are redrawn to match one another. The script still decides what every entry does and what is unlocked.'],
-        ['Gallery', 'On the title, in place of End game: the game\u2019s four picture galleries in one place, the flowchart, the guide, and a music player for the tracks you have heard in the story.'],
-        ['Flowchart', 'Drawn from the script\u2019s own flow and laid out by place and time. It shows what you have reached; choosing a scene lights the ways to it and on from it, and hints, if you turn them on, say how to reach the rest.'],
-        ['Guide', 'Optional, and off until you turn it on. It follows the walkthrough that came with the copy, one day at a time, and marks the choice to take.'],
+      h.features(p, [
+        ['The menus', 'The title, Start game and each story\u2019s page are redrawn to match one another.'],
+        ['Gallery', 'In place of End game: the four picture galleries, the flowchart, the guide and a music player.'],
+        ['Flowchart', 'Drawn from the script\u2019s own flow and laid out by place and time.'],
+        ['Guide', 'Off until you turn it on; it marks the choice to take.'],
         ['Settings', 'One page for everything: the story\u2019s font, text speed, sound, and the game\u2019s own four switches.'],
         ['Saves', 'Twenty slots with a picture and a line of the page, kept in this browser.'],
-        ['History', 'Everything read this session, as one scroll; a click or a tap on a page goes back to it.'],
-        ['16:9', 'An option, on the Play page and in Settings: the picture fills a wide screen, with nothing bare at its sides. Backgrounds are enlarged to fit, so some are cut off at the top and the bottom; the title and every menu are laid out for the wider shape.'],
-        ['Languages', 'The story in English, Japanese, Portuguese, Spanish or Simplified Chinese, each from its own script and with its own pictures, and the interface in the same language. Chosen on the Play page or in Settings.'],
-        ['HD pictures', 'The standing pictures and event CGs, enlarged four times so they stay sharp on a large screen. On by default and switched in Settings; backgrounds and menus are the game\u2019s own.'],
-        ['Keys', 'Every key can be changed, in Settings under Controls. Holding Ctrl fast-forwards only through text already read.'],
-        ['Phones', 'Played with the phone on its side, across the whole screen. Swipes bring up the quick bar, the menu and the text history, and the flowchart moves and zooms under your fingers.'],
-        ['Unlock everything', 'A switch in Settings that opens every scene, picture, track and story, and the staff room with its Jukebox, without changing your own progress.'],
-        ['Drinking, Dreaming Moon', 'The special story can be read: from the flowchart, below the Summer Festivals, or from the last card of Gallery, Submitted art.'],
-        ['Desktop program', 'The same port for Windows, macOS and Linux, on the Download page. It plays with no connection and updates itself.'],
+        ['History', 'Everything read this session, as one scroll.'],
+        ['16:9', 'The picture fills a wide screen, with nothing bare at its sides.'],
+        ['Languages', 'The story in English, Japanese, Portuguese, Spanish or Simplified Chinese.'],
+        ['HD pictures', 'The standing pictures and event CGs, enlarged four times so they stay sharp on a large screen.'],
+        ['Keys', 'Every key can be changed, in Settings under Controls.'],
+        ['Phones', 'Played with the phone on its side, across the whole screen.'],
+        ['Unlock everything', 'Opens every scene, picture, track and story, without changing your own progress.'],
+        ['Drinking, Dreaming Moon', 'The special story can be read: from the flowchart, below the Summer Festivals.'],
+        ['Desktop program', 'The same port for Windows, macOS and Linux, on the Download page.'],
       ]);
     } },
     { plate: 'Controls', build(p) {
@@ -390,7 +388,7 @@ async function boot() {
       brand: 'Tsukihime fan disc',
       title: 'Kagetsu Tohya',
       sub: 'in the browser',
-      line: 'An unofficial browser port that plays the game’s own files. Choose a page: About, Controls, Save data, or Play to begin.',
+      line: 'An unofficial browser port of Kagetsu Tohya, also available to download for Windows, macOS, Linux and Android.',
       foot: 'Unofficial · not affiliated with TYPE-MOON',
       tabs,
       onStart: () => { if (ready) start(); },

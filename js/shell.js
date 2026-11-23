@@ -1971,11 +1971,6 @@ export class Shell {
 export const h = {
   head: (panel, text) => panel.appendChild(el('h2', null, text)),
   p: (panel, text, cls) => panel.appendChild(el('p', cls || null, text)),
-  rows: (panel, rows) => {
-    const g = el('div', 'hm-rows');
-    for (const [k, v] of rows) { g.appendChild(el('div', 'k', k)); g.appendChild(el('div', 'v', v)); }
-    panel.appendChild(g);
-  },
   // the Controls page: [[what the mouse or a finger does, the keys' names, what it does]], a rule
   // between rows. The first two come already translated (a key's name is what is printed on it).
   controls: (panel, rows) => {
@@ -1990,8 +1985,19 @@ export const h = {
     }
     panel.appendChild(g);
   },
-  facts: (panel, facts) => {
-    const g = el('div', 'hm-facts');
+  // what is new, a line each: [[name, what it is]], set two to a row where they fit
+  features: (panel, items) => {
+    const g = el('div', 'hm-features');
+    for (const [name, line] of items) {
+      const d = el('div');
+      d.appendChild(el('b', null, name));
+      d.appendChild(el('span', null, line));
+      g.appendChild(d);
+    }
+    panel.appendChild(g);
+  },
+  facts: (panel, facts, cls) => {
+    const g = el('div', 'hm-facts' + (cls ? ' ' + cls : ''));
     for (const [big, small] of facts) { const d = el('div'); d.appendChild(el('b', null, big)); d.appendChild(document.createTextNode(tr(small))); g.appendChild(d); }
     panel.appendChild(g);
   },
