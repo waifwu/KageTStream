@@ -425,7 +425,16 @@ the story.
 * **Language** (the opening page's Play tab, and Settings; shown when the data
   holds another language's script) — English, 日本語, Português, Español,
   简体中文 or Русский on the opening page, EN, JA, PT-BR, ES, 简中 or RU in Settings
-  (six full names do not fit its column), each offered when its script is in `data/`. On the opening page nothing is
+  (six full names do not fit its column), each offered when its script is in `data/`. On a first
+  visit the story and the interface are in the language the device or browser
+  is set to: the first of the browser's languages (`navigator.languages`) that
+  the story has, any Portuguese as the Brazilian translation and Chinese as the
+  Simplified one (Traditional Chinese passes on to the reader's next language),
+  or else English. A reader who has played here before without choosing keeps
+  English, the language their saves are in. The language found is kept as a
+  choice made by hand is, so it can be changed on the Play page or in Settings.
+  The desktop program and the Android app follow the system's language the same
+  way. On the opening page nothing is
   running yet, so the other script is simply loaded and the Play tab comes back.
   From Settings it asks first, then starts again from the opening page with the
   other script. What has been read, the gallery, the flowchart and the

@@ -19,6 +19,24 @@ const DATA = 'data/';
 const LANGUAGES = [['English', 'en'], ['\u65e5\u672c\u8a9e', 'ja'], ['Portugu\u00eas', 'pt'], ['Espa\u00f1ol', 'es'], ['简体中文', 'chs'], ['Русский', 'ru']];
 const SHORT = { en: 'EN', ja: 'JA', pt: 'PT-BR', es: 'ES', chs: '简中', ru: 'RU' };
 const scriptOf = (l) => 'script-' + l + '.txt';
+// The story's language that the device or browser asks for: the first of the reader's languages
+// (navigator.languages, most wanted first) that the story has. Any Portuguese is the Brazilian
+// translation; Chinese is the Simplified one, so Traditional Chinese (zh-Hant, zh-TW, zh-HK, zh-MO)
+// passes on to the reader's next language.
+function deviceLanguage() {
+  const nav = typeof navigator !== 'undefined' ? navigator : {};
+  const wanted = nav.languages && nav.languages.length ? nav.languages : [nav.language || ''];
+  for (const tag of wanted) {
+    const t = String(tag).toLowerCase();
+    const base = t.split('-')[0];
+    if (base === 'zh') {
+      if (/-(hant|tw|hk|mo)\b/.test(t) && !/-hans\b/.test(t)) continue;
+      return 'chs';
+    }
+    if (LANGUAGES.some(([, l]) => l === base)) return base;
+  }
+  return 'en';
+}
 const SWITCH = { en: 'Switch the story to English?', ja: 'Switch the story to Japanese?', pt: 'Switch the story to Portuguese?', es: 'Switch the story to Spanish?', chs: 'Switch the story to Simplified Chinese?', ru: 'Switch the story to Russian?' };
 
 // What the Japanese script calls its scenes. Each says so in the question it asks before a re-read
@@ -202,6 +220,16 @@ async function boot() {
   const storage = new Storage('nsweb:game:');
   const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: !IPHONE, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   storage.remove('trace');      // (a note that earlier builds of this page kept of what the game was doing)
+  // A reader who has never chosen a language reads in the one their device or browser is set to.
+  // One who has played here before without choosing has been reading in English and keeps it:
+  // saved games are each language's own, and theirs are English. Either is kept from then on, as
+  // a choice made on the Play page or in Settings is.
+  if (!settings.lang) {
+    const kept = storage.exportAll();
+    const played = 'global' in kept || Object.keys(kept).some((k) => /(^|:)save\d+$/.test(k));
+    settings.lang = played ? 'en' : deviceLanguage();
+    storage.saveSettings(settings);
+  }
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
 
 
