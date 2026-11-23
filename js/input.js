@@ -93,6 +93,16 @@ export class Input {
       this.ctrl = false;
       this.push({ type: 'wake' });
     };
+    // The page has been left (another app, a notification, the lock screen): whatever a finger was
+    // doing is over. A browser does not always say that such a finger came up, and one still counted
+    // as down would make every tap after it a two-finger tap, which opens the menu. If the finger
+    // does come up later, that is no tap either.
+    const leave = () => {
+      touches.clear();
+      start = null;
+      longFired = true;
+      letGo();
+    };
     // The right button opens the menu on "contextmenu", which the browser sends once it is done with
     // the press (as it goes down on macOS and Linux, as it comes up on Windows). Taken on the press
     // itself, the menu's page would be up before that event, the event would land on the page, and
@@ -105,6 +115,7 @@ export class Input {
     c.addEventListener('pointerdown', (e) => {
       const p = this.pos(e);
       if (e.pointerType === 'touch') {
+        if (e.isPrimary) touches.clear();      // the first finger down: none before it is still there, whatever was heard of it
         touches.add(e.pointerId);
         longFired = false;
         clearTimeout(longPress);
@@ -174,6 +185,8 @@ export class Input {
       if (!e.repeat && this.onShortcut && this.onShortcut(action)) e.preventDefault();
     });
     window.addEventListener('keyup', (e) => { if (actionOf(keyOf(e)) === 'hold') this.ctrl = false; });
-    window.addEventListener('blur', () => { holding = false; this.ctrl = false; });
+    window.addEventListener('blur', () => { leave(); this.ctrl = false; });
+    window.addEventListener('pagehide', leave);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) leave(); });
   }
 }

@@ -61,6 +61,15 @@ export class Storage {
       for (const k of keys) this.ls.removeItem(k);
     } else this.mem.clear();
   }
+  // What exportAll writes: an object of names and the texts kept under them, which are JSON (set).
+  // Anything else (a list, a number, another program's file) is not taken, and an empty one neither.
+  // One text that reads as JSON is enough: a real export is not turned away for an odd entry in it.
+  isExport(obj) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+    const texts = Object.values(obj);
+    return texts.length > 0 && texts.every((v) => typeof v === 'string')
+      && texts.some((v) => { try { JSON.parse(v); return true; } catch (e) { return false; } });
+  }
   importAll(obj) {
     for (const k in obj) {
       if (typeof obj[k] !== 'string') continue;

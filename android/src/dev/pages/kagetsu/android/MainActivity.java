@@ -65,6 +65,7 @@ public class MainActivity extends Activity {
     private static boolean checked;                      // the release check, once for the app's process
     private final ExecutorService worker = Executors.newSingleThreadExecutor();   // file writes and the release check, off the page's thread
     private WebView web;
+    private boolean stopped;        // between onStop and onStart: in the background
     private ValueCallback<Uri[]> chooser;                // the page's file question (Import), until the player has answered
     private byte[] saving;                               // an exported file, until the player has said where it goes
 
@@ -292,6 +293,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+        stopped = false;
         if (web != null) {
             web.resumeTimers();
             web.evaluateJavascript("globalThis.appResume && globalThis.appResume()", null);
@@ -312,9 +314,12 @@ public class MainActivity extends Activity {
 
     // Going to the background: Android may end the app from there without the page's pagehide, so what has been read
     // is written now, and the sound is stopped (main.js appSuspend). Then the page's timers stop until it comes back.
+    // (The page answers a moment later. If the app is back in front by then, its timers are left running: stopped
+    // after onStart had started them, they would stay stopped with the game on screen.)
     @Override
     protected void onStop() {
-        web.evaluateJavascript("globalThis.appSuspend && globalThis.appSuspend()", (r) -> { if (web != null) web.pauseTimers(); });
+        stopped = true;
+        web.evaluateJavascript("globalThis.appSuspend && globalThis.appSuspend()", (r) -> { if (web != null && stopped) web.pauseTimers(); });
         super.onStop();
     }
 

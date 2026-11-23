@@ -265,7 +265,9 @@ async function boot() {
     a.href = URL.createObjectURL(blob);
     a.download = 'kagetsu-tohya-saves.json';
     a.click();
-    URL.revokeObjectURL(a.href);
+    // (not at once: a browser may only start reading the file after the click has been dealt with)
+    const url = a.href;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
   let replaced = false;       // the store was just filled from a file: nothing in memory is written over it
   const saveCount = () => {
@@ -385,12 +387,14 @@ async function boot() {
   }
   document.getElementById('import-file').addEventListener('change', async (ev) => {
     const f = ev.target.files[0];
+    ev.target.value = '';       // so that the same file, chosen again, is heard of again
     if (!f) return;
-    try {
-      storage.importAll(JSON.parse(await f.text()));
-      replaced = true;
-      location.reload();
-    } catch (e) { shell.notice('That file is not a save export.'); }
+    let data = null;
+    try { data = JSON.parse(await f.text()); } catch (e) { /* not JSON at all */ }
+    if (!storage.isExport(data)) { shell.notice('That file is not a save export.'); return; }
+    try { storage.importAll(data); } catch (e) { shell.notice('That file is not a save export.'); return; }
+    replaced = true;
+    location.reload();
   });
 
   await loading;
