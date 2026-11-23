@@ -370,9 +370,10 @@ the story.
   picture whole, over a soft copy of itself. It can be switched at any time
   (the opening page's Play tab has the same switch), and saves are the same in
   either shape. The glow around the picture is kept for each shape by itself:
-  on at 4:3, off at 16:9 until it is turned on there. An iPhone at 16:9 has no
-  glow and Settings does not offer it there: the picture all but fills the
-  screen, and the glow is the whole screen blurred several times a second.
+  on at 4:3 (off on an iPhone until turned on), off at 16:9 until it is turned
+  on there. An iPhone at 16:9 has no glow and Settings does not offer it there:
+  the picture all but fills the screen, and the glow is the whole screen blurred
+  several times a second.
 * **HD pictures** (Settings; on by default, shown when `data/hd/` is there) —
   the sprites and event CGs drawn from their 4× files (`tools/hd.py`, above)
   in place of the game's own. Each takes exactly the room and the place the
@@ -385,7 +386,8 @@ the story.
   own; an HD file that cannot be had falls back to the game's. The gallery's
   full-size viewer shows a CG's HD file; its thumbnails keep the game's.
   Switched during the story, what is on screen is fetched again in the other
-  size where it stands.
+  size where it stands, and turning it off drops the cached HD pictures from
+  memory.
 * **The waiting marks** — the triangle after a line and the sheet of paper at
   the end of a page are 24×24 bitmaps in the game's files. They are drawn
   instead (`js/gfx.js`, `MARKS`): the same shapes and the same three frames, at
@@ -455,10 +457,12 @@ the story.
   played for four seconds: a decoded track is some 50 MB, and fast-forward
   passes a change of music every second or two.
 * **A phone that is turned** — the picture is fitted to the window again at
-  every sign that its size has changed, and the size is looked at again several
-  times in the two seconds after one, and at each touch. An iPhone's Home
-  Screen app can announce a turn while the window still has its old size and
-  say nothing after: the picture then stayed small, in a corner.
+  every sign that its size or visibility has changed, and the size is looked at
+  again several times in the two seconds after one, and at each touch. An
+  iPhone's Home Screen app can announce a turn while the window still has its
+  old size and say nothing after: the picture then stayed small, in a corner.
+  The size is read in both places a browser gives it (the window and its visual
+  viewport); where the two disagree, the one that has changed is believed.
 * **Nothing blurred on a phone** — the pages that lie over the picture (the
   menu, the text history, a question) blur it; on a phone they stand on a
   nearly solid ground instead, and the history has no entrance. On an iPhone,

@@ -104,7 +104,10 @@ const onPhone = () => {
   return /Mobi|iPhone|iPod/i.test(navigator.userAgent) || (coarse && Math.min(window.screen.width, window.screen.height) < 600);
 };
 const PHONE = onPhone();
-const IPHONE = !DESKTOP && !ANDROID && /iPhone|iPod/i.test(navigator.userAgent);
+const IPHONE = !DESKTOP && !ANDROID && (
+  /iPhone|iPod/i.test(navigator.userAgent)
+  || (PHONE && navigator.maxTouchPoints > 1 && /Mac/i.test(navigator.platform || navigator.userAgent))
+);
 const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const sideways = () => {
   try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* not to be had here */ }
@@ -183,7 +186,7 @@ async function boot() {
   })();
 
   const storage = new Storage('nsweb:game:');
-  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: true, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
+  const settings = Object.assign({ muted: false, speed: 1, autoPace: 1, bgmVol: 1, seVol: 1, ambient: !IPHONE, ambientWide: false, wide: false, hd: true, font: 'serif', flowAll: false, flowHints: false }, storage.loadSettings());
   storage.remove('trace');      // (a note that earlier builds of this page kept of what the game was doing)
   setBindings(settings.keys);      // which key does what (keys.js): the reader's own, or the ones the game comes with
 
@@ -611,7 +614,7 @@ async function boot() {
         { key: 'seVol', label: 'Sound effects', range: true },
         { key: 'wide', label: 'Aspect ratio', options: [['4:3', false], ['16:9', true]] },
         ...(loader.hd ? [{ key: 'hd', label: 'HD pictures', options: onOff }] : []),
-        ...(noGlow() ? [] : [{ key: 'ambient', label: 'Glow around the picture', options: onOff }]),
+        { key: 'ambient', label: 'Glow around the picture', options: onOff, show: () => !noGlow() },
         ...(ANDROID ? [] : [{ key: 'full', label: 'Fullscreen', options: onOff }]),
       ] },
       { title: more.length > 1 ? 'Language and progress' : 'Progress', under: true, rows: more },
@@ -657,6 +660,7 @@ async function boot() {
       if (key === 'guide') { guide.setOn(value); return; }
       if (key === 'full') { fullscreen(value); return; }
       if (key === 'hd') { settings.hd = value; saveSettings(); await gfx.setHd(value); return; }
+      if (key === 'ambient' && noGlow()) return;
       if (key === 'wide' && value && !settings.wide && !(await confirmWide())) return;
       const fontChanged = key === 'font' && settings.font !== value;
       const shapeChanged = key === 'wide' && !!settings.wide !== value;

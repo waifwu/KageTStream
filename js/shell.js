@@ -101,13 +101,36 @@ export class Shell {
     } catch (e) { /* no grain */ }
   }
 
+  // The window's size, in CSS pixels. A browser gives it in two places: the window itself
+  // (innerWidth, innerHeight) and its visual viewport. They agree nearly always, and then the
+  // window's own is used, as it always was. When they do not (after a turn, an iPhone's Home
+  // Screen app can leave one of them at the size it had before), the one that has changed since
+  // it was last looked at is believed: the one left behind is the one that has not moved. Both
+  // changed and still apart, the visual viewport is taken, being what is seen; neither changed,
+  // whichever was believed before. (The viewport's size is taken times its scale: in a browser
+  // where a pinch that zooms the page leaves the window's own size alone, it leaves this one too.)
+  viewSize() {
+    const inner = [window.innerWidth, window.innerHeight];
+    const vv = window.visualViewport;
+    const k = (vv && vv.scale) || 1;
+    const view = vv && vv.width > 0 && vv.height > 0 ? [Math.round(vv.width * k), Math.round(vv.height * k)] : null;
+    const was = this.sizeSeen, now = { inner: inner.join('x'), view: view ? view.join('x') : '' };
+    this.sizeSeen = now;
+    if (!view || (Math.abs(view[0] - inner[0]) < 2 && Math.abs(view[1] - inner[1]) < 2)) { this.sizeFrom = 'inner'; return inner; }
+    if (was && was.view !== now.view) this.sizeFrom = 'view';
+    else if (was && was.inner !== now.inner) this.sizeFrom = 'inner';
+    return this.sizeFrom === 'view' ? view : inner;
+  }
+
   // The stage as large as the window allows. On a phone held upright, while the opening page is
   // open, the stage stands upright as well: UPW across and as tall as the screen's shape, with the
   // page laid out for that (css/shell.css, "upright"). The game itself is only played on its side:
   // once it starts, the stage is the picture's shape again, and the phone is asked to be turned.
   fit() {
-    const iw = window.innerWidth, ih = window.innerHeight;
+    const [iw, ih] = this.viewSize();
+    if (!iw || !ih) return;
     this.fitFor = iw + 'x' + ih;
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
     const up = this.uprightHome && this.homeOpen && ih > iw;
     if (up !== this.upright) {
       this.upright = up;
@@ -136,7 +159,10 @@ export class Shell {
   // stay so.
   watchSize() {
     let timers = [];
-    const check = () => { if (window.innerWidth + 'x' + window.innerHeight !== this.fitFor) this.fit(); };
+    const check = () => {
+      const [iw, ih] = this.viewSize();
+      if (iw + 'x' + ih !== this.fitFor) this.fit();
+    };
     const changed = () => {
       this.fit();
       timers.forEach(clearTimeout);
@@ -145,8 +171,13 @@ export class Shell {
     window.addEventListener('resize', changed);
     window.addEventListener('orientationchange', changed);
     window.addEventListener('pageshow', changed);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) changed(); });
     if (window.visualViewport) window.visualViewport.addEventListener('resize', changed);
     try { if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', changed); } catch (e) { /* not to be had here */ }
+    try {
+      const mq = window.matchMedia && window.matchMedia('(orientation: portrait)');
+      if (mq && mq.addEventListener) mq.addEventListener('change', changed);
+    } catch (e) { /* not to be had here */ }
     window.addEventListener('pointerdown', check, true);
   }
   // The opening page's title on one line, upright. Its face is whichever serif the phone has (few
@@ -183,10 +214,24 @@ export class Shell {
   // smaller canvas in memory, and drawing the screen into one is that same reading back. The
   // sketch is drawn as 64 x 48 all the same, scaled up.
   setAmbient(on) {
-    this.ambientOn = !!on;
-    this.ambient.classList.toggle('on', this.ambientOn);
+    const want = !!on;
+    if (this.ambientOn === want) return;
+    this.ambientOn = want;
     clearInterval(this.ambientTimer);
-    if (!this.ambientOn) return;
+    clearTimeout(this.ambientHideTimer);
+    if (!want) {
+      this.ambient.classList.remove('on');
+      // once the fade finishes, take the element out of layout so its blur filter holds no GPU layer
+      if (this.ambient.classList.contains('shown')) {
+        this.ambientHideTimer = setTimeout(() => { if (!this.ambientOn) this.ambient.classList.remove('shown'); }, 1300);
+      }
+      return;
+    }
+    if (!this.ambient.classList.contains('shown')) {
+      this.ambient.classList.add('shown');
+      void this.ambient.offsetWidth;        // let the fade start from opacity 0
+    }
+    this.ambient.classList.add('on');
     const ctx = this.ambient.getContext('2d');
     const tmp = document.createElement('canvas');
     tmp.width = this.ambient.width;
@@ -196,7 +241,8 @@ export class Shell {
     let primed = false, seen = '', still = 0;
     this.ambientTimer = setInterval(() => {
       // nothing of the glow shows while the stage covers the window: it is left as it was
-      if (this.stageW * this.scale >= window.innerWidth - 1 && this.stageH * this.scale >= window.innerHeight - 1) return;
+      const [iw, ih] = this.viewSize();
+      if (this.stageW * this.scale >= iw - 1 && this.stageH * this.scale >= ih - 1) return;
       if (document.hidden) return;
       // Once the glow has caught up with a picture that is not changing it is left alone: every
       // touch of the canvas has the whole window's blur worked out again, ten times a second.
@@ -1160,6 +1206,8 @@ export class Shell {
           rows.push(row);
           const r = el('div', 'cf-row');
           r.appendChild(el('div', 'cf-label', row.label));
+          const buttons = [];
+          let paint = () => {};
           if (row.range) {
             const wrap = el('label', 'cf-range');
             const inp = el('input');
@@ -1172,8 +1220,7 @@ export class Shell {
             r.appendChild(wrap);
           } else {
             const opts = el('div', 'cf-opts' + (row.key === 'lang' ? ' languages' : ''));
-            const buttons = [];
-            const paint = () => buttons.forEach(([b, v]) => b.classList.toggle('sel', get(row.key) === v));
+            paint = () => buttons.forEach(([b, v]) => b.classList.toggle('sel', get(row.key) === v));
             for (const [label, value] of row.options) {
               // `set` may ask first (and so take a while, or decline): the row shows what was kept
               // (every row is shown again: one setting can change what another reads, as the picture's shape does the glow)
@@ -1181,10 +1228,15 @@ export class Shell {
               buttons.push([b, value]);
               opts.appendChild(b);
             }
-            row.repaint = paint;
-            paint();
             r.appendChild(opts);
           }
+          row.repaint = () => {
+            const shown = !row.show || !!row.show();
+            r.hidden = !shown;
+            buttons.forEach(([b]) => { b.disabled = !shown; });
+            if (shown) paint();
+          };
+          row.repaint();
           box.appendChild(r);
         }
         if (!below) cols.appendChild(box);

@@ -130,6 +130,10 @@ export class Loader {
     this.held -= this.sizes.get(url) || 0;
     this.sizes.delete(url);
   }
+  dropHd() {
+    const pre = this.base + 'hd/';
+    for (const url of this.images.keys()) if (url.startsWith(pre)) this.drop(url);
+  }
   // Start loading pictures the script will soon ask for, so they are ready when it does.
   // Only names not already held or on their way; the cache keeps the last few whatever their size (trim).
   // Each comes as [name, transparency]: ":a;" asks for a standing picture, no tag for a background
@@ -334,6 +338,7 @@ export class Gfx {
     l.hdOn = !!on;
     this.spriteCache.clear();
     this.spriteBytes = 0;
+    if (!l.hdOn) l.dropHd();
     const bg = this.bg, jobs = [];
     if (bg.raw) {
       jobs.push(l.image(parseTag(bg.file).file, 'plain').then((raw) => {
