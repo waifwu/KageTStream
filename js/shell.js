@@ -1161,12 +1161,15 @@ export class Shell {
       // the slider would then never follow the music again. So letting go gives it back as well, a
       // moment later: a `change` on its way comes after the finger is up, and is to find the
       // slider where the reader left it.
+      // (A mouse let go away from the slider tells the window, not the slider: while the handle is
+      // held, the window is listened to as well.)
       let dragging = false, shownPlay = null, freeing = null;
-      const hold = () => { clearTimeout(freeing); dragging = true; };
-      const free = () => { clearTimeout(freeing); freeing = setTimeout(() => { dragging = false; }, 400); };
+      const watch = (on) => { for (const type of ['pointerup', 'pointercancel']) window[on ? 'addEventListener' : 'removeEventListener'](type, free, true); };
+      const hold = () => { clearTimeout(freeing); dragging = true; watch(true); };
+      const free = () => { clearTimeout(freeing); freeing = setTimeout(() => { dragging = false; }, 400); watch(false); };
       seek.addEventListener('pointerdown', hold);
       for (const type of ['pointerup', 'pointercancel', 'lostpointercapture', 'blur']) seek.addEventListener(type, free);
-      seek.addEventListener('change', () => { clearTimeout(freeing); api.seek(seek.value / 1000); dragging = false; paint(); });
+      seek.addEventListener('change', () => { clearTimeout(freeing); watch(false); api.seek(seek.value / 1000); dragging = false; paint(); });
       seek.addEventListener('input', () => { if (dragging) hold(); const st = api.state(); now.textContent = clock((seek.value / 1000) * st.duration); });
       const paint = () => {
         const st = api.state();
@@ -1187,7 +1190,7 @@ export class Shell {
       };
       const timer = setInterval(paint, 250);
       const done = ctl.done;
-      ctl.done = (v) => { clearInterval(timer); clearTimeout(freeing); done(v); };
+      ctl.done = (v) => { clearInterval(timer); clearTimeout(freeing); watch(false); done(v); };
       this.back(layer, ctl);
       ctl.onKey = (e) => {
         if (e.key === ' ') { api.toggle(); paint(); return true; }

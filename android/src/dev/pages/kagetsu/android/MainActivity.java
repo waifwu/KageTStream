@@ -430,7 +430,7 @@ public class MainActivity extends Activity {
         }
 
         private InputStream empty(FileInputStream in, Closeable fd) {
-            try { in.close(); fd.close(); } catch (IOException ignored) { }
+            shut(in, fd);
             return new ByteArrayInputStream(new byte[0]);
         }
 
